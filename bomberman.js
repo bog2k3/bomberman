@@ -2,11 +2,14 @@ import sprite_brick11 from "./sprites/brick11.png.js";
 import sprite_brick12 from "./sprites/brick12.png.js";
 import sprite_field1 from "./sprites/field1.png.js";
 
+import * as constants from "./constants.js";
 import { dosemu } from "./node_modules/dosemu/index.js";
 import { Theme } from "./theme.js";
 import { Character } from "./character.js";
 import { Player } from "./player.js";
 import { playerSprites } from "./player-sprites.js";
+import * as collision from "./collision.js";
+import { clamp } from "./math.js";
 
 export function init() {
 	buildThemes();
@@ -21,11 +24,11 @@ export function update(dt) {
 export function draw() {
 	[scrollX, scrollY] = getScrollOffsets();
 	// on which tile we start drawing:
-	const tileOffsX = Math.floor(scrollX / TILE_SIZE);
-	const tileOffsY = Math.floor(scrollY / TILE_SIZE);
+	const tileOffsX = Math.floor(scrollX / constants.TILE_SIZE);
+	const tileOffsY = Math.floor(scrollY / constants.TILE_SIZE);
 	// how many tiles to draw:
-	const nTilesX = Math.ceil(SCREEN_WIDTH / TILE_SIZE) + 1;
-	const nTilesY = Math.ceil(SCREEN_HEIGHT / TILE_SIZE) + 1;
+	const nTilesX = Math.ceil(constants.SCREEN_WIDTH / constants.TILE_SIZE) + 1;
+	const nTilesY = Math.ceil(constants.SCREEN_HEIGHT / constants.TILE_SIZE) + 1;
 
 	for (let i=tileOffsY; i<map.length && i<tileOffsY+nTilesY; i++) {
 		for (let j=tileOffsX; j<map[0].length && j<tileOffsX+nTilesX; j++) {
@@ -37,13 +40,6 @@ export function draw() {
 }
 
 // --------------------------------------------------------------------------------------------------
-
-const SCREEN_WIDTH = 320;
-const SCREEN_HEIGHT = 200;
-const TILE_SIZE = 16;
-const PLAYER_INITIAL_X_OFFS = 8;
-const PLAYER_INITIAL_Y_OFFS = 11;
-const PLAYER_INITIAL_SPEED = 2; // tiles per second
 
 /** @type {Theme[]} */
 const themes = [];
@@ -108,11 +104,15 @@ function buildCharacterSprites() {
 }
 
 function reset() {
+	collision.clearData();
 	selectMap(0);
 	let [playerRow, playerCol] = findPlayerPosition(map);
-	const playerX = playerCol * TILE_SIZE + PLAYER_INITIAL_X_OFFS;
-	const playerY = playerRow * TILE_SIZE + PLAYER_INITIAL_Y_OFFS;
-	player = new Player(playerX, playerY, PLAYER_INITIAL_SPEED * TILE_SIZE, playerSprites[0]);
+	const playerX = playerCol * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
+	const playerY = playerRow * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
+	player = new Player(playerX, playerY, constants.PLAYER_INITIAL_SPEED * constants.TILE_SIZE, playerSprites[0]);
+
+	collision.setMap(map);
+	collision.addEntity(player);
 }
 
 function selectMap(index) {
@@ -120,12 +120,8 @@ function selectMap(index) {
 	map = maps[index].map(
 		row => row.map(x => x)
 	);
-	maxMapX = map[0].length * TILE_SIZE;
-	maxMapY = map.length * TILE_SIZE;
-}
-
-function clamp(x, a, b) {
-	return Math.max(a, Math.min(x, b));
+	maxMapX = map[0].length * constants.TILE_SIZE;
+	maxMapY = map.length * constants.TILE_SIZE;
 }
 
 /** @returns {[ofsX: number, ofsY: number]} */
@@ -136,10 +132,10 @@ function getScrollOffsets() {
 	// only adjust if the player moves outside a central region
 	const playerScreenX = player.x - scrollX;
 	const playerScreenY = player.y - scrollY;
-	const toleranceX = SCREEN_WIDTH / 8;
-	const toleranceY = SCREEN_HEIGHT / 8;
-	const centerX = SCREEN_WIDTH / 2;
-	const centerY = SCREEN_HEIGHT / 2;
+	const toleranceX = constants.SCREEN_WIDTH / 8;
+	const toleranceY = constants.SCREEN_HEIGHT / 8;
+	const centerX = constants.SCREEN_WIDTH / 2;
+	const centerY = constants.SCREEN_HEIGHT / 2;
 	const differenceX = playerScreenX - centerX;
 	const differenceY = playerScreenY - centerY;
 	if (Math.abs(differenceX) > toleranceX) {
@@ -149,15 +145,15 @@ function getScrollOffsets() {
 		viewportY += differenceY - toleranceY * Math.sign(differenceY);
 	}
 	// only scroll as much as the map limits
-	viewportX = clamp(viewportX, 0, maxMapX - SCREEN_WIDTH);
-	viewportY = clamp(viewportY, 0, maxMapY - SCREEN_HEIGHT);
+	viewportX = clamp(viewportX, 0, maxMapX - constants.SCREEN_WIDTH);
+	viewportY = clamp(viewportY, 0, maxMapY - constants.SCREEN_HEIGHT);
 
 	return [viewportX, viewportY];
 }
 
 function drawTile(row, col, mapDX, mapDY) {
-	const tileX = col * TILE_SIZE + mapDX;
-	const tileY = row * TILE_SIZE + mapDY;
+	const tileX = col * constants.TILE_SIZE + mapDX;
+	const tileY = row * constants.TILE_SIZE + mapDY;
 	let sprite = null;
 	if ([1, 2].includes(map[row][col])) {
 		// brick type
