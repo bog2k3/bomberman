@@ -1,0 +1,11 @@
+body {
+	background-color: black;
+}
+
+#root {
+	width: 100%;
+}
+
+#emuscreen {
+	margin: 0 auto;
+}
