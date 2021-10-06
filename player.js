@@ -1,22 +1,19 @@
 import { dosemu } from "./node_modules/dosemu/index.js";
 import { Character } from "./character.js";
-import { SpriteSequence } from "./sprite-sequence.js";
+import * as collision from "./collision.js";
+import { Bomb } from "./bomb.js";
 
 export class Player extends Character {
 
-	/** @param {{left: SpriteSequence, right: SpriteSequence, up: SpriteSequence, down: SpriteSequence}} spriteSet */
-	constructor(x, y, speed, spriteSet) {
-		super({
-			x,
-			y,
-			speed
-		});
-		this.setSpriteSet(spriteSet);
+	wasSpacePressed = false;
+
+	/** @param {Character} data */
+	constructor(data) {
+		super(data);
 	}
 
-	draw(mapOffsX, mapOffsY) {
-		dosemu.drawSprite(this.x + mapOffsX, this.y + mapOffsY, this.getCurrentSprite());
-	}
+	/** @returns {string} the type of entity */
+	getType() { return "player"; }
 
 	update(dt) {
 		super.update(dt);
@@ -28,6 +25,21 @@ export class Player extends Character {
 			this.move("left");
 		} else if (dosemu.isKeyPressed("ArrowRight")) {
 			this.move("right");
+		}
+		if (dosemu.isKeyPressed(" ") && !this.wasSpacePressed) {
+			this.spawnBomb();
+			this.wasSpacePressed = true;
+		}
+		if (!dosemu.isKeyPressed(" ")) {
+			this.wasSpacePressed = false;
+		}
+	}
+
+	spawnBomb() {
+		const spawnRow = this.getRow();
+		const spawnColumn = this.getColumn();
+		if (!collision.isBombAt(spawnRow, spawnColumn)) {
+			new Bomb(1, spawnRow, spawnColumn);
 		}
 	}
 }

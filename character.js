@@ -1,23 +1,26 @@
 import { checkCollision } from "./collision.js";
 import { Entity } from "./entity.js";
-import { dosemuBBox, dosemuSprite } from "./node_modules/dosemu/index.js";
+import { dosemu, dosemuBBox, dosemuSprite } from "./node_modules/dosemu/index.js";
 import { SpriteSequence } from "./sprite-sequence.js";
+import * as constants from "./constants.js";
 
 export class Character extends Entity {
 	x = 0;
 	y = 0;
 	speed = 0;
+
+	/** @private */
 	animationFrame = 0;
 
 	/** @type {"up" | "down" | "left" | "right"} */
 	orientation = "down";
 	/** @private */
 	isStopped = true;
-	/** @private @type {{left: SpriteSequence, right: SpriteSequence, up: SpriteSequence, down: SpriteSequence}} */
+	/** @type {{left: SpriteSequence, right: SpriteSequence, up: SpriteSequence, down: SpriteSequence}} */
 	spriteSet = {};
 
 	/** @type {dosemuBBox.BoundingBox} */
-	boundingBox = {up: -5, down: 3, left: -7, right: 7};
+	boundingBox = {up: -10, down: 3, left: -6, right: 6};
 
 	/** @param {Character} data */
 	constructor(data) {
@@ -32,14 +35,27 @@ export class Character extends Entity {
 		return dosemuBBox.moveBoundingBox(this.boundingBox, this.x, this.y);
 	}
 
-	/** @param {{left: SpriteSequence, right: SpriteSequence, up: SpriteSequence, down: SpriteSequence}} spriteSet */
-	setSpriteSet(spriteSet) {
-		this.spriteSet = spriteSet;
-	}
-
 	/** @returns {dosemuSprite.Sprite} */
 	getCurrentSprite() {
 		return this.spriteSet[this.orientation].frames[Math.floor(this.animationFrame) % this.spriteSet[this.orientation].frames.length];
+	}
+
+	/** @returns {number} the row the character is on */
+	getRow() {
+		return Math.floor(this.y / constants.TILE_SIZE);
+	}
+
+	/** @returns {number} the column the character is on */
+	getColumn() {
+		return Math.floor(this.x / constants.TILE_SIZE);
+	}
+
+	/**
+	 * @param {number} mapOffsX the position of the map, relative to the screen, in pixels
+	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
+	 **/
+	draw(mapOffsX, mapOffsY) {
+		dosemu.drawSprite(this.x + mapOffsX, this.y + mapOffsY, this.getCurrentSprite());
 	}
 
 	update(dt) {

@@ -3,6 +3,7 @@ import { dosemuBBox } from "./node_modules/dosemu/index.js";
 import * as constants from "./constants.js";
 import { clamp } from "./math.js";
 
+/** @type {{map: number[][], entities: Entity[]}} */
 const data = {
 	map: [],
 	entities: []
@@ -28,6 +29,20 @@ export function checkCollision(boundingBox, owner) {
 	}
 	// step 2: check against other entities
 	// TODO
+}
+
+/**
+ * @returns {boolean} true if there's a bomb at the indicated position
+ * @param {boolean} row
+ * @param {boolean} column
+ */
+export function isBombAt(row, column) {
+	for (let entity of data.entities) {
+		if (entity.getType() === "bomb" && entity.row === row && entity.column === column) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /** @param {number[][]} map */

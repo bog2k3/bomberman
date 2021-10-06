@@ -10,15 +10,18 @@ import { Player } from "./player.js";
 import { playerSprites } from "./player-sprites.js";
 import * as collision from "./collision.js";
 import { clamp } from "./math.js";
+import { Entity } from "./entity.js";
 
 export function init() {
 	buildThemes();
 	buildCharacterSprites();
+	Entity.onEntityCreated = handleEntityCreated;
+	Entity.onEntityDestroyed = handleEntityDestroyed;
 	reset();
 }
 
 export function update(dt) {
-	player.update(dt);
+	entities.forEach(e => e.update(dt));
 }
 
 export function draw() {
@@ -36,7 +39,7 @@ export function draw() {
 		}
 	}
 
-	player.draw(-scrollX, -scrollY);
+	entities.forEach(e => e.draw(-scrollX, -scrollY));
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -45,6 +48,8 @@ export function draw() {
 const themes = [];
 
 let selectedTheme = 0;
+
+let player = null;
 
 /**
  * 0 - empty space (field)
@@ -88,7 +93,8 @@ let maxMapY = 0;
 let scrollX = 0;
 let scrollY = 0;
 
-let player = new Character();
+/** @type {Entity[]} */
+let entities = [];
 
 function buildThemes() {
 	themes.push({
@@ -105,14 +111,19 @@ function buildCharacterSprites() {
 
 function reset() {
 	collision.clearData();
+	entities = [];
 	selectMap(0);
-	let [playerRow, playerCol] = findPlayerPosition(map);
+	let [playerRow, playerCol] = findPlayerSpawnPosition(map);
 	const playerX = playerCol * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
 	const playerY = playerRow * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
-	player = new Player(playerX, playerY, constants.PLAYER_INITIAL_SPEED * constants.TILE_SIZE, playerSprites[0]);
+	player = new Player({
+		x: playerX,
+		y: playerY,
+		speed: constants.PLAYER_INITIAL_SPEED * constants.TILE_SIZE,
+		spriteSet: playerSprites[0]
+	});
 
 	collision.setMap(map);
-	collision.addEntity(player);
 }
 
 function selectMap(index) {
@@ -174,13 +185,25 @@ function drawTile(row, col, mapDX, mapDY) {
  * @param {number[][]} map
  * @returns {[row: number, col: number]} the position of the player
  */
-function findPlayerPosition(map) {
+function findPlayerSpawnPosition(map) {
 	for (let i=0; i<map.length; i++) {
 		for (let j=0; j<map[i].length; j++) {
 			if (map[i][j] === 9)
 				return [i, j];
 		}
 	}
-	console.error(`Player position not found in map!`);
+	console.error(`Player spawn position not found in map!`);
 	return [0, 0];
+}
+
+/** @param {Entity} entity */
+function handleEntityCreated(entity) {
+	entities.unshift(entity);
+	collision.addEntity(entity);
+}
+
+/** @param {Entity} entity */
+function handleEntityDestroyed(entity) {
+	entities.splice(entities.indexOf(entity), 1);
+	collision.removeEntity(entity);
 }
