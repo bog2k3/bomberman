@@ -6,6 +6,7 @@ import { dosemu } from "./node_modules/dosemu/index.js";
 import { Theme } from "./theme.js";
 import { Character } from "./character.js";
 import { Player } from "./player.js";
+import { playerSprites } from "./player-sprites.js";
 
 export function init() {
 	buildThemes();
@@ -42,7 +43,7 @@ const SCREEN_HEIGHT = 200;
 const TILE_SIZE = 16;
 const PLAYER_INITIAL_X_OFFS = 8;
 const PLAYER_INITIAL_Y_OFFS = 11;
-const PLAYER_INITIAL_SPEED = 10; // tiles per second
+const PLAYER_INITIAL_SPEED = 2; // tiles per second
 
 /** @type {Theme[]} */
 const themes = [];
@@ -111,7 +112,7 @@ function reset() {
 	let [playerRow, playerCol] = findPlayerPosition(map);
 	const playerX = playerCol * TILE_SIZE + PLAYER_INITIAL_X_OFFS;
 	const playerY = playerRow * TILE_SIZE + PLAYER_INITIAL_Y_OFFS;
-	player = new Player(playerX, playerY, PLAYER_INITIAL_SPEED * TILE_SIZE);
+	player = new Player(playerX, playerY, PLAYER_INITIAL_SPEED * TILE_SIZE, playerSprites[0]);
 }
 
 function selectMap(index) {

@@ -4,7 +4,6 @@ import * as bomberman from "./bomberman.js";
 let lastTime = new Date().getTime();
 
 function init() {
-	dosemu.setNoiseStrength(0.25);
 	requestAnimationFrame(step);
 	dosemu.hideMouse();
 

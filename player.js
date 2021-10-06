@@ -1,18 +1,21 @@
 import { dosemu } from "./node_modules/dosemu/index.js";
 import { Character } from "./character.js";
+import { SpriteSequence } from "./sprite-sequence.js";
 
 export class Player extends Character {
 
-	constructor(x, y, speed) {
+	/** @param {{left: SpriteSequence, right: SpriteSequence, up: SpriteSequence, down: SpriteSequence}} spriteSet */
+	constructor(x, y, speed, spriteSet) {
 		super({
 			x,
 			y,
 			speed
 		});
+		this.setSpriteSet(spriteSet);
 	}
 
 	draw(mapOffsX, mapOffsY) {
-		dosemu.drawCircle(this.x + mapOffsX, this.y + mapOffsY, 4, 9);
+		dosemu.drawSprite(this.x + mapOffsX, this.y + mapOffsY, this.getCurrentSprite());
 	}
 
 	update(dt) {
