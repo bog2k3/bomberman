@@ -31,27 +31,6 @@ export function checkCollision(boundingBox, owner) {
 	// TODO
 }
 
-/**
- * @returns {boolean} true if there's a bomb at the indicated position
- * @param {boolean} row
- * @param {boolean} column
- */
-export function isBombAt(row, column) {
-	for (let entity of data.entities) {
-		if (entity.getType() === "bomb" && entity.row === row && entity.column === column) {
-			return true;
-		}
-	}
-	return false;
-}
-
-export function getMapCell(row, column) {
-	if (row < 0 || row >= data.map.length || column < 0 || column >= data.map[0].length) {
-		return -1;
-	}
-	return data.map[row][column];
-}
-
 /** @param {number[][]} map */
 export function setMap(map) {
 	data.map = map;

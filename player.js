@@ -1,6 +1,6 @@
 import { dosemu } from "./node_modules/dosemu/index.js";
 import { Character } from "./character.js";
-import * as collision from "./collision.js";
+import * as world from "./world.js";
 import { Bomb } from "./bomb.js";
 
 export class Player extends Character {
@@ -38,7 +38,7 @@ export class Player extends Character {
 	spawnBomb() {
 		const spawnRow = this.getRow();
 		const spawnColumn = this.getColumn();
-		if (!collision.isBombAt(spawnRow, spawnColumn)) {
+		if (!world.isBombAt(spawnRow, spawnColumn)) {
 			new Bomb(5, spawnRow, spawnColumn);
 		}
 	}

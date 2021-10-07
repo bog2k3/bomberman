@@ -5,10 +5,9 @@ import sprite_field1 from "./sprites/field1.png.js";
 import * as constants from "./constants.js";
 import { dosemu } from "./node_modules/dosemu/index.js";
 import { Theme } from "./theme.js";
-import { Character } from "./character.js";
 import { Player } from "./player.js";
 import { playerSprites } from "./player-sprites.js";
-import * as collision from "./collision.js";
+import * as world from "./world.js";
 import { clamp } from "./math.js";
 import { Entity } from "./entity.js";
 
@@ -134,7 +133,7 @@ function buildCharacterSprites() {
 }
 
 function reset() {
-	collision.clearData();
+	world.clearData();
 	entities = [];
 	player = null;
 	selectMap(0);
@@ -166,7 +165,7 @@ function reset() {
 		console.error(`Player spawn position not found in map!`);
 	}
 
-	collision.setMap(map);
+	world.setMap(map);
 }
 
 function selectMap(index) {
@@ -227,11 +226,11 @@ function drawTile(row, col, mapDX, mapDY) {
 function handleEntityCreated(entity) {
 	entities.push(entity);
 	entities.sort((a, b) => a.layer - b.layer);
-	collision.addEntity(entity);
+	world.addEntity(entity);
 }
 
 /** @param {Entity} entity */
 function handleEntityDestroyed(entity) {
 	entities.splice(entities.indexOf(entity), 1);
-	collision.removeEntity(entity);
+	world.removeEntity(entity);
 }

@@ -3,7 +3,7 @@ import { bombSprites } from "./bomb-sprites.js";
 import * as constants from "./constants.js";
 import { GridEntity } from "./grid-entity.js";
 import { Fire } from "./fire.js";
-import * as collision from "./collision.js";
+import * as world from "./world.js";
 
 export class Bomb extends GridEntity {
 
@@ -51,7 +51,7 @@ export class Bomb extends GridEntity {
 				}
 				const fRow = this.row + dir.dy * (i+1);
 				const fColumn = this.column + dir.dx * (i+1);
-				const cellType = collision.getMapCell(fRow, fColumn);
+				const cellType = world.getMapCell(fRow, fColumn);
 				if ([-1, 2].includes(cellType)) {
 					// we got outside of map or hit an indestructible brick
 					dir.blocked = true;
@@ -63,9 +63,10 @@ export class Bomb extends GridEntity {
 					["Up", "Down"].includes(dirKey) ? "middleV" : "middleH"
 				);
 				new Fire(fireType, fRow, fColumn);
-				// if we hit a regular brick, we stop here
+				// if we hit a regular brick, we stop here and destroy the brick
 				if (cellType === 1) {
 					dir.blocked = true;
+					world.setMapCell(fRow, fColumn, 0);
 				}
 			}
 		}
