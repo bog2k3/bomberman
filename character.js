@@ -28,6 +28,7 @@ export class Character extends Entity {
 		if (data) {
 			Object.assign(this, data);
 		}
+		this.setLayer(1);
 	}
 
 	/** @returns {dosemuBBox.BoundingBox} the bounding box of this entity, in world space*/

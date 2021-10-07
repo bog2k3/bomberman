@@ -2,6 +2,8 @@ import { dosemuSprite } from "./node_modules/dosemu/index.js";
 import { bombSprites } from "./bomb-sprites.js";
 import * as constants from "./constants.js";
 import { GridEntity } from "./grid-entity.js";
+import { Fire } from "./fire.js";
+import * as collision from "./collision.js";
 
 export class Bomb extends GridEntity {
 
@@ -32,7 +34,41 @@ export class Bomb extends GridEntity {
 	}
 
 	explode() {
-		// TODO create flames
+		// create central fire
+		new Fire("center", this.row, this.column)
+		// go out from the center and create the flames
+		let directions = {
+			Up: { blocked: false, dx: 0, dy: -1 },
+			Down: { blocked: false, dx: 0, dy: 1 },
+			Left: { blocked: false, dx: -1, dy: 0 },
+			Right: { blocked: false, dx: 1, dy: 0 },
+		};
+		for (let i=0; i<this.power; i++) {
+			for (let dirKey in directions) {
+				const dir = directions[dirKey];
+				if (dir.blocked) {
+					continue;
+				}
+				const fRow = this.row + dir.dy * (i+1);
+				const fColumn = this.column + dir.dx * (i+1);
+				const cellType = collision.getMapCell(fRow, fColumn);
+				if ([-1, 2].includes(cellType)) {
+					// we got outside of map or hit an indestructible brick
+					dir.blocked = true;
+					continue;
+				}
+				// spawn the right type of fire
+				const isCap = i === this.power-1 || cellType === 1;
+				const fireType = isCap ? `cap${dirKey}` : (
+					["Up", "Down"].includes(dirKey) ? "middleV" : "middleH"
+				);
+				new Fire(fireType, fRow, fColumn);
+				// if we hit a regular brick, we stop here
+				if (cellType === 1) {
+					dir.blocked = true;
+				}
+			}
+		}
 		this.destroy();
 	}
 }

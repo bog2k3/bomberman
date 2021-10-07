@@ -45,6 +45,13 @@ export function isBombAt(row, column) {
 	return false;
 }
 
+export function getMapCell(row, column) {
+	if (row < 0 || row >= data.map.length || column < 0 || column >= data.map[0].length) {
+		return -1;
+	}
+	return data.map[row][column];
+}
+
 /** @param {number[][]} map */
 export function setMap(map) {
 	data.map = map;

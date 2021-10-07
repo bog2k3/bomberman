@@ -14,7 +14,7 @@ import cap4 from "./sprites/fire/cap-4.png.js";
 
 import { dosemuSprite } from "./node_modules/dosemu/index.js";
 
-const fireAnimationSpeed = 4;
+const fireAnimationSpeed = 8;
 
 export const fireSprites = {
 	/** @type {SpriteSequence} */

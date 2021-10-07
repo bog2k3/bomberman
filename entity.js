@@ -2,6 +2,8 @@ import { dosemuBBox } from "./node_modules/dosemu/index.js";
 
 export class Entity {
 
+	layer = 0;
+
 	constructor() {
 		if (Entity.onEntityCreated) {
 			Entity.onEntityCreated(this);
@@ -25,6 +27,15 @@ export class Entity {
 	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
 	 **/
 	draw(mapOffsX, mapOffsY) { throw "you must override abstract method."; }
+
+	/**
+	 * Sets the layer in which this entity resides. The layering affects the draw order.
+	 * The base layer (containing the bricks) is zero. Positive layers appear on top, and negative layers below.
+	 * @param {number} layerNumber
+	 */
+	setLayer(layerNumber) {
+		this.layer = layerNumber;
+	}
 
 	/**
 	 * @type {(entity: Entity) => void}

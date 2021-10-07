@@ -39,7 +39,7 @@ export class Player extends Character {
 		const spawnRow = this.getRow();
 		const spawnColumn = this.getColumn();
 		if (!collision.isBombAt(spawnRow, spawnColumn)) {
-			new Bomb(1, spawnRow, spawnColumn);
+			new Bomb(5, spawnRow, spawnColumn);
 		}
 	}
 }

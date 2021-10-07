@@ -1,10 +1,17 @@
 import { dosemuSprite } from "./node_modules/dosemu/index.js";
-import { GridEntity } from "./grid-entity";
+import { GridEntity } from "./grid-entity.js";
+import { fireSprites } from "./fire-sprites.js";
 
 export class Fire extends GridEntity {
 
-	constructor() {
-		super();
+	animationFrame = 0;
+	animationDirection = 1;
+
+	/** @param {"center"|"middleV"|"middleH"|"capRight"|"capLeft"|"capUp"|"capDown"} type */
+	constructor(type, row, column) {
+		super(row, column);
+		this.type = type;
+		this.setLayer(-1); // appear behind bricks
 	}
 
 	/** @returns {string} the type of entity */
@@ -12,6 +19,24 @@ export class Fire extends GridEntity {
 
 	/** @returns {dosemuSprite.Sprite} the current sprite to use for drawing */
 	getCurrentSprite() {
-		return new Sprite();
+		const frames = this.getSpriteSequence().frames;
+		return frames[Math.floor(this.animationFrame) % frames.length];
+	}
+
+	/** @private */
+	getSpriteSequence() {
+		return fireSprites[this.type];
+	}
+
+	update(dt) {
+		this.animationFrame += dt * this.getSpriteSequence().animationSpeed * this.animationDirection;
+		if (this.animationFrame >= this.getSpriteSequence().frames.length - 0.5) {
+			// reverse the animation
+			this.animationDirection = -1;
+		}
+		if (this.animationFrame < 0) {
+			// reached the end of the line
+			this.destroy();
+		}
 	}
 }

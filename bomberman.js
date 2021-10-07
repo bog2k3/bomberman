@@ -26,6 +26,7 @@ export function update(dt) {
 
 export function draw() {
 	[scrollX, scrollY] = getScrollOffsets();
+
 	// on which tile we start drawing:
 	const tileOffsX = Math.floor(scrollX / constants.TILE_SIZE);
 	const tileOffsY = Math.floor(scrollY / constants.TILE_SIZE);
@@ -33,13 +34,36 @@ export function draw() {
 	const nTilesX = Math.ceil(constants.SCREEN_WIDTH / constants.TILE_SIZE) + 1;
 	const nTilesY = Math.ceil(constants.SCREEN_HEIGHT / constants.TILE_SIZE) + 1;
 
+	// draw field (background):
 	for (let i=tileOffsY; i<map.length && i<tileOffsY+nTilesY; i++) {
 		for (let j=tileOffsX; j<map[0].length && j<tileOffsX+nTilesX; j++) {
-			drawTile(i, j, -scrollX, -scrollY);
+			if (map[i][j] === 0) {
+				drawTile(i, j, -scrollX, -scrollY);
+			}
 		}
 	}
 
-	entities.forEach(e => e.draw(-scrollX, -scrollY));
+	// draw entities below layer 0:
+	let iEntity = 0;
+	while (iEntity < entities.length && entities[iEntity].layer < 0) {
+		entities[iEntity].draw(-scrollX, -scrollY);
+		iEntity++;
+	}
+
+	// draw bricks (layer 0):
+	for (let i=tileOffsY; i<map.length && i<tileOffsY+nTilesY; i++) {
+		for (let j=tileOffsX; j<map[0].length && j<tileOffsX+nTilesX; j++) {
+			if (map[i][j] !== 0) {
+				drawTile(i, j, -scrollX, -scrollY);
+			}
+		}
+	}
+
+	// draw entities above layer 0:
+	while (iEntity < entities.length) {
+		entities[iEntity].draw(-scrollX, -scrollY);
+		iEntity++;
+	}
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -112,16 +136,35 @@ function buildCharacterSprites() {
 function reset() {
 	collision.clearData();
 	entities = [];
+	player = null;
 	selectMap(0);
-	let [playerRow, playerCol] = findPlayerSpawnPosition(map);
-	const playerX = playerCol * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
-	const playerY = playerRow * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
-	player = new Player({
-		x: playerX,
-		y: playerY,
-		speed: constants.PLAYER_INITIAL_SPEED * constants.TILE_SIZE,
-		spriteSet: playerSprites[0]
-	});
+	for (let i=0; i<map.length; i++) {
+		for (let j=0; j<map[i].length; j++) {
+			if (map[i][j] <= 2) {
+				continue; // brick type or empty
+			}
+			// some entity type
+			switch (map[i][j]) {
+				case 9: // player
+					map[i][j] = 0; // leave an empty space below
+					const playerX = j * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
+					const playerY = i * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
+					player = new Player({
+						x: playerX,
+						y: playerY,
+						speed: constants.PLAYER_INITIAL_SPEED * constants.TILE_SIZE,
+						spriteSet: playerSprites[0]
+					});
+					break;
+				default: // enemy
+					break;
+			}
+			map[i][j] = 0; // leave an empty space below entity
+		}
+	}
+	if (!player) {
+		console.error(`Player spawn position not found in map!`);
+	}
 
 	collision.setMap(map);
 }
@@ -180,25 +223,10 @@ function drawTile(row, col, mapDX, mapDY) {
 	dosemu.drawSprite(tileX, tileY, sprite);
 }
 
-/**
- *
- * @param {number[][]} map
- * @returns {[row: number, col: number]} the position of the player
- */
-function findPlayerSpawnPosition(map) {
-	for (let i=0; i<map.length; i++) {
-		for (let j=0; j<map[i].length; j++) {
-			if (map[i][j] === 9)
-				return [i, j];
-		}
-	}
-	console.error(`Player spawn position not found in map!`);
-	return [0, 0];
-}
-
 /** @param {Entity} entity */
 function handleEntityCreated(entity) {
-	entities.unshift(entity);
+	entities.push(entity);
+	entities.sort((a, b) => a.layer - b.layer);
 	collision.addEntity(entity);
 }
 
