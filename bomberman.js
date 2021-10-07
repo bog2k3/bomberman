@@ -63,6 +63,10 @@ export function draw() {
 		entities[iEntity].draw(-scrollX, -scrollY);
 		iEntity++;
 	}
+
+	if (player.isDestroyed) {
+		drawLoserBox();
+	}
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -72,6 +76,7 @@ const themes = [];
 
 let selectedTheme = 0;
 
+/** @type {Player} */
 let player = null;
 
 /**
@@ -233,4 +238,16 @@ function handleEntityCreated(entity) {
 function handleEntityDestroyed(entity) {
 	entities.splice(entities.indexOf(entity), 1);
 	world.removeEntity(entity);
+
+	if (entity === player) {
+		// player died
+		// TODO respawn or whatever
+	}
+}
+
+function drawLoserBox() {
+	dosemu.drawBar(70, 85, 245, 115, 0);
+	dosemu.drawRectangle(70, 85, 245, 115, 9);
+	dosemu.drawRectangle(68, 83, 247, 117, 0);
+	dosemu.drawText(160, 100, "You're dead! Loser!", 9, "center");
 }

@@ -34,6 +34,7 @@ export class Bomb extends GridEntity {
 	}
 
 	explode() {
+		this.destroy();
 		// create central fire
 		new Fire("center", this.row, this.column)
 		// go out from the center and create the flames
@@ -70,6 +71,10 @@ export class Bomb extends GridEntity {
 				}
 			}
 		}
-		this.destroy();
+	}
+
+	/** we've been fried by another explosion, so chain-reaction! */
+	fry() {
+		this.explode();
 	}
 }

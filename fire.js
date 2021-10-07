@@ -1,6 +1,7 @@
 import { dosemuSprite } from "./node_modules/dosemu/index.js";
 import { GridEntity } from "./grid-entity.js";
 import { fireSprites } from "./fire-sprites.js";
+import { checkCollision } from "./collision.js";
 
 export class Fire extends GridEntity {
 
@@ -12,6 +13,8 @@ export class Fire extends GridEntity {
 		super(row, column);
 		this.type = type;
 		this.setLayer(-1); // appear behind bricks
+
+		this.checkCollision();
 	}
 
 	/** @returns {string} the type of entity */
@@ -37,6 +40,14 @@ export class Fire extends GridEntity {
 		if (this.animationFrame < 0) {
 			// reached the end of the line
 			this.destroy();
+		}
+	}
+
+	checkCollision() {
+		const collisionResult = checkCollision(this.getBoundingBox(), this);
+		if (collisionResult && collisionResult.entity) {
+			// we hit an entity
+			collisionResult.entity.fry();
 		}
 	}
 }

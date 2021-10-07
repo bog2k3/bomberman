@@ -1,8 +1,9 @@
-import { checkCollision } from "./collision.js";
+import { checkCollision, CollisionResult } from "./collision.js";
 import { Entity } from "./entity.js";
 import { dosemu, dosemuBBox, dosemuSprite } from "./node_modules/dosemu/index.js";
 import { SpriteSequence } from "./sprite-sequence.js";
 import * as constants from "./constants.js";
+import { CharacterExplodeAnimation } from "./character-explode-animation.js";
 
 export class Character extends Entity {
 	x = 0;
@@ -16,7 +17,7 @@ export class Character extends Entity {
 	orientation = "down";
 	/** @private */
 	isStopped = true;
-	/** @type {{left: SpriteSequence, right: SpriteSequence, up: SpriteSequence, down: SpriteSequence}} */
+	/** @type {{left: SpriteSequence, right: SpriteSequence, up: SpriteSequence, down: SpriteSequence, explode: SpriteSequence}} */
 	spriteSet = {};
 
 	/** @type {dosemuBBox.BoundingBox} */
@@ -59,6 +60,21 @@ export class Character extends Entity {
 		dosemu.drawSprite(this.x + mapOffsX, this.y + mapOffsY, this.getCurrentSprite());
 	}
 
+	/** @virtual override this to take action when hitting a brick */
+	handleCollisionWithBrick(row, column, type) {
+		return;
+	}
+
+	/**
+	 * Override this to decide if certain collisions should be ignored
+	 * @virtual
+	 * @param {CollisionResult} collision
+	 * @returns {boolean}
+	 */
+	ignoreCollision(collision) {
+		return false;
+	}
+
 	update(dt) {
 		if (!this.isStopped) {
 			// update animation
@@ -72,10 +88,14 @@ export class Character extends Entity {
 				case "left": this.x -= delta; break;
 				case "right": this.x += delta; break;
 			}
-			if (checkCollision(dosemuBBox.moveBoundingBox(this.boundingBox, this.x, this.y), this)) {
+			const collisionResult = checkCollision(dosemuBBox.moveBoundingBox(this.boundingBox, this.x, this.y), this);
+			if (collisionResult && !this.ignoreCollision(collisionResult)) {
 				this.x = prevX;
 				this.y = prevY;
 				this.isStopped = true;
+				if (collisionResult.brick) {
+					this.handleCollisionWithBrick(collisionResult.brick.row, collisionResult.brick.column, collisionResult.brick.type);
+				}
 			}
 		}
 		if (this.isStopped) {
@@ -91,5 +111,12 @@ export class Character extends Entity {
 		}
 		this.isStopped = false;
 		this.orientation = direction;
+	}
+
+	/** we've been fried by an explosion */
+	fry() {
+		// create a dummy explode animation entity
+		new CharacterExplodeAnimation(this.spriteSet.explode, this.x, this.y);
+		this.destroy();
 	}
 }

@@ -3,6 +3,7 @@ import { dosemuBBox } from "./node_modules/dosemu/index.js";
 export class Entity {
 
 	layer = 0;
+	isDestroyed = false;
 
 	constructor() {
 		if (Entity.onEntityCreated) {
@@ -11,18 +12,22 @@ export class Entity {
 	}
 
 	destroy() {
-		if (Entity.onEntityDestroyed) {
-			Entity.onEntityDestroyed(this);
+		if (!this.isDestroyed) {
+			this.isDestroyed = true;
+			if (Entity.onEntityDestroyed) {
+				Entity.onEntityDestroyed(this);
+			}
 		}
 	}
 
-	/** @returns {string} the type of entity */
+	/** @abstract @returns {string} the type of entity */
 	getType() { throw "you must override abstract method."; }
 
-	/** @returns {dosemuBBox.BoundingBox} the bounding box of this entity, in world space*/
+	/** @abstract @returns {dosemuBBox.BoundingBox} the bounding box of this entity, in world space*/
 	getBoundingBox() { throw "you must override abstract method."; }
 
 	/**
+	 * @abstract
 	 * @param {number} mapOffsX the position of the map, relative to the screen, in pixels
 	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
 	 **/
@@ -36,6 +41,9 @@ export class Entity {
 	setLayer(layerNumber) {
 		this.layer = layerNumber;
 	}
+
+	/** @virtual Override this to react to being fried by an explosion */
+	fry() {}
 
 	/**
 	 * @type {(entity: Entity) => void}

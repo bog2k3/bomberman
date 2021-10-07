@@ -10,9 +10,16 @@ import player1_left3 from "./sprites/player1/left-3.png.js";
 import player1_right1 from "./sprites/player1/right-1.png.js";
 import player1_right2 from "./sprites/player1/right-2.png.js";
 import player1_right3 from "./sprites/player1/right-3.png.js";
+import player1_explode1 from "./sprites/player1/explode-1.png.js";
+import player1_explode2 from "./sprites/player1/explode-2.png.js";
+import player1_explode3 from "./sprites/player1/explode-3.png.js";
+import player1_explode4 from "./sprites/player1/explode-4.png.js";
+import player1_explode5 from "./sprites/player1/explode-5.png.js";
+import player1_explode6 from "./sprites/player1/explode-6.png.js";
+import player1_explode7 from "./sprites/player1/explode-7.png.js";
 import { SpriteSequence } from "./sprite-sequence.js";
 
-/** @type {{"up": SpriteSequence, "down": SpriteSequence, "left": SpriteSequence, "right": SpriteSequence}[]} */
+/** @type {{"up": SpriteSequence, "down": SpriteSequence, "left": SpriteSequence, "right": SpriteSequence, "explode": SpriteSequence}[]} */
 export const playerSprites = [
 	// Player 1
 	{
@@ -32,6 +39,10 @@ export const playerSprites = [
 			frames: [player1_right1, player1_right2, player1_right1, player1_right3],
 			animationSpeed: 10
 		},
+		"explode": {
+			frames: [player1_explode1, player1_explode2, player1_explode3, player1_explode4, player1_explode5, player1_explode6, player1_explode7],
+			animationSpeed: 5
+		}
 	},
 	// more to come
 ];

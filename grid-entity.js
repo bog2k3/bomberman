@@ -13,13 +13,13 @@ export class GridEntity extends Entity {
 		this.column = column;
 	}
 
-	/** @returns {dosemuSprite.Sprite} the current sprite to use for drawing */
+	/** @abstract @returns {dosemuSprite.Sprite} the current sprite to use for drawing */
 	getCurrentSprite() { throw "you must override abstract method."; }
 
 	/** @returns {dosemuBBox.BoundingBox} the bounding box of this entity, in world space*/
 	getBoundingBox() {
 		return dosemuBBox.moveBoundingBox(
-			{up: -8, down: 8, left: -8, right: 8},
+			{up: 0, down: 15, left: 0, right: 15},
 			this.column * constants.TILE_SIZE,
 			this.row * constants.TILE_SIZE
 		);

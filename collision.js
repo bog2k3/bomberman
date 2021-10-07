@@ -3,6 +3,13 @@ import { dosemuBBox } from "./node_modules/dosemu/index.js";
 import * as constants from "./constants.js";
 import { clamp } from "./math.js";
 
+export class CollisionResult {
+	/** @type {{row: number, column: number, type: number}|null} */
+	brick = null;
+	/** @type {Entity | null} */
+	entity = null;
+}
+
 /** @type {{map: number[][], entities: Entity[]}} */
 const data = {
 	map: [],
@@ -13,6 +20,7 @@ const data = {
  * Checks if the given bounding box collides with anything
  * @param {dosemuBBox.BoundingBox} boundingBox a world-space bounding box to check against the world
  * @param {Entity} owner the owner of the bounding box; this is required in order to ignore collisions with self
+ * @returns {CollisionResult|null} null if there's no collision, or a CollisionResult object
  * */
 export function checkCollision(boundingBox, owner) {
 	// step 1: check against bricks
@@ -23,12 +31,21 @@ export function checkCollision(boundingBox, owner) {
 	for (let row=rowStart; row<=rowEnd; row++) {
 		for (let col=colStart; col<=colEnd; col++) {
 			if ([1,2].includes(data.map[row][col])) {
-				return true;
+				return {
+					brick: {row: row, column: col, type: data.map[row][col]}
+				};
 			}
 		}
 	}
 	// step 2: check against other entities
-	// TODO
+	for (let entity of data.entities) {
+		if (entity !== owner && dosemuBBox.getBoundingBoxOverlap(boundingBox, entity.getBoundingBox())) {
+			return {
+				entity
+			};
+		}
+	}
+	return null;
 }
 
 /** @param {number[][]} map */
