@@ -34,8 +34,11 @@ export class Entity {
 	 **/
 	draw(mapOffsX, mapOffsY) { throw "you must override abstract method."; }
 
+	/** @virtual override this to implement update */
+	update(dt) {}
+
 	/**
-	 * Sets the layer in which this entity resides. The layering affects the draw order.
+ * Sets the layer in which this entity resides. The layering affects the draw order.
 	 * The base layer (containing the bricks) is zero. Positive layers appear on top, and negative layers below.
 	 * @param {number} layerNumber
 	 */

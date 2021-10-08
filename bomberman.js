@@ -10,6 +10,8 @@ import { playerSprites } from "./player-sprites.js";
 import * as world from "./world.js";
 import { clamp } from "./math.js";
 import { Entity } from "./entity.js";
+import { Enemy } from "./enemy.js";
+import { enemySprites } from "./enemy-sprites.js";
 
 export function init() {
 	buildThemes();
@@ -104,9 +106,9 @@ let playerHasDied = false;
  * 0 - empty space (field)
  * 1 - regular brick
  * 2 - indestructable brick
- * 3 - enemy type 1
- * 4 - enemy type 2
- * 5 - enemy type 3
+ * 3 - enemy type 0
+ * 4 - enemy type 1
+ * 5 - enemy type 2
  * ...
  * 9 - player
  */
@@ -178,7 +180,6 @@ function spawnEntities() {
 			// some entity type
 			switch (map[i][j]) {
 				case 9: // player
-					map[i][j] = 0; // leave an empty space below
 					if (player) {
 						break; // player is already spawned
 					}
@@ -192,6 +193,17 @@ function spawnEntities() {
 					});
 					break;
 				default: // enemy
+					const enemyX = j * constants.TILE_SIZE + constants.ENEMY_INITIAL_X_OFFS;
+					const enemyY = i * constants.TILE_SIZE + constants.ENEMY_INITIAL_Y_OFFS;
+					let enemyType = map[i][j] - 3;
+					enemyType = 0; // TODO remove hardcoding after adding all the sprites
+					new Enemy({
+						x: enemyX,
+						y: enemyY,
+						type: enemyType,
+						speed: constants.ENEMY_SPEED[enemyType] * constants.TILE_SIZE,
+						spriteSet: enemySprites[enemyType]
+					});
 					break;
 			}
 			map[i][j] = 0; // leave an empty space below entity

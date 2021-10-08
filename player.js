@@ -10,16 +10,17 @@ export class Player extends Character {
 	/** @type {Bomb[]} */
 	overlapingOwnBombs = [];
 
-	bombPower = 1;
+	bombPower = 2;
 
 	/** @param {Character} data */
 	constructor(data) {
 		super(data);
 	}
 
-	/** @returns {string} the type of entity */
+	/** @override @returns {string} the type of entity */
 	getType() { return "player"; }
 
+	/** @override */
 	update(dt) {
 		super.update(dt);
 		if (dosemu.isKeyPressed("ArrowDown")) {
@@ -50,7 +51,7 @@ export class Player extends Character {
 
 	/**
 	 * We ignore collision with a bomb if we just spawned it and haven't moved away from it yet
-	 * @virtual
+	 * @override
 	 * @param {CollisionResult} collision
 	 * @returns {boolean}
 	 */

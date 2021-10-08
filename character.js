@@ -75,6 +75,7 @@ export class Character extends Entity {
 		return false;
 	}
 
+	/** @override @virtual */
 	update(dt) {
 		if (!this.isStopped) {
 			// update animation
@@ -115,7 +116,7 @@ export class Character extends Entity {
 		this.orientation = direction;
 	}
 
-	/** we've been fried by an explosion */
+	/** @override we've been fried by an explosion */
 	fry() {
 		// create a dummy explode animation entity
 		new CharacterExplodeAnimation(this.spriteSet.explode, this.x, this.y);
