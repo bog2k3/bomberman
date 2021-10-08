@@ -115,25 +115,25 @@ let playerHasDied = false;
  */
 const map0 = [
 	[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-	[2, 9, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-	[2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-	[2, 0, 0, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-	[2, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2],
-	[2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 2, 2, 0, 0, 2],
-	[2, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 0, 0, 0, 0, 2, 0, 1, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-	[2, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 2, 2, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-	[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-	[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+	[2, 9, 0, 1, 0, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 0, 9, 2],
+	[2, 0, 1, 1, 0, 1, 1, 2, 1, 1, 2, 1, 0, 0, 0, 1, 1, 1, 0, 2, 0, 1, 2, 0, 1, 1, 1, 1, 0, 2],
+	[2, 1, 1, 2, 3, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 2, 0, 1, 1, 3, 1, 0, 0, 1, 1, 2],
+	[2, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 2, 3, 1, 1, 1, 1, 2, 2, 2, 2, 2],
+	[2, 1, 1, 0, 0, 2, 1, 0, 1, 1, 0, 1, 2, 1, 0, 0, 1, 1, 1, 2, 0, 0, 1, 0, 1, 2, 0, 0, 2, 2],
+	[2, 1, 1, 1, 1, 2, 2, 3, 1, 0, 1, 2, 2, 1, 1, 4, 2, 1, 0, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 2],
+	[2, 3, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 2],
+	[2, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 2, 1, 1, 2, 2, 1, 0, 1, 1, 1, 1, 1, 0, 2],
+	[2, 2, 2, 2, 2, 2, 2, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 0, 1, 2, 2, 2, 1, 0, 2],
+	[2, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 4, 1, 1, 2, 0, 1, 0, 0, 2],
+	[2, 1, 0, 1, 0, 1, 1, 2, 0, 1, 0, 1, 0, 2, 4, 1, 1, 1, 2, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 2],
+	[2, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 0, 2, 2, 2, 2, 2, 2],
+	[2, 1, 0, 1, 1, 2, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2],
+	[2, 2, 2, 1, 0, 2, 3, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 2, 0, 1, 1, 0, 2, 1, 1, 1, 2],
+	[2, 1, 0, 1, 1, 2, 0, 1, 1, 1, 1, 2, 2, 2, 1, 0, 1, 0, 0, 2, 2, 3, 1, 0, 1, 3, 0, 0, 2, 2],
+	[2, 1, 1, 2, 1, 1, 1, 1, 0, 3, 1, 2, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 2, 1, 1, 1, 1, 1, 1, 2],
+	[2, 0, 1, 1, 0, 3, 1, 1, 1, 1, 1, 2, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 3, 1, 0, 1, 1, 1, 0, 2],
+	[2, 9, 0, 1, 1, 1, 2, 0, 1, 1, 0, 2, 1, 1, 0, 1, 1, 1, 1, 1, 2, 2, 1, 0, 0, 1, 1, 0, 9, 2],
+	[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ];
 
 const maps = [map0];
@@ -319,7 +319,29 @@ function toggleEditMode() {
 }
 
 function handleEditModeKey(key) {
+	switch (key) {
+		case '`': editTileType = 0; break;
+		case '1': editTileType = 1; break;
+		case '2': editTileType = 2; break;
+		case '3': editTileType = 3; break;
+		case '4': editTileType = 4; break;
+		case '5': editTileType = 5; break;
+		case '6': editTileType = 6; break;
+		case '7': editTileType = 7; break;
+		case '8': editTileType = 8; break;
+		case '9': editTileType = 9; break;
+		case 'f': fillMapWithBricks(); break;
+	}
+}
 
+function fillMapWithBricks() {
+	for (let i=0; i<map.length; i++) {
+		for (let j=0; j<map[0].length; j++) {
+			if (map[i][j] === 0) {
+				map[i][j] = 1;
+			}
+		}
+	}
 }
 
 function writeMapToConsole() {
@@ -344,15 +366,28 @@ function withinMap(row, col) {
 function drawEditModeOverlay(tileOffsX, tileOffsY, nTilesX, nTilesY) {
 	for (let i=tileOffsY; i<tileOffsY + nTilesY; i++) {
 		for (let j=tileOffsX; j<tileOffsX + nTilesX; j++) {
-			if (!withinMap(i, j)) {
-				continue;
-			}
 			if (map[i][j] === 9) {
 				// draw the player spawn position
 				dosemu.drawSprite(
 					j * constants.TILE_SIZE - scrollX + constants.PLAYER_INITIAL_X_OFFS,
 					i * constants.TILE_SIZE - scrollY + constants.PLAYER_INITIAL_Y_OFFS,
 					playerSprites[0].down.frames[0]
+				);
+			} else if (map[i][j] > 2) {
+				// enemy spawn point
+				dosemu.drawRectangle(
+					j * constants.TILE_SIZE - scrollX + 1,
+					i * constants.TILE_SIZE - scrollY + 1,
+					(j+1) * constants.TILE_SIZE - scrollX - 2,
+					(i+1) * constants.TILE_SIZE - scrollY - 2,
+					9
+				);
+				dosemu.drawText(
+					j * constants.TILE_SIZE - scrollX + 8,
+					i * constants.TILE_SIZE - scrollY + 8,
+					map[i][j].toString(),
+					9,
+					"center"
 				);
 			}
 		}
@@ -414,11 +449,14 @@ function updateEditMode(dt) {
 	}
 	if (dosemu.isKeyPressed("a")) {
 		scrollX -= EDIT_MODE_SCROLL_SPEED * dt;
-	} else if (dosemu.isKeyPressed("d")) {
+	}
+	if (dosemu.isKeyPressed("d")) {
 		scrollX += EDIT_MODE_SCROLL_SPEED * dt;
-	} else if (dosemu.isKeyPressed("w")) {
+	}
+	if (dosemu.isKeyPressed("w")) {
 		scrollY -= EDIT_MODE_SCROLL_SPEED * dt;
-	} else if (dosemu.isKeyPressed("s")) {
+	}
+	if (dosemu.isKeyPressed("s")) {
 		scrollY += EDIT_MODE_SCROLL_SPEED * dt;
 	}
 }
