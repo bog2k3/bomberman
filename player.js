@@ -10,6 +10,8 @@ export class Player extends Character {
 	/** @type {Bomb[]} */
 	overlapingOwnBombs = [];
 
+	bombPower = 1;
+
 	/** @param {Character} data */
 	constructor(data) {
 		super(data);
@@ -63,7 +65,7 @@ export class Player extends Character {
 		const spawnRow = this.getRow();
 		const spawnColumn = this.getColumn();
 		if (!world.isBombAt(spawnRow, spawnColumn)) {
-			this.overlapingOwnBombs.push(new Bomb(5, spawnRow, spawnColumn));
+			this.overlapingOwnBombs.push(new Bomb(this.bombPower, spawnRow, spawnColumn));
 		}
 	}
 }

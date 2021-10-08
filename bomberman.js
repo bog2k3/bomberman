@@ -13,7 +13,6 @@ import { Entity } from "./entity.js";
 
 export function init() {
 	buildThemes();
-	buildCharacterSprites();
 	Entity.onEntityCreated = handleEntityCreated;
 	Entity.onEntityDestroyed = handleEntityDestroyed;
 	reset();
@@ -89,7 +88,7 @@ export function draw() {
 
 let EDIT_MODE = false;
 const EDIT_MODE_SCROLL_SPEED = 150; // pixels per second
-let editTileType = 1;
+let editTileType = 1; // the type of tile under cursor
 
 /** @type {Theme[]} */
 const themes = [];
@@ -134,10 +133,11 @@ const map0 = [
 	[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ];
 
-const maps = [map0];
+/** the map templates, we instantiate the map out of these */
+const mapTemplates = [map0];
 
 /** @type {number[][]} */
-let map = [];
+let map = []; // the map instance
 let maxMapX = 0;
 let maxMapY = 0;
 let scrollX = 0;
@@ -153,10 +153,6 @@ function buildThemes() {
 		],
 		fieldSprite: sprite_field1
 	});
-}
-
-function buildCharacterSprites() {
-
 }
 
 function reset() {
@@ -205,7 +201,7 @@ function spawnEntities() {
 
 function selectMap(index) {
 	// make a deep copy, so we don't ever alter the map template
-	map = maps[index].map(
+	map = mapTemplates[index].map(
 		row => row.map(x => x)
 	);
 	maxMapX = map[0].length * constants.TILE_SIZE;
@@ -304,7 +300,7 @@ function toggleEditMode() {
 	EDIT_MODE = !EDIT_MODE;
 	if (EDIT_MODE) {
 		dosemu.showMouse();
-		map = maps[0]; // operate on the template directly
+		map = mapTemplates[0]; // operate on the template directly
 	} else {
 		dosemu.hideMouse();
 		writeMapToConsole();
@@ -325,6 +321,7 @@ function handleEditModeKey(key) {
 		case '8': editTileType = 8; break;
 		case '9': editTileType = 9; break;
 		case 'f': fillMapWithBricks(); break;
+		case 'c': clearMap(); break;
 	}
 }
 
@@ -334,6 +331,14 @@ function fillMapWithBricks() {
 			if (map[i][j] === 0) {
 				map[i][j] = 1;
 			}
+		}
+	}
+}
+
+function clearMap() {
+	for (let i=0; i<map.length; i++) {
+		for (let j=0; j<map[0].length; j++) {
+			map[i][j] = 0;
 		}
 	}
 }
