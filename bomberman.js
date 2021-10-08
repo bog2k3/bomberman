@@ -17,25 +17,33 @@ export function init() {
 	Entity.onEntityCreated = handleEntityCreated;
 	Entity.onEntityDestroyed = handleEntityDestroyed;
 	reset();
+
+	registerCommandHandlers();
 }
 
 export function update(dt) {
-	entities.forEach(e => e.update(dt));
+	if (!EDIT_MODE) {
+		entities.forEach(e => e.update(dt));
+	} else {
+		updateEditMode(dt);
+	}
 }
 
 export function draw() {
-	[scrollX, scrollY] = getScrollOffsets();
+	if (!EDIT_MODE) {
+		[scrollX, scrollY] = getScrollOffsets();
+	}
 
 	// on which tile we start drawing:
-	const tileOffsX = Math.floor(scrollX / constants.TILE_SIZE);
-	const tileOffsY = Math.floor(scrollY / constants.TILE_SIZE);
+	const tileOffsX = clamp(Math.floor(scrollX / constants.TILE_SIZE), 0, map[0].length - 1);
+	const tileOffsY = clamp(Math.floor(scrollY / constants.TILE_SIZE), 0, map.length - 1);
 	// how many tiles to draw:
-	const nTilesX = Math.ceil(constants.SCREEN_WIDTH / constants.TILE_SIZE) + 1;
-	const nTilesY = Math.ceil(constants.SCREEN_HEIGHT / constants.TILE_SIZE) + 1;
+	const nTilesX = Math.min(Math.ceil(constants.SCREEN_WIDTH / constants.TILE_SIZE) + 1, map[0].length - tileOffsX);
+	const nTilesY = Math.min(Math.ceil(constants.SCREEN_HEIGHT / constants.TILE_SIZE) + 1, map.length - tileOffsY);
 
 	// draw field (background):
-	for (let i=tileOffsY; i<map.length && i<tileOffsY+nTilesY; i++) {
-		for (let j=tileOffsX; j<map[0].length && j<tileOffsX+nTilesX; j++) {
+	for (let i = tileOffsY; i < map.length && i < tileOffsY + nTilesY; i++) {
+		for (let j = tileOffsX; j < map[0].length && j < tileOffsX + nTilesX; j++) {
 			if (map[i][j] === 0) {
 				drawTile(i, j, -scrollX, -scrollY);
 			}
@@ -44,32 +52,46 @@ export function draw() {
 
 	// draw entities below layer 0:
 	let iEntity = 0;
-	while (iEntity < entities.length && entities[iEntity].layer < 0) {
-		entities[iEntity].draw(-scrollX, -scrollY);
-		iEntity++;
+	if (!EDIT_MODE) {
+		while (iEntity < entities.length && entities[iEntity].layer < 0) {
+			entities[iEntity].draw(-scrollX, -scrollY);
+			iEntity++;
+		}
 	}
 
 	// draw bricks (layer 0):
-	for (let i=tileOffsY; i<map.length && i<tileOffsY+nTilesY; i++) {
-		for (let j=tileOffsX; j<map[0].length && j<tileOffsX+nTilesX; j++) {
+	for (let i = tileOffsY; i < map.length && i < tileOffsY + nTilesY; i++) {
+		for (let j = tileOffsX; j < map[0].length && j < tileOffsX + nTilesX; j++) {
 			if (map[i][j] !== 0) {
 				drawTile(i, j, -scrollX, -scrollY);
 			}
 		}
 	}
 
-	// draw entities above layer 0:
-	while (iEntity < entities.length) {
-		entities[iEntity].draw(-scrollX, -scrollY);
-		iEntity++;
+	if (!EDIT_MODE) {
+		// draw entities above layer 0:
+		while (iEntity < entities.length) {
+			entities[iEntity].draw(-scrollX, -scrollY);
+			iEntity++;
+		}
+
+		if (playerHasDied) {
+			drawLoserBox();
+		}
 	}
 
-	if (player.isDestroyed) {
-		drawLoserBox();
+	if (EDIT_MODE) {
+		drawEditModeOverlay(tileOffsX, tileOffsY, nTilesX, nTilesY);
 	}
 }
 
 // --------------------------------------------------------------------------------------------------
+
+let EDIT_MODE = false;
+const EDIT_MODE_SCROLL_SPEED = 100; // pixels per second
+let editTileType = 1;
+let editScrollX = 0;
+let editScrollY = 0;
 
 /** @type {Theme[]} */
 const themes = [];
@@ -78,6 +100,8 @@ let selectedTheme = 0;
 
 /** @type {Player} */
 let player = null;
+
+let playerHasDied = false;
 
 /**
  * 0 - empty space (field)
@@ -141,9 +165,19 @@ function reset() {
 	world.clearData();
 	entities = [];
 	player = null;
+	playerHasDied = false;
 	selectMap(0);
-	for (let i=0; i<map.length; i++) {
-		for (let j=0; j<map[i].length; j++) {
+	spawnEntities();
+	if (!player) {
+		console.error(`Player spawn position not found in map!`);
+	}
+
+	world.setMap(map);
+}
+
+function spawnEntities() {
+	for (let i = 0; i < map.length; i++) {
+		for (let j = 0; j < map[i].length; j++) {
 			if (map[i][j] <= 2) {
 				continue; // brick type or empty
 			}
@@ -151,6 +185,9 @@ function reset() {
 			switch (map[i][j]) {
 				case 9: // player
 					map[i][j] = 0; // leave an empty space below
+					if (player) {
+						break; // player is already spawned
+					}
 					const playerX = j * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
 					const playerY = i * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
 					player = new Player({
@@ -166,11 +203,6 @@ function reset() {
 			map[i][j] = 0; // leave an empty space below entity
 		}
 	}
-	if (!player) {
-		console.error(`Player spawn position not found in map!`);
-	}
-
-	world.setMap(map);
 }
 
 function selectMap(index) {
@@ -240,8 +272,11 @@ function handleEntityDestroyed(entity) {
 	world.removeEntity(entity);
 
 	if (entity === player) {
-		// player died
-		// TODO respawn or whatever
+		// player was destroyed, we wait for the explode animation to finish
+		setTimeout(() => {
+			// TODO respawn or whatever
+			playerHasDied = true;
+		}, 1500);
 	}
 }
 
@@ -250,4 +285,144 @@ function drawLoserBox() {
 	dosemu.drawRectangle(70, 85, 245, 115, 9);
 	dosemu.drawRectangle(68, 83, 247, 117, 0);
 	dosemu.drawText(160, 100, "You're dead! Loser!", 9, "center");
+}
+
+function registerCommandHandlers() {
+	dosemu.onKeyDown((key) => {
+		switch (key) {
+			case "q":
+				toggleEditMode();
+				break;
+			default:
+				if (EDIT_MODE) {
+					handleEditModeKey(key);
+				}
+		}
+	});
+	dosemu.onMouseDown((x, y, btn) => {
+		if (btn === 2) {
+			nextEditTileType();
+		}
+	})
+}
+
+function toggleEditMode() {
+	EDIT_MODE = !EDIT_MODE;
+	if (EDIT_MODE) {
+		dosemu.showMouse();
+		map = maps[0]; // operate on the template directly
+	} else {
+		dosemu.hideMouse();
+		writeMapToConsole();
+		reset();
+	}
+}
+
+function handleEditModeKey(key) {
+
+}
+
+function writeMapToConsole() {
+	console.log("[");
+	for (let i=0; i<map.length; i++) {
+		console.log(`[${map[i].join(', ')}],`);
+	}
+	console.log("];");
+}
+
+function getMouseRowCol() {
+	const [mouseX, mouseY] = dosemu.getMousePosition();
+	const mouseCol = Math.floor((mouseX + scrollX) / constants.TILE_SIZE);
+	const mouseRow = Math.floor((mouseY + scrollY) / constants.TILE_SIZE);
+	return [mouseRow, mouseCol];
+}
+
+function withinMap(row, col) {
+	return row >= 0 && row < map.length && col >= 0 && col < map[0].length;
+}
+
+function drawEditModeOverlay(tileOffsX, tileOffsY, nTilesX, nTilesY) {
+	for (let i=tileOffsY; i<tileOffsY + nTilesY; i++) {
+		for (let j=tileOffsX; j<tileOffsX + nTilesX; j++) {
+			if (!withinMap(i, j)) {
+				continue;
+			}
+			if (map[i][j] === 9) {
+				// draw the player spawn position
+				dosemu.drawSprite(
+					j * constants.TILE_SIZE - scrollX + constants.PLAYER_INITIAL_X_OFFS,
+					i * constants.TILE_SIZE - scrollY + constants.PLAYER_INITIAL_Y_OFFS,
+					playerSprites[0].down.frames[0]
+				);
+			}
+		}
+	}
+	const [mouseRow, mouseCol] = getMouseRowCol();
+	if (!withinMap(mouseRow, mouseCol)) {
+		return;
+	}
+	let sprite = null;
+	let spriteOffsX = 0;
+	let spriteOffsY = 0;
+	switch (editTileType) {
+		case 0: sprite = themes[selectedTheme].fieldSprite; break;
+		case 1:
+		case 2: sprite = themes[selectedTheme].brickSprites[editTileType - 1]; break;
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		case 8: break;
+		case 9:
+			sprite = playerSprites[0].down.frames[0];
+			spriteOffsX = constants.PLAYER_INITIAL_X_OFFS;
+			spriteOffsY = constants.PLAYER_INITIAL_Y_OFFS;
+			break;
+	}
+	if (sprite) {
+		dosemu.drawSprite(
+			mouseCol * constants.TILE_SIZE - scrollX + spriteOffsX,
+			mouseRow * constants.TILE_SIZE - scrollY + spriteOffsY,
+			sprite,
+			true
+		);
+	} else {
+		dosemu.drawText(
+			mouseCol * constants.TILE_SIZE - scrollX + constants.TILE_SIZE / 2,
+			mouseRow * constants.TILE_SIZE - scrollY + constants.TILE_SIZE / 2,
+			editTileType.toString(),
+			9,
+			"center"
+		);
+	}
+	dosemu.drawRectangle(
+		mouseCol * constants.TILE_SIZE - scrollX,
+		mouseRow * constants.TILE_SIZE - scrollY,
+		mouseCol * constants.TILE_SIZE - scrollX + constants.TILE_SIZE - 1,
+		mouseRow * constants.TILE_SIZE - scrollY + constants.TILE_SIZE - 1,
+		9
+	);
+}
+
+function updateEditMode(dt) {
+	if (dosemu.isMouseButtonDown(0)) {
+		const [mouseRow, mouseCol] = getMouseRowCol();
+		if (withinMap(mouseRow, mouseCol)) {
+			map[mouseRow][mouseCol] = editTileType;
+		}
+	}
+	if (dosemu.isKeyPressed("a")) {
+		scrollX -= EDIT_MODE_SCROLL_SPEED * dt;
+	} else if (dosemu.isKeyPressed("d")) {
+		scrollX += EDIT_MODE_SCROLL_SPEED * dt;
+	} else if (dosemu.isKeyPressed("w")) {
+		scrollY -= EDIT_MODE_SCROLL_SPEED * dt;
+	} else if (dosemu.isKeyPressed("s")) {
+		scrollY += EDIT_MODE_SCROLL_SPEED * dt;
+	}
+}
+
+function nextEditTileType() {
+	editTileType = (editTileType + 1) % 10;
 }
