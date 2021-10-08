@@ -40,7 +40,7 @@ export class CharacterExplodeAnimation extends Entity {
 	 * @param {number} mapOffsX the position of the map, relative to the screen, in pixels
 	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
 	 **/
-	 draw(mapOffsX, mapOffsY) {
+	draw(mapOffsX, mapOffsY) {
 		dosemu.drawSprite(this.x + mapOffsX, this.y + mapOffsY, this.getCurrentSprite());
 	}
 
