@@ -90,9 +90,11 @@ export class Character extends Entity {
 			}
 			const collisionResult = checkCollision(dosemuBBox.moveBoundingBox(this.boundingBox, this.x, this.y), this);
 			if (collisionResult && !this.ignoreCollision(collisionResult)) {
-				this.x = prevX;
-				this.y = prevY;
-				this.isStopped = true;
+				if (!collisionResult.entity || collisionResult.entity.isSolid) {
+					this.x = prevX;
+					this.y = prevY;
+					this.isStopped = true;
+				}
 				if (collisionResult.brick) {
 					this.handleCollisionWithBrick(collisionResult.brick.row, collisionResult.brick.column, collisionResult.brick.type);
 				}

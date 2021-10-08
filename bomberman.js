@@ -90,8 +90,6 @@ export function draw() {
 let EDIT_MODE = false;
 const EDIT_MODE_SCROLL_SPEED = 100; // pixels per second
 let editTileType = 1;
-let editScrollX = 0;
-let editScrollY = 0;
 
 /** @type {Theme[]} */
 const themes = [];
@@ -245,15 +243,15 @@ function drawTile(row, col, mapDX, mapDY) {
 	const tileX = col * constants.TILE_SIZE + mapDX;
 	const tileY = row * constants.TILE_SIZE + mapDY;
 	let sprite = null;
-	if ([1, 2].includes(map[row][col])) {
+	if (map[row][col] === 0) {
+		// if the map is 0, we  draw a field sprite at that location
+		sprite = themes[selectedTheme].fieldSprite;
+	} else if ([1, 2].includes(map[row][col])) {
 		// brick type
 		sprite = themes[selectedTheme].brickSprites[map[row][col] - 1];
-	} else {
-		// even if the map is not 0 (enemy or player), we still draw a field sprite at that location
-		sprite = themes[selectedTheme].fieldSprite;
 	}
 	if (!sprite) {
-		console.log(`no tile sprite for row=${row}, col=${col}, map[][]=${map[row][col]}`);
+		console.error(`no tile sprite for row=${row}, col=${col}, map[][]=${map[row][col]}`);
 		return;
 	}
 	dosemu.drawSprite(tileX, tileY, sprite);

@@ -12,6 +12,7 @@ export class Fire extends GridEntity {
 	constructor(type, row, column) {
 		super(row, column);
 		this.type = type;
+		this.isSolid = false; // don't prevent other entities from going over fire
 		this.setLayer(-1); // appear behind bricks
 
 		this.checkCollision();
@@ -41,11 +42,12 @@ export class Fire extends GridEntity {
 			// reached the end of the line
 			this.destroy();
 		}
+		this.checkCollision();
 	}
 
 	checkCollision() {
 		const collisionResult = checkCollision(this.getBoundingBox(), this);
-		if (collisionResult && collisionResult.entity) {
+		if (collisionResult && collisionResult.entity && !collisionResult.entity.isDestroyed) {
 			// we hit an entity
 			collisionResult.entity.fry();
 		}

@@ -3,6 +3,7 @@ import { dosemuBBox } from "./node_modules/dosemu/index.js";
 export class Entity {
 
 	layer = 0;
+	isSolid = true;
 	isDestroyed = false;
 
 	constructor() {
