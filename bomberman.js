@@ -12,12 +12,15 @@ import { clamp } from "./math.js";
 import { Entity } from "./entity.js";
 import { Enemy } from "./enemy.js";
 import { enemySprites } from "./enemy-sprites.js";
+import { mapsCollection } from "./maps.js";
 
 export function init() {
 	buildThemes();
 	Entity.onEntityCreated = handleEntityCreated;
 	Entity.onEntityDestroyed = handleEntityDestroyed;
 	reset();
+	// selectMap(mapsCollection[0]); // select a specific map
+	selectMap(); // no arguments will create a random map
 
 	registerCommandHandlers();
 }
@@ -128,13 +131,6 @@ function reset() {
 	entities = [];
 	player = null;
 	playerHasDied = false;
-	selectMap();
-	spawnEntities();
-	if (!player) {
-		console.error(`Player spawn position not found in map!`);
-	}
-
-	world.setMap(map);
 }
 
 function spawnEntities() {
@@ -175,20 +171,23 @@ function spawnEntities() {
 			map[i][j] = 0; // leave an empty space below entity
 		}
 	}
+	if (!player) {
+		console.error(`Player spawn position not found in map!`);
+	}
 }
 
-function selectMap(index) {
-	if (index === undefined) {
-		// generate a random map
-		randomMap()
-	} else {
-		// make a deep copy, so we don't ever alter the map template
-		map = mapTemplates[index].map(
-			row => row.map(x => x)
-		);
-	}
+/** @param {number[][]} mapTemplate (Optional) the template to instantiate the map from; if missing, a random map will be generated */
+function selectMap(template) {
+	mapTemplate = template || randomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS);
+	// make a deep copy, so we don't ever alter the map template while playing
+	map = mapTemplate.map(
+		row => row.map(x => x)
+	);
 	maxMapX = map[0].length * constants.TILE_SIZE;
 	maxMapY = map.length * constants.TILE_SIZE;
+
+	world.setMap(map);
+	spawnEntities();
 }
 
 /** @returns {[ofsX: number, ofsY: number]} */
@@ -283,11 +282,12 @@ function toggleEditMode() {
 	EDIT_MODE = !EDIT_MODE;
 	if (EDIT_MODE) {
 		dosemu.showMouse();
-		map = mapTemplates[0]; // operate on the template directly
+		map = mapTemplate; // operate on the template directly while editing
 	} else {
 		dosemu.hideMouse();
 		writeMapToConsole();
 		reset();
+		selectMap(mapTemplate);
 	}
 }
 
@@ -305,7 +305,7 @@ function handleEditModeKey(key) {
 		case '9': editTileType = 9; break;
 		case 'f': fillMapWithBricks(); break;
 		case 'c': clearMap(); break;
-		case 'r': randomMap(constants.RANDOM_MAP_FILL_FACTOR, constants.RANDOM_MAP_ENEMY_DENSITY); break;
+		case 'r': map = mapTemplate = randomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS); break;
 	}
 }
 
@@ -328,51 +328,57 @@ function clearMap() {
 }
 
 /**
- *
- * @param {*} rows
- * @param {*} cols
- * @param {*} fillFactor
- * @param {*} enemyDensity
+ * Generates and returns a random map
+ * @param {number} nRows number of rows for the map
+ * @param {number} nCols number of columns
  */
-function randomMap(rows, cols, fillFactor, enemyDensity) {
-	clearMap();
+function randomMap(nRows, nCols) {
+	let theMap = [];
+	// create empty map:
+	for (let i=0; i<nRows; i++) {
+		theMap.push([]);
+		for (let j=0; j<nCols; j++) {
+			theMap[i][j] = 0;
+		}
+	}
 	// top and bottom borders:
-	for (let i=0; i<map[0].length; i++) {
-		map[0][i] = 2;
-		map[map.length-1][i] = 2;
+	for (let i=0; i<nCols; i++) {
+		theMap[0][i] = 2;
+		theMap[nRows-1][i] = 2;
 	}
 	// left and right borders:
-	for (let i=0; i<map.length; i++) {
-		map[i][0] = 2;
-		map[i][map[i].length-1] = 2;
+	for (let i=0; i<nRows; i++) {
+		theMap[i][0] = 2;
+		theMap[i][nCols-1] = 2;
 	}
+	const fillFactor = constants.RANDOM_MAP_FILL_FACTOR_MIN + (constants.RANDOM_MAP_FILL_FACTOR_MAX - constants.RANDOM_MAP_FILL_FACTOR_MIN) * Math.random();
 	// destructable bricks:
-	for (let i=1; i<map.length-1; i++) {
-		for (let j=1; j<map[i].length-1; j++) {
+	for (let i=1; i<nRows-1; i++) {
+		for (let j=1; j<nCols-1; j++) {
 			if (i%2===0 && j%2===0) {
-				map[i][j] = 2;
+				theMap[i][j] = 2;
 			} else {
 				if (Math.random() < fillFactor) {
-					map[i][j] = 1;
+					theMap[i][j] = 1;
 				}
 			}
 		}
 	}
 	// player spawn positions:
-	const halfRow = Math.floor(map.length/2);
-	const halfCol = Math.floor(map[0].length/2);
-	const spawnPositions = [
+	const halfRow = Math.floor(nRows/2);
+	const halfCol = Math.floor(nCols/2);
+	const playerSpawnPositions = [
 		[1, 1],
-		[1, map[0].length-2],
-		[map.length-2, 1],
-		[map.length-2, map[0].length-2],
+		[1, nCols-2],
+		[nRows-2, 1],
+		[nRows-2, nCols-2],
 		[halfRow, halfCol],
 		[1, halfCol],
-		[map.length-2,halfCol]
+		[nRows-2,halfCol]
 	];
-	for (let pos of spawnPositions) {
+	for (let pos of playerSpawnPositions) {
 		const row = pos[0], col = pos[1];
-		if (map[row, col] === 2) {
+		if (theMap[row, col] === 2) {
 			// we landed on an indestructable brick, shift the position
 			if (col <= halfCol) {
 				col++;
@@ -382,23 +388,57 @@ function randomMap(rows, cols, fillFactor, enemyDensity) {
 		}
 		pos[0] = row; // update the altered position in the array since we'll use them later
 		pos[1] = col;
-		map[row][col] = 9;
+		theMap[row][col] = 9;
 		// make some room around
-		if (map[row-1][col] === 1) {
-			map[row-1][col] = 0;
+		if (theMap[row-1][col] === 1) {
+			theMap[row-1][col] = 0;
 		}
-		if (map[row+1][col] === 1) {
-			map[row+1][col] = 0;
+		if (theMap[row+1][col] === 1) {
+			theMap[row+1][col] = 0;
 		}
-		if (map[row][col-1] === 1) {
-			map[row][col-1] = 0;
+		if (theMap[row][col-1] === 1) {
+			theMap[row][col-1] = 0;
 		}
-		if (map[row][col+1] === 1) {
-			map[row][col+1] = 0;
+		if (theMap[row][col+1] === 1) {
+			theMap[row][col+1] = 0;
 		}
 	}
 	// create some enemies:
-	const enemyCount = map.length * map[0].length * enemyDensity;
+	let enemyCount = Math.floor(nRows * nCols * constants.RANDOM_MAP_ENEMY_DENSITY);
+	while (enemyCount > 0) {
+		let foundSuitablePosition = false;
+		let nTries = 0;
+		while (!foundSuitablePosition && nTries < 20) {
+			let row = Math.floor(Math.random() * nRows);
+			let col = Math.floor(Math.random() * nCols);
+			if (isValidPositionForEnemy(row, col, theMap, playerSpawnPositions)) {
+				foundSuitablePosition = true;
+				theMap[row][col] = 3;
+				enemyCount--;
+			} else {
+				nTries++;
+			}
+		}
+		if (!foundSuitablePosition) {
+			enemyCount = 0; // we can't place any more enemies
+		}
+	}
+	return theMap;
+}
+
+function isValidPositionForEnemy(row, col, map, playerSpawnPos) {
+	// valid positions for an enemy are at sufficient manhattan distance from a player spawn pos and is not on an indestructable brick
+	const minDistance = 4;
+	if (map[row][col] === 2) {
+		return false;
+	}
+	for (let spawnPos of playerSpawnPos) {
+		const dist = Math.abs(spawnPos[0] - row) + Math.abs(spawnPos[1] - col);
+		if (dist < minDistance) {
+			return false;
+		}
+	}
+	return true;
 }
 
 function writeMapToConsole() {

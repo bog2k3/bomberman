@@ -32,5 +32,5 @@
 	[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ];
 
-/** the map templates, we instantiate the map out of these */
-export const mapTemplates = [map0];
+/** the map templates collection that can be used to instantiate a map from */
+export const mapsCollection = [map0];
