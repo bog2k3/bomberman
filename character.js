@@ -21,7 +21,7 @@ export class Character extends Entity {
 	spriteSet = {};
 
 	/** @type {dosemuBBox.BoundingBox} */
-	boundingBox = {up: -10, down: 3, left: -6, right: 6};
+	boundingBox = {up: -10, down: 2, left: -6, right: 6};
 
 	/** @param {Character} data */
 	constructor(data) {
@@ -39,7 +39,14 @@ export class Character extends Entity {
 
 	/** @returns {dosemuSprite.Sprite} */
 	getCurrentSprite() {
-		return this.spriteSet[this.orientation].frames[Math.floor(this.animationFrame) % this.spriteSet[this.orientation].frames.length];
+		if (!this.spriteSet[this.orientation]) {
+			console.error(`Missing spriteSet for orientation="${this.orientation}" in Character `, this);
+		}
+		const currentFrame = Math.floor(this.animationFrame) % this.spriteSet[this.orientation].frames.length;
+		if (!this.spriteSet[this.orientation].frames || !this.spriteSet[this.orientation].frames[currentFrame]) {
+			console.error(`Missing animation frame ${currentFrame} in spriteSet for orientation="${this.orientation}" in Character `, this);
+		}
+		return this.spriteSet[this.orientation].frames[currentFrame];
 	}
 
 	/** @returns {number} the row the character is on */
@@ -60,8 +67,11 @@ export class Character extends Entity {
 		dosemu.drawSprite(this.x + mapOffsX, this.y + mapOffsY, this.getCurrentSprite());
 	}
 
-	/** @virtual override this to take action when hitting a brick */
-	handleCollisionWithBrick(row, column, type) {
+	/**
+	 * @virtual override this to take action when colliding with a brick/entity
+	 * @param {CollisionResult} collision
+	 * */
+	reactToCollision(collision) {
 		return;
 	}
 
@@ -96,9 +106,7 @@ export class Character extends Entity {
 					this.y = prevY;
 					this.isStopped = true;
 				}
-				if (collisionResult.brick) {
-					this.handleCollisionWithBrick(collisionResult.brick.row, collisionResult.brick.column, collisionResult.brick.type);
-				}
+				this.reactToCollision(collisionResult);
 			}
 		}
 		if (this.isStopped) {

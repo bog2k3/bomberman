@@ -102,42 +102,8 @@ let player = null;
 
 let playerHasDied = false;
 
-/**
- * 0 - empty space (field)
- * 1 - regular brick
- * 2 - indestructable brick
- * 3 - enemy type 0
- * 4 - enemy type 1
- * 5 - enemy type 2
- * ...
- * 9 - player
- */
-const map0 = [
-	[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-	[2, 9, 0, 1, 0, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 0, 9, 2],
-	[2, 0, 1, 1, 0, 1, 1, 2, 1, 1, 2, 1, 0, 0, 0, 1, 1, 1, 0, 2, 0, 1, 2, 0, 1, 1, 1, 1, 0, 2],
-	[2, 1, 1, 2, 3, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 2, 0, 1, 1, 3, 1, 0, 0, 1, 1, 2],
-	[2, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 2, 3, 1, 1, 1, 1, 2, 2, 2, 2, 2],
-	[2, 1, 1, 0, 0, 2, 1, 0, 1, 1, 0, 1, 2, 1, 0, 0, 1, 1, 1, 2, 0, 0, 1, 0, 1, 2, 0, 0, 2, 2],
-	[2, 1, 1, 1, 1, 2, 2, 3, 1, 0, 1, 2, 2, 1, 1, 4, 2, 1, 0, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 2],
-	[2, 3, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 2],
-	[2, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 2, 1, 1, 2, 2, 1, 0, 1, 1, 1, 1, 1, 0, 2],
-	[2, 2, 2, 2, 2, 2, 2, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 0, 1, 2, 2, 2, 1, 0, 2],
-	[2, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 4, 1, 1, 2, 0, 1, 0, 0, 2],
-	[2, 1, 0, 1, 0, 1, 1, 2, 0, 1, 0, 1, 0, 2, 4, 1, 1, 1, 2, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 2],
-	[2, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 0, 2, 2, 2, 2, 2, 2],
-	[2, 1, 0, 1, 1, 2, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2],
-	[2, 2, 2, 1, 0, 2, 3, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 2, 0, 1, 1, 0, 2, 1, 1, 1, 2],
-	[2, 1, 0, 1, 1, 2, 0, 1, 1, 1, 1, 2, 2, 2, 1, 0, 1, 0, 0, 2, 2, 3, 1, 0, 1, 3, 0, 0, 2, 2],
-	[2, 1, 1, 2, 1, 1, 1, 1, 0, 3, 1, 2, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 2, 1, 1, 1, 1, 1, 1, 2],
-	[2, 0, 1, 1, 0, 3, 1, 1, 1, 1, 1, 2, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 3, 1, 0, 1, 1, 1, 0, 2],
-	[2, 9, 0, 1, 1, 1, 2, 0, 1, 1, 0, 2, 1, 1, 0, 1, 1, 1, 1, 1, 2, 2, 1, 0, 0, 1, 1, 0, 9, 2],
-	[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-];
-
-/** the map templates, we instantiate the map out of these */
-const mapTemplates = [map0];
-
+/** @type {number[][]} */
+let mapTemplate = []; // the map template
 /** @type {number[][]} */
 let map = []; // the map instance
 let maxMapX = 0;
@@ -162,7 +128,7 @@ function reset() {
 	entities = [];
 	player = null;
 	playerHasDied = false;
-	selectMap(0);
+	selectMap();
 	spawnEntities();
 	if (!player) {
 		console.error(`Player spawn position not found in map!`);
@@ -212,10 +178,15 @@ function spawnEntities() {
 }
 
 function selectMap(index) {
-	// make a deep copy, so we don't ever alter the map template
-	map = mapTemplates[index].map(
-		row => row.map(x => x)
-	);
+	if (index === undefined) {
+		// generate a random map
+		randomMap()
+	} else {
+		// make a deep copy, so we don't ever alter the map template
+		map = mapTemplates[index].map(
+			row => row.map(x => x)
+		);
+	}
 	maxMapX = map[0].length * constants.TILE_SIZE;
 	maxMapY = map.length * constants.TILE_SIZE;
 }
@@ -334,6 +305,7 @@ function handleEditModeKey(key) {
 		case '9': editTileType = 9; break;
 		case 'f': fillMapWithBricks(); break;
 		case 'c': clearMap(); break;
+		case 'r': randomMap(constants.RANDOM_MAP_FILL_FACTOR, constants.RANDOM_MAP_ENEMY_DENSITY); break;
 	}
 }
 
@@ -353,6 +325,80 @@ function clearMap() {
 			map[i][j] = 0;
 		}
 	}
+}
+
+/**
+ *
+ * @param {*} rows
+ * @param {*} cols
+ * @param {*} fillFactor
+ * @param {*} enemyDensity
+ */
+function randomMap(rows, cols, fillFactor, enemyDensity) {
+	clearMap();
+	// top and bottom borders:
+	for (let i=0; i<map[0].length; i++) {
+		map[0][i] = 2;
+		map[map.length-1][i] = 2;
+	}
+	// left and right borders:
+	for (let i=0; i<map.length; i++) {
+		map[i][0] = 2;
+		map[i][map[i].length-1] = 2;
+	}
+	// destructable bricks:
+	for (let i=1; i<map.length-1; i++) {
+		for (let j=1; j<map[i].length-1; j++) {
+			if (i%2===0 && j%2===0) {
+				map[i][j] = 2;
+			} else {
+				if (Math.random() < fillFactor) {
+					map[i][j] = 1;
+				}
+			}
+		}
+	}
+	// player spawn positions:
+	const halfRow = Math.floor(map.length/2);
+	const halfCol = Math.floor(map[0].length/2);
+	const spawnPositions = [
+		[1, 1],
+		[1, map[0].length-2],
+		[map.length-2, 1],
+		[map.length-2, map[0].length-2],
+		[halfRow, halfCol],
+		[1, halfCol],
+		[map.length-2,halfCol]
+	];
+	for (let pos of spawnPositions) {
+		const row = pos[0], col = pos[1];
+		if (map[row, col] === 2) {
+			// we landed on an indestructable brick, shift the position
+			if (col <= halfCol) {
+				col++;
+			} else {
+				col--;
+			}
+		}
+		pos[0] = row; // update the altered position in the array since we'll use them later
+		pos[1] = col;
+		map[row][col] = 9;
+		// make some room around
+		if (map[row-1][col] === 1) {
+			map[row-1][col] = 0;
+		}
+		if (map[row+1][col] === 1) {
+			map[row+1][col] = 0;
+		}
+		if (map[row][col-1] === 1) {
+			map[row][col-1] = 0;
+		}
+		if (map[row][col+1] === 1) {
+			map[row][col+1] = 0;
+		}
+	}
+	// create some enemies:
+	const enemyCount = map.length * map[0].length * enemyDensity;
 }
 
 function writeMapToConsole() {
@@ -377,29 +423,43 @@ function withinMap(row, col) {
 function drawEditModeOverlay(tileOffsX, tileOffsY, nTilesX, nTilesY) {
 	for (let i=tileOffsY; i<tileOffsY + nTilesY; i++) {
 		for (let j=tileOffsX; j<tileOffsX + nTilesX; j++) {
-			if (map[i][j] === 9) {
-				// draw the player spawn position
-				dosemu.drawSprite(
-					j * constants.TILE_SIZE - scrollX + constants.PLAYER_INITIAL_X_OFFS,
-					i * constants.TILE_SIZE - scrollY + constants.PLAYER_INITIAL_Y_OFFS,
-					playerSprites[0].down.frames[0]
-				);
-			} else if (map[i][j] > 2) {
-				// enemy spawn point
-				dosemu.drawRectangle(
-					j * constants.TILE_SIZE - scrollX + 1,
-					i * constants.TILE_SIZE - scrollY + 1,
-					(j+1) * constants.TILE_SIZE - scrollX - 2,
-					(i+1) * constants.TILE_SIZE - scrollY - 2,
-					9
-				);
-				dosemu.drawText(
-					j * constants.TILE_SIZE - scrollX + 8,
-					i * constants.TILE_SIZE - scrollY + 8,
-					map[i][j].toString(),
-					9,
-					"center"
-				);
+			switch (map[i][j]) {
+				case 0:
+				case 1:
+				case 2:
+					break; // these are bricks already drawn
+				case 9:
+					// draw the player spawn position
+					dosemu.drawSprite(
+						j * constants.TILE_SIZE - scrollX + constants.PLAYER_INITIAL_X_OFFS,
+						i * constants.TILE_SIZE - scrollY + constants.PLAYER_INITIAL_Y_OFFS,
+						playerSprites[0].down.frames[0]
+					);
+					break;
+				case 3:
+					// enemy type #0 spawn point
+					dosemu.drawSprite(
+						j * constants.TILE_SIZE - scrollX + constants.ENEMY_INITIAL_X_OFFS,
+						i * constants.TILE_SIZE - scrollY + constants.ENEMY_INITIAL_Y_OFFS,
+						enemySprites[0].down.frames[0]
+					);
+					break;
+				default:
+					// no sprite for this type
+					dosemu.drawRectangle(
+						j * constants.TILE_SIZE - scrollX + 1,
+						i * constants.TILE_SIZE - scrollY + 1,
+						(j+1) * constants.TILE_SIZE - scrollX - 2,
+						(i+1) * constants.TILE_SIZE - scrollY - 2,
+						9
+					);
+					dosemu.drawText(
+						j * constants.TILE_SIZE - scrollX + 8,
+						i * constants.TILE_SIZE - scrollY + 8,
+						map[i][j].toString(),
+						9,
+						"center"
+					);
 			}
 		}
 	}
@@ -415,6 +475,10 @@ function drawEditModeOverlay(tileOffsX, tileOffsY, nTilesX, nTilesY) {
 		case 1:
 		case 2: sprite = themes[selectedTheme].brickSprites[editTileType - 1]; break;
 		case 3:
+			sprite = enemySprites[0].down.frames[0];
+			spriteOffsX = constants.ENEMY_INITIAL_X_OFFS;
+			spriteOffsY = constants.ENEMY_INITIAL_Y_OFFS;
+			break;
 		case 4:
 		case 5:
 		case 6:
@@ -474,4 +538,7 @@ function updateEditMode(dt) {
 
 function nextEditTileType() {
 	editTileType = (editTileType + 1) % 10;
+	if (editTileType > 3 && editTileType < 9) {
+		editTileType = 9; // skip types that are not currently used
+	}
 }
