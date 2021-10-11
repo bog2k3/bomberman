@@ -1,4 +1,7 @@
+import { dosemuBBox } from "./node_modules/dosemu/index.js";
 import * as collision from "./collision.js";
+import { Entity } from "./entity.js";
+import * as constants from "./constants.js";
 
 /** @type {{map: number[][], entities: Entity[]}} */
 const data = {
@@ -56,4 +59,30 @@ export function setMapCell(row, column, value) {
 		return;
 	}
 	data.map[row][column] = value;
+}
+
+/**
+ * @returns a list of entities that overlap the given bounding box (expressed in world space)
+ * @param {dosemuBBox.BoundingBox} bbox
+ */
+export function getEntitiesInArea(bbox) {
+	const result = [];
+	for (let entity of data.entities) {
+		if (dosemuBBox.getBoundingBoxOverlap(bbox, entity.getBoundingBox())) {
+			result.push(entity);
+		}
+	}
+	return result;
+}
+
+/**
+ * @returns a list of entities that overlap the given cell
+ */
+export function getEntitiesInCell(row, col) {
+	const bbox = new dosemuBBox.BoundingBox();
+	bbox.up = row * constants.TILE_SIZE;
+	bbox.down = bbox.up + constants.TILE_SIZE - 1;
+	bbox.left = col * constants.TILE_SIZE;
+	bbox.right = bbox.left + constants.TILE_SIZE - 1;
+	return getEntitiesInArea(bbox);
 }

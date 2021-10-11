@@ -23,6 +23,9 @@ export class Character extends Entity {
 	/** @type {dosemuBBox.BoundingBox} */
 	boundingBox = {up: -10, down: 2, left: -6, right: 6};
 
+	/** @type {Bomb[]} */
+	overlapingBombs = [];
+
 	/** @param {Character} data */
 	constructor(data) {
 		super();
@@ -70,18 +73,25 @@ export class Character extends Entity {
 	/**
 	 * @virtual override this to take action when colliding with a brick/entity
 	 * @param {CollisionResult} collision
+	 * @param {number} deltaOverlap the difference in overlap between this frame and the previous one
+	 * (if positive, the collision is "bigger" than last time, if negative it is "smaller")
 	 * */
-	reactToCollision(collision) {
+	reactToCollision(collision, deltaOverlap) {
 		return;
 	}
 
 	/**
-	 * Override this to decide if certain collisions should be ignored
+	 * Override this to decide if certain collisions should be ignored;
+	 * Don't forget to call super.ignoreCollision(collision) and return true if it returns true
 	 * @virtual
 	 * @param {CollisionResult} collision
 	 * @returns {boolean}
 	 */
 	ignoreCollision(collision) {
+		if (collision.entity && this.overlapingBombs.includes(collision.entity)) {
+			// We ignore collision with a bomb if it just got spawned underneath us, until we walk away from it
+			return true;
+		}
 		return false;
 	}
 
@@ -93,24 +103,39 @@ export class Character extends Entity {
 			// update position
 			const delta = this.speed * dt;
 			const prevX = this.x, prevY = this.y;
+			const collisionResultBefore = checkCollision(dosemuBBox.moveBoundingBox(this.boundingBox, this.x, this.y), this);
 			switch (this.orientation) {
 				case "up": this.y -= delta; break;
 				case "down": this.y += delta; break;
 				case "left": this.x -= delta; break;
 				case "right": this.x += delta; break;
 			}
-			const collisionResult = checkCollision(dosemuBBox.moveBoundingBox(this.boundingBox, this.x, this.y), this);
-			if (collisionResult && !this.ignoreCollision(collisionResult)) {
-				if (!collisionResult.entity || collisionResult.entity.isSolid) {
+			const collisionResultAfter = checkCollision(dosemuBBox.moveBoundingBox(this.boundingBox, this.x, this.y), this);
+			const deltaOverlap = (collisionResultAfter?.totalOverlap || 0) -
+				(collisionResultBefore?.entity === collisionResultAfter?.entity ? collisionResultBefore?.totalOverlap || 0 : 0);
+			if (collisionResultAfter) {
+				if (!this.ignoreCollision(collisionResultAfter) &&
+					(!collisionResultAfter.entity || collisionResultAfter.entity.isSolid) && deltaOverlap > 0
+				) {
 					this.x = prevX;
 					this.y = prevY;
 					this.isStopped = true;
 				}
-				this.reactToCollision(collisionResult);
+				this.reactToCollision(collisionResultAfter, deltaOverlap);
+			}
+			for (let i=0; i<this.overlapingBombs.length;) {
+				if (!dosemuBBox.getBoundingBoxOverlap(this.getBoundingBox(), this.overlapingBombs[i].getBoundingBox())) {
+					// we're not overlapping the bomb any more
+					this.overlapingBombs.splice(i, 1);
+				} else {
+					i++;
+				}
 			}
 		}
 		if (this.isStopped) {
-			this.animationFrame = 0.9; // reset to the first frame, but right before switching to the second, so when player presses a key, the animation starts right away
+			// reset to the first frame, but right before switching to the second,
+			// so when player presses a key, the animation starts right away
+			this.animationFrame = 0.9;
 		}
 		this.isStopped = true;
 	}
@@ -126,6 +151,10 @@ export class Character extends Entity {
 
 	/** @override we've been fried by an explosion */
 	fry() {
+		this.die();
+	}
+
+	die() {
 		// create a dummy explode animation entity
 		new CharacterExplodeAnimation(this.spriteSet.explode, this.x, this.y);
 		this.destroy();

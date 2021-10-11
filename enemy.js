@@ -1,4 +1,7 @@
+import { Bomb } from "./bomb.js";
 import { Character } from "./character.js";
+import { CollisionResult } from "./collision.js";
+import { Player } from "./player.js";
 import * as world from "./world.js";
 
 export class Enemy extends Character {
@@ -25,21 +28,37 @@ export class Enemy extends Character {
 	 * @override
 	 * @param {CollisionResult} collision
 	 * */
-	reactToCollision(collision) {
+	reactToCollision(collision, deltaOverlap) {
+		if (deltaOverlap < 0) {
+			return; // we don't react to decreasing collisions
+		}
+		if (collision.entity && collision.entity instanceof Player) {
+			// we've just eaten a player :-)
+			collision.entity.die();
+			return;
+		}
 		const [myRow, myCol] = [this.getRow(), this.getColumn()];
 		// determine what are the possible collision-free directions from our current location
 		const directions = [];
 		if (this.orientation !== "up" && world.getMapCell(myRow - 1, myCol) === 0) {
-			directions.push("up");
+			if (this.thereAreNoBombsAt(myRow - 1, myCol)) {
+				directions.push("up");
+			}
 		}
 		if (this.orientation !== "down" && world.getMapCell(myRow + 1, myCol) === 0) {
-			directions.push("down");
+			if (this.thereAreNoBombsAt(myRow + 1, myCol)) {
+				directions.push("down");
+			}
 		}
 		if (this.orientation !== "left" && world.getMapCell(myRow, myCol - 1) === 0) {
-			directions.push("left");
+			if (this.thereAreNoBombsAt(myRow, myCol - 1)) {
+				directions.push("left");
+			}
 		}
 		if (this.orientation !== "right" && world.getMapCell(myRow, myCol + 1) === 0) {
-			directions.push("right");
+			if (this.thereAreNoBombsAt(myRow, myCol + 1)) {
+				directions.push("right");
+			}
 		}
 		if (directions.length) {
 			// randomly choose a different direction to move in
@@ -51,5 +70,9 @@ export class Enemy extends Character {
 			if (this.orientation === "left") this.move("right");
 			if (this.orientation === "right") this.move("left");
 		}
+	}
+
+	thereAreNoBombsAt(row, col) {
+		return world.getEntitiesInCell(row, col).filter(e => e instanceof Bomb).length === 0;
 	}
 }

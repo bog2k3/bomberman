@@ -442,11 +442,12 @@ function isValidPositionForEnemy(row, col, map, playerSpawnPos) {
 }
 
 function writeMapToConsole() {
-	console.log("[");
+	let str = "[\n";
 	for (let i=0; i<map.length; i++) {
-		console.log(`[${map[i].join(', ')}],`);
+		str += `\t[${map[i].join(', ')}],\n`;
 	}
-	console.log("];");
+	str += "]\n";
+	console.log(str);
 }
 
 function getMouseRowCol() {

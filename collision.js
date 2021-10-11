@@ -8,6 +8,8 @@ export class CollisionResult {
 	brick = null;
 	/** @type {Entity | null} */
 	entity = null;
+	/** @type {number} */
+	totalOverlap = 0;
 }
 
 /** @type {{map: number[][], entities: Entity[]}} */
@@ -32,16 +34,19 @@ export function checkCollision(boundingBox, owner) {
 		for (let col=colStart; col<=colEnd; col++) {
 			if ([1,2].includes(data.map[row][col])) {
 				return {
-					brick: {row: row, column: col, type: data.map[row][col]}
+					brick: {row: row, column: col, type: data.map[row][col]},
+					totalOverlap: computeCellOverlap(boundingBox, row, col)
 				};
 			}
 		}
 	}
 	// step 2: check against other entities
 	for (let entity of data.entities) {
-		if (entity !== owner && dosemuBBox.getBoundingBoxOverlap(boundingBox, entity.getBoundingBox())) {
+		const overlap = dosemuBBox.getBoundingBoxOverlap(boundingBox, entity.getBoundingBox());
+		if (entity !== owner && overlap) {
 			return {
-				entity
+				entity,
+				totalOverlap: Math.abs(overlap.xOverlap) + Math.abs(overlap.yOverlap)
 			};
 		}
 	}
@@ -66,4 +71,28 @@ export function removeEntity(entity) {
 export function clearData() {
 	data.map = [];
 	data.entities = [];
+}
+
+/**
+ * @param {dosemuBBox.BoundingBox} boundingBox
+ * @param {number} row
+ * @param {number} col
+ */
+function computeCellOverlap(boundingBox, row, col) {
+	const bboxCenterX = (boundingBox.left + boundingBox.right) / 2;
+	const bboxCenterY = (boundingBox.up + boundingBox.down) / 2;
+	const cellCenterX = (col + 0.5) * constants.TILE_SIZE;
+	const cellCenterY = (row + 0.5) * constants.TILE_SIZE;
+	let overlapX = 0, overlapY = 0;
+	if (bboxCenterX > cellCenterX) {
+		overlapX = (col+1) * constants.TILE_SIZE - boundingBox.left;
+	} else {
+		overlapX = boundingBox.right - col * constants.TILE_SIZE;
+	}
+	if (bboxCenterY > cellCenterY) {
+		overlapY = (row+1) * constants.TILE_SIZE - boundingBox.up;
+	} else {
+		overlapY = boundingBox.down - row * constants.TILE_SIZE;
+	}
+	return overlapX + overlapY;
 }

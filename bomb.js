@@ -4,6 +4,7 @@ import * as constants from "./constants.js";
 import { GridEntity } from "./grid-entity.js";
 import { Fire } from "./fire.js";
 import * as world from "./world.js";
+import { Character } from "./character.js";
 
 export class Bomb extends GridEntity {
 
@@ -15,6 +16,13 @@ export class Bomb extends GridEntity {
 	constructor(power, row, column) {
 		super(row, column);
 		this.power = power;
+		world.getEntitiesInArea(this.getBoundingBox()).forEach(
+			entity => {
+				if (entity instanceof Character) {
+					entity.overlapingBombs.push(this);
+				}
+			}
+		)
 	}
 
 	/** @returns {string} the type of entity */
@@ -73,7 +81,7 @@ export class Bomb extends GridEntity {
 		}
 	}
 
-	/** we've been fried by another explosion, so chain-reaction! */
+	/** @override we've been fried by another explosion, so chain-reaction! */
 	fry() {
 		this.explode();
 	}
