@@ -7,6 +7,7 @@ export class Player extends Character {
 
 	wasSpacePressed = false;
 	bombPower = 2;
+	movementInputEnabled = true;
 
 	/** @param {Character} data */
 	constructor(data) {
@@ -19,14 +20,16 @@ export class Player extends Character {
 	/** @override */
 	update(dt) {
 		super.update(dt);
-		if (dosemu.isKeyPressed("ArrowDown")) {
-			this.move("down");
-		} else if (dosemu.isKeyPressed("ArrowUp")) {
-			this.move("up");
-		} else if (dosemu.isKeyPressed("ArrowLeft")) {
-			this.move("left");
-		} else if (dosemu.isKeyPressed("ArrowRight")) {
-			this.move("right");
+		if (this.movementInputEnabled) {
+			if (dosemu.isKeyPressed("ArrowDown")) {
+				this.move("down");
+			} else if (dosemu.isKeyPressed("ArrowUp")) {
+				this.move("up");
+			} else if (dosemu.isKeyPressed("ArrowLeft")) {
+				this.move("left");
+			} else if (dosemu.isKeyPressed("ArrowRight")) {
+				this.move("right");
+			}
 		}
 		if (dosemu.isKeyPressed(" ") && !this.wasSpacePressed) {
 			this.spawnBomb();

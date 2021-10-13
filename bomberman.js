@@ -13,6 +13,7 @@ import { Entity } from "./entity.js";
 import { Enemy } from "./enemy.js";
 import { enemySprites } from "./enemy-sprites.js";
 import { mapsCollection } from "./maps.js";
+import * as raycast from "./raycast.js"
 
 export function init() {
 	buildThemes();
@@ -23,11 +24,16 @@ export function init() {
 	selectMap(); // no arguments will create a random map
 
 	registerCommandHandlers();
+
+	raycast.init();
 }
 
 export function update(dt) {
 	if (!EDIT_MODE) {
 		entities.forEach(e => e.update(dt));
+		if (enable3DMode) {
+			raycast.update(player, dt);
+		}
 	} else {
 		updateEditMode(dt);
 	}
@@ -38,6 +44,53 @@ export function draw() {
 		[scrollX, scrollY] = getScrollOffsets();
 	}
 
+	if (!EDIT_MODE && enable3DMode) {
+		draw3D();
+	} else {
+		draw2D();
+	}
+}
+
+// --------------------------------------------------------------------------------------------------
+
+let enable3DMode = false;
+
+let EDIT_MODE = false;
+const EDIT_MODE_SCROLL_SPEED = 150; // pixels per second
+let editTileType = 1; // the type of tile under cursor
+
+/** @type {Theme[]} */
+const themes = [];
+
+let selectedTheme = 0;
+
+/** @type {Player} */
+let player = null;
+
+let playerHasDied = false;
+
+/** @type {number[][]} */
+let mapTemplate = []; // the map template
+/** @type {number[][]} */
+let map = []; // the map instance
+let maxMapX = 0;
+let maxMapY = 0;
+let scrollX = 0;
+let scrollY = 0;
+
+/** @type {Entity[]} */
+let entities = [];
+
+function buildThemes() {
+	themes.push({
+		brickSprites: [
+			sprite_brick11, sprite_brick12
+		],
+		fieldSprite: sprite_field1
+	});
+}
+
+function draw2D() {
 	// on which tile we start drawing:
 	const tileOffsX = clamp(Math.floor(scrollX / constants.TILE_SIZE), 0, map[0].length - 1);
 	const tileOffsY = clamp(Math.floor(scrollY / constants.TILE_SIZE), 0, map.length - 1);
@@ -89,41 +142,8 @@ export function draw() {
 	}
 }
 
-// --------------------------------------------------------------------------------------------------
-
-let EDIT_MODE = false;
-const EDIT_MODE_SCROLL_SPEED = 150; // pixels per second
-let editTileType = 1; // the type of tile under cursor
-
-/** @type {Theme[]} */
-const themes = [];
-
-let selectedTheme = 0;
-
-/** @type {Player} */
-let player = null;
-
-let playerHasDied = false;
-
-/** @type {number[][]} */
-let mapTemplate = []; // the map template
-/** @type {number[][]} */
-let map = []; // the map instance
-let maxMapX = 0;
-let maxMapY = 0;
-let scrollX = 0;
-let scrollY = 0;
-
-/** @type {Entity[]} */
-let entities = [];
-
-function buildThemes() {
-	themes.push({
-		brickSprites: [
-			sprite_brick11, sprite_brick12
-		],
-		fieldSprite: sprite_field1
-	});
+function draw3D() {
+	raycast.render(map, player, entities, themes[selectedTheme]);
 }
 
 function reset() {
@@ -265,6 +285,9 @@ function registerCommandHandlers() {
 			case "q":
 				toggleEditMode();
 				break;
+			case "e":
+				toggle3dMode();
+				break;
 			default:
 				if (EDIT_MODE) {
 					handleEditModeKey(key);
@@ -278,8 +301,17 @@ function registerCommandHandlers() {
 	})
 }
 
+function toggle3dMode() {
+	enable3DMode = !enable3DMode;
+	player.movementInputEnabled = !enable3DMode;
+	if (enable3DMode) {
+		raycast.updatePlayerAngle(player);
+	}
+}
+
 function toggleEditMode() {
 	EDIT_MODE = !EDIT_MODE;
+	enable3DMode = false;
 	if (EDIT_MODE) {
 		dosemu.showMouse();
 		map = mapTemplate; // operate on the template directly while editing
@@ -405,15 +437,17 @@ function randomMap(nRows, nCols) {
 	}
 	// create some enemies:
 	let enemyCount = Math.floor(nRows * nCols * constants.RANDOM_MAP_ENEMY_DENSITY);
+	const enemySpawnPositions = [];
 	while (enemyCount > 0) {
 		let foundSuitablePosition = false;
 		let nTries = 0;
 		while (!foundSuitablePosition && nTries < 20) {
 			let row = Math.floor(Math.random() * nRows);
 			let col = Math.floor(Math.random() * nCols);
-			if (isValidPositionForEnemy(row, col, theMap, playerSpawnPositions)) {
+			if (isValidPositionForEnemy(row, col, theMap, playerSpawnPositions, enemySpawnPositions)) {
 				foundSuitablePosition = true;
 				theMap[row][col] = 3;
+				enemySpawnPositions.push([row, col]);
 				enemyCount--;
 			} else {
 				nTries++;
@@ -426,13 +460,14 @@ function randomMap(nRows, nCols) {
 	return theMap;
 }
 
-function isValidPositionForEnemy(row, col, map, playerSpawnPos) {
-	// valid positions for an enemy are at sufficient manhattan distance from a player spawn pos and is not on an indestructable brick
+function isValidPositionForEnemy(row, col, map, playerSpawnPos, enemySpawnPositions) {
+	// valid positions for an enemy are at sufficient manhattan distance from a player spawn pos and all other enemies
+	// and are not on indestructable bricks
 	const minDistance = 4;
 	if (map[row][col] === 2) {
 		return false;
 	}
-	for (let spawnPos of playerSpawnPos) {
+	for (let spawnPos of [...playerSpawnPos, ...enemySpawnPositions]) {
 		const dist = Math.abs(spawnPos[0] - row) + Math.abs(spawnPos[1] - col);
 		if (dist < minDistance) {
 			return false;

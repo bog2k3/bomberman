@@ -10,7 +10,7 @@ export const ENEMY_SPEED = [1, 2]; // tiles per second for each enemy type
 export const BOMB_FUSE_TIME = 4; // seconds
 export const RANDOM_MAP_FILL_FACTOR_MIN = 0.4;
 export const RANDOM_MAP_FILL_FACTOR_MAX = 0.9;
-export const RANDOM_MAP_ENEMY_DENSITY = 0.02; // enemies per tile for random map
+export const RANDOM_MAP_ENEMY_DENSITY = 0.05; // enemies per tile for random map
 
 export const DEFAULT_MAP_ROWS = 21;
 export const DEFAULT_MAP_COLS = 31;
