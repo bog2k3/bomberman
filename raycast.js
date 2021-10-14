@@ -206,7 +206,9 @@ export function render(map, player, entities, theme) {
 				ty = Math.floor(playerY + yr / j) % tileSize;
 				while (ty < 0) ty += tileSize;
 				dosemu.drawPixel(i, 99 + j, theme.fieldSprite.pixels[ty][tx]);
+				dosemu.drawPixel(i, 100 - j, 117);
 				if (false /* enableCeiling*/) {
+
 					// let cofs = i+(maxy-(wh>>1))*320-32000;
 					// buffer[cofs] = ceilling.pixels[ty][tx];
 					// cofs -= 320;
@@ -229,9 +231,13 @@ export function render(map, player, entities, theme) {
 			//);
 			if (Math.abs(distFromSpriteToRay) < sprite.width / 2) {
 				// we hit the sprite, hooray!!!
-				const dx = playerX - spriteX;
-				const dy = playerY - spriteY;
+				const dx = spriteX - playerX;
+				const dy = spriteY - playerY;
 				const hitDistance = Math.sqrt(dx*dx + dy*dy);
+				// check if the sprite is behind, and skip it if so:
+				if (dx * _cos[a] + dy * _sin[a] < 0) {
+					continue;
+				}
 				spriteHits.push({
 					entity: e,
 					sprite,

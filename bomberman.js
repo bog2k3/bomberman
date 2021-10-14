@@ -49,6 +49,9 @@ export function draw() {
 	} else {
 		draw2D();
 	}
+	if (!EDIT_MODE && playerHasDied) {
+		drawLoserBox();
+	}
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -130,10 +133,6 @@ function draw2D() {
 		while (iEntity < entities.length) {
 			entities[iEntity].draw(-scrollX, -scrollY);
 			iEntity++;
-		}
-
-		if (playerHasDied) {
-			drawLoserBox();
 		}
 	}
 
