@@ -20,7 +20,7 @@ export function init() {
 	Entity.onEntityCreated = handleEntityCreated;
 	Entity.onEntityDestroyed = handleEntityDestroyed;
 	reset();
-	// selectMap(mapsCollection[0]); // select a specific map
+	// selectMap(mapsCollection[1]); // select a specific map
 	selectMap(); // no arguments will create a random map
 
 	registerCommandHandlers();

@@ -124,7 +124,7 @@ export function render(map, player, entities, theme) {
 			xStep = yStep / _tan[ a ];				// deltaX / step 	   //
 
 			do {
-				if ( xHoriz < 0 || yHoriz < 0 || xHoriz > map_maxx || yHoriz > map_maxy ) {
+				if ( xHoriz < 0 || (yHoriz + yOffs) < 0 || xHoriz > map_maxx || yHoriz > map_maxy ) {
 					distHoriz = 999999; // are we out of the map ? //
 					break;
 				}
@@ -156,7 +156,7 @@ export function render(map, player, entities, theme) {
 			yStep = xStep * _tan[ a ];
 
 			do {
-				if ( xVert < 0 || yVert < 0 || xVert > map_maxx || yVert > map_maxy ) {
+				if ( (xVert + xOffs) < 0 || yVert < 0 || xVert > map_maxx || yVert > map_maxy ) {
 					distVert = 999999; // we're out of the map //
 					break;
 				}
@@ -181,33 +181,35 @@ export function render(map, player, entities, theme) {
 
 		// and finally draw the wall //
 		// if it's not a fake wall (map-bound) //
+		let wallHeight = 0;
 		if ( distHoriz < 999999 ) {
 			// remove fish-bowl defformation //
 			distHoriz = distHoriz * _cos[ Math.floor(Math.abs( a - player.angle )) ];
 			// calculate wall slice height //
-			const wallHeight = 290 * tileSize / (1 + distHoriz);
+			wallHeight = 290 * tileSize / (1 + distHoriz);
 			// scale and draw it //
 			const mapRow = Math.floor(yHoriz / tileSize);
 			const mapCol = Math.floor(xHoriz / tileSize);
 			if (map[mapRow][mapCol] > 0) {
 				drawtex( i, 100 - wallHeight/2, theme.brickSprites[map[mapRow][mapCol]-1], texColumnHoriz, wallHeight);
 			}
-
-			// start floor-casting //
-			if (true) {
-				let tx, ty, j;
-				let xr = 145 * tileSize * (_cos[a] / _cos[Math.floor(Math.abs(a-player.angle))]);
-				let yr = 145 * tileSize * (_sin[a] / _cos[Math.floor(Math.abs(a-player.angle))]);
-				const j0 = Math.floor(wallHeight/2 + 1);
-				for (j = j0; j <= 100; j++) {
-					tx = Math.floor(playerX + xr / j) % tileSize;
-					ty = Math.floor(playerY + yr / j) % tileSize;
-					dosemu.drawPixel(i, 99 + j, theme.fieldSprite.pixels[ty][tx]);
-					if (false /* enableCeiling*/) {
-						// let cofs = i+(maxy-(wh>>1))*320-32000;
-						// buffer[cofs] = ceilling.pixels[ty][tx];
-						// cofs -= 320;
-					}
+		}
+		// start floor-casting //
+		if (true) {
+			let tx, ty, j;
+			let xr = 145 * tileSize * (_cos[a] / _cos[Math.floor(Math.abs(a-player.angle))]);
+			let yr = 145 * tileSize * (_sin[a] / _cos[Math.floor(Math.abs(a-player.angle))]);
+			const j0 = Math.floor(wallHeight/2 + 1);
+			for (j = j0; j <= 100; j++) {
+				tx = Math.floor(playerX + xr / j) % tileSize;
+				while (tx < 0) tx += tileSize;
+				ty = Math.floor(playerY + yr / j) % tileSize;
+				while (ty < 0) ty += tileSize;
+				dosemu.drawPixel(i, 99 + j, theme.fieldSprite.pixels[ty][tx]);
+				if (false /* enableCeiling*/) {
+					// let cofs = i+(maxy-(wh>>1))*320-32000;
+					// buffer[cofs] = ceilling.pixels[ty][tx];
+					// cofs -= 320;
 				}
 			}
 		}
@@ -227,9 +229,9 @@ export function render(map, player, entities, theme) {
 			//);
 			if (Math.abs(distFromSpriteToRay) < sprite.width / 2) {
 				// we hit the sprite, hooray!!!
-				const hitDistance = (a === 0 || a === angle_180) ? Math.abs(spriteX - playerX)
-					: (a === angle_90 || a === angle_270) ? Math.abs(spriteY - playerY)
-					: Math.abs((Math.abs(playerX - spriteX) + Math.abs(distFromSpriteToRay) * _sin[a]) / _cos[a]);
+				const dx = playerX - spriteX;
+				const dy = playerY - spriteY;
+				const hitDistance = Math.sqrt(dx*dx + dy*dy);
 				spriteHits.push({
 					entity: e,
 					sprite,
@@ -245,8 +247,6 @@ export function render(map, player, entities, theme) {
 			if (spriteHit.hitDistance >= distHoriz) {
 				continue; // too distant, behind wall
 			}
-			// remove fish-bowl defformation //
-			spriteHit.hitDistance = spriteHit.hitDistance * _cos[ Math.floor(Math.abs( a - player.angle )) ];
 			// calculate sprite slice height //
 			const spriteHeight = 290 * spriteHit.sprite.height / (1 + spriteHit.hitDistance)
 			const spriteColumn = Math.floor(
