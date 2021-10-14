@@ -1,8 +1,9 @@
-import { dosemu } from "./node_modules/dosemu/index.js";
+import { dosemu, dosemuSprite } from "./node_modules/dosemu/index.js";
 import { Player } from "./player.js";
 import { Entity } from "./entity.js";
 import { Theme } from "./theme.js";
 import * as constants from "./constants.js";
+import { clamp } from "./math.js";
 
 export function init() {
 	// building trigonometric tables //
@@ -42,9 +43,9 @@ const _tan = []; // [1920]
 
 function build_sincos() {
 	for (let i=0; i<1920; i++) {
-		_sin[i] = Math.sin( i * 2 * Math.PI / 1920 ) ;
-		_cos[i] = Math.cos( i * 2 * Math.PI / 1920 ) ;
-		_tan[i] = Math.tan( i * 2 * Math.PI / 1920 ) ;
+		_sin[i] = Math.sin( (i+0.5*0) * 2 * Math.PI / 1920 ) ;
+		_cos[i] = Math.cos( (i+0.5*0) * 2 * Math.PI / 1920 ) ;
+		_tan[i] = Math.tan( (i+0.5*0) * 2 * Math.PI / 1920 ) ;
 	}
 }
 
@@ -58,8 +59,8 @@ export function updatePlayerAngle(player) {
 	}
 }
 
-/** @param {Theme} theme */
-function drawtex(x, y, id, col, h, dist, theme) {
+/** @param {dosemuSprite.Sprite} tex */
+function drawtex(x, y, tex, col, h, transparent = false) {
 	if ( h < 1 ) return;
 	const step = tileSize / h;
 	let texRow = 0;
@@ -69,7 +70,10 @@ function drawtex(x, y, id, col, h, dist, theme) {
 		y = 0;
 	}
 	for (let i = 0; i < h; i++) {
-		dosemu.drawPixel(x, y + i, theme.brickSprites[id].pixels[ Math.floor(texRow)][ col ]);
+		const pxColor = tex.pixels[ Math.floor(texRow)][ col ];
+		if (!transparent || pxColor != tex.transparent) {
+			dosemu.drawPixel(x, y + i, pxColor);
+		}
 		texRow += step;
 	}
 }
@@ -82,117 +86,179 @@ function drawtex(x, y, id, col, h, dist, theme) {
  * @param {Theme} theme
  */
 export function render(map, player, entities, theme) {
-	/* int */ let px, py, hy, vx, hd, vd, hid, vid, a, wh, pxm, pxp, pym, pyp;
-	/* float */ let hx, vy, xs, ys;
-
 	const map_maxx = map[0].length * tileSize - 1;
 	const map_maxy = map.length * tileSize - 1;
 
-	px = Math.floor(player.x); // [player.x] //
-	py = Math.floor(player.y); // [player.y] //
-	a = Math.floor(player.angle - angle_30); // current ray's angle //
-	pxm = (Math.floor(px / tileSize) * tileSize) - 1;
-	pxp = (Math.floor(px / tileSize) * tileSize) + tileSize;
-	pym = (Math.floor(py / tileSize) * tileSize) - 1;
-	pyp = (Math.floor(py / tileSize) * tileSize) + tileSize;
+	const playerX = player.x; // [player.x] //
+	const playerY = player.y - 3; // [player.y] //
+	let a = Math.floor(player.angle - angle_30); // current ray's angle //
+	const pxm = Math.floor(playerX / tileSize) * tileSize;
+	const pxp = Math.floor(playerX / tileSize + 1) * tileSize;
+	const pym = Math.floor(playerY / tileSize) * tileSize;
+	const pyp = Math.floor(playerY / tileSize + 1) * tileSize;
 
-	for (let i = 0; i <= maxx; i++) {		// make sure the angle is in //
-		a += a < 0 ? angle_360 : 0;			// the [0,360) interval 	 //
-		a -= a >= angle_360 ? angle_360 : 0;
+	for (let i = 0; i <= maxx; i++) {
+		while (a < 0) a += angle_360;
+		while (a >= angle_360) a -= angle_360;
+
+		let xHoriz, yHoriz, xVert, yVert;
+		let xStep, yStep, distHoriz, distVert, texColumnHoriz, texColumnVert;
+
+		let yOffs = 0;
+		let xOffs = 0;
 
 		// horizontal grids //
 
 		if ( a == angle_180 || a == 0 ) {  // if the ray is goind paralel //
-			hd = 999999;     			   // with the walls, skip this   //
+			distHoriz = 999999;     			   // with the walls, skip this   //
 		} else {
 			if ( a > angle_180 ) {			// is it goind up ? //
-				hy = pym;
-				ys = -tileSize;
+				yHoriz = pym;
+				yOffs = -1;
+				yStep = -tileSize;
 			} else {						// or down ? //
-				hy = pyp;
-				ys = tileSize;
+				yHoriz = pyp;
+				yStep = tileSize;
 			}
-			hx = ( ( hy - py ) / _tan[ a ] ) + px; // 1st intersection pt //
-			xs = ys / _tan[ a ];				// deltaX / step 	   //
+			xHoriz = ( ( yHoriz - playerY ) / _tan[ a ] ) + playerX; // 1st intersection pt //
+			xStep = yStep / _tan[ a ];				// deltaX / step 	   //
 
 			do {
-				if ( hx < 0 || hy < 0 || hx > map_maxx || hy > map_maxy ) {
-					hd = 999999; // are we out of the map ? //
+				if ( xHoriz < 0 || yHoriz < 0 || xHoriz > map_maxx || yHoriz > map_maxy ) {
+					distHoriz = 999999; // are we out of the map ? //
 					break;
 				}
-				if ( map[ Math.floor(hy / tileSize) ] [ Math.floor(hx / tileSize) ] ) {
-					hd = Math.floor(( hy - py ) / _sin[ a ]); // did we hit a wall ? //
-					hid = tileSize - 1 - Math.floor(hx) % tileSize; // if so, calculate the distance to the wall //
+				if ( map[ Math.floor((yHoriz + yOffs) / tileSize) ] [ Math.floor(xHoriz / tileSize) ] ) {
+					distHoriz = ( yHoriz - playerY ) / _sin[ a ]; // did we hit a wall ? //
+					texColumnHoriz = Math.floor(xHoriz) % tileSize; // if so, calculate the distance to the wall //
 					// and the texture offset and jump out of the loop //
 					break;
 				}
-				hx += xs; // no wall ? //
-				hy += Math.floor(ys); // keep searching... //
+				xHoriz += xStep; // no wall ? //
+				yHoriz += yStep; // keep searching... //
 			} while (1);
 		}
 
 		// verical grids //
 
 		if ( a == angle_90 || a == angle_270 ) { // are we paralel ? //
-			vd = 999999;	// then there is no point searching for an intersection, is it ? //
+			distVert = 999999;	// then there is no point searching for an intersection, is it ? //
 		} else {
 			if ( a > angle_90 && a < angle_270 ) { // is the ray going left ? //
-				vx = pxm;
-				xs = -tileSize;
+				xVert = pxm;
+				xOffs = -1;
+				xStep = -tileSize;
 			} else { 							   // or right ? //
-				vx = pxp;
-				xs = tileSize;
+				xVert = pxp;
+				xStep = tileSize;
 			}
-			vy = ( ( vx - px ) * _tan[ a ] ) + py;
-			ys = xs * _tan[ a ];
+			yVert = ( ( xVert - playerX ) * _tan[ a ] ) + playerY;
+			yStep = xStep * _tan[ a ];
 
 			do {
-				if ( vx < 0 || vy < 0 || vx > map_maxx || vy > map_maxy ) {
-					vd = 999999; // we're out of the map //
+				if ( xVert < 0 || yVert < 0 || xVert > map_maxx || yVert > map_maxy ) {
+					distVert = 999999; // we're out of the map //
 					break;
 				}
-				if ( map[ Math.floor(vy / tileSize) ] [ Math.floor(vx / tileSize) ] ) {
-					vd = Math.floor(( vx - px ) / _cos[ a ]); // a wall ! //
-					vid = Math.floor(vy) % tileSize; // get the distance and tex offset //
+				if ( map[ Math.floor(yVert / tileSize) ] [ Math.floor((xVert + xOffs) / tileSize) ] ) {
+					distVert = ( xVert - playerX ) / _cos[ a ]; // a wall ! //
+					texColumnVert = Math.floor(yVert) % tileSize; // get the distance and tex offset //
 					break;
 				}
-				vx += Math.floor(xs); // keep going until we //
-				vy += ys; // hit something or we get out of the map //
+				xVert += xStep; // keep going until we //
+				yVert += yStep; // hit something or we get out of the map //
 			} while (1);
 		}
 
-		if ( hd > vd ) { // see which of the walls is closer //
-			hd = vd;
-			hid = vid;
-			hx = vx;
-			hy = Math.floor(vy);
+		if ( distHoriz > distVert ) { // see which of the walls is closer //
+			distHoriz = distVert;
+			texColumnHoriz = texColumnVert;
+			xHoriz = xVert + xOffs;
+			yHoriz = yVert;
+		} else {
+			yHoriz += yOffs;
 		}
 
 		// and finally draw the wall //
 		// if it's not a fake wall (map-bound) //
-		if ( hd < 999999 ) {
+		if ( distHoriz < 999999 ) {
 			// remove fish-bowl defformation //
-			hd = Math.floor(hd * _cos[ Math.floor(Math.abs( a - player.angle )) ]);
+			distHoriz = distHoriz * _cos[ Math.floor(Math.abs( a - player.angle )) ];
 			// calculate wall slice height //
-			wh = hd > 0 ? Math.floor(277 * tileSize / hd) : 277 * tileSize;
+			const wallHeight = 290 * tileSize / (1 + distHoriz);
 			// scale and draw it //
-			drawtex( i, 100 - ( wh >> 1 ), map[Math.floor(hy/ tileSize)][Math.floor(hx / tileSize)]-1, hid, wh, hd, theme );
+			const mapRow = Math.floor(yHoriz / tileSize);
+			const mapCol = Math.floor(xHoriz / tileSize);
+			if (map[mapRow][mapCol] > 0) {
+				drawtex( i, 100 - wallHeight/2, theme.brickSprites[map[mapRow][mapCol]-1], texColumnHoriz, wallHeight);
+			}
 
 			// start floor-casting //
-			let tx, ty, j;
-			let xr = 138.5 * tileSize * (_cos[a] / _cos[Math.floor(Math.abs(a-player.angle))]);
-			let yr = 138.5 * tileSize * (_sin[a] / _cos[Math.floor(Math.abs(a-player.angle))]);
-			const j0 = (wh >> 1) + 1;
-			for (j = j0; j <= 100; j++) {
-				tx = Math.floor(px + xr / j) % tileSize;
-				ty = Math.floor(py + yr / j) % tileSize;
-				dosemu.drawPixel(i, 99 + j, theme.fieldSprite.pixels[ty][tx]);
-				if (false /* enableCeiling*/) {
-					// let cofs = i+(maxy-(wh>>1))*320-32000;
-					// buffer[cofs] = ceilling.pixels[ty][tx];
-					// cofs -= 320;
+			if (true) {
+				let tx, ty, j;
+				let xr = 145 * tileSize * (_cos[a] / _cos[Math.floor(Math.abs(a-player.angle))]);
+				let yr = 145 * tileSize * (_sin[a] / _cos[Math.floor(Math.abs(a-player.angle))]);
+				const j0 = Math.floor(wallHeight/2 + 1);
+				for (j = j0; j <= 100; j++) {
+					tx = Math.floor(playerX + xr / j) % tileSize;
+					ty = Math.floor(playerY + yr / j) % tileSize;
+					dosemu.drawPixel(i, 99 + j, theme.fieldSprite.pixels[ty][tx]);
+					if (false /* enableCeiling*/) {
+						// let cofs = i+(maxy-(wh>>1))*320-32000;
+						// buffer[cofs] = ceilling.pixels[ty][tx];
+						// cofs -= 320;
+					}
 				}
 			}
+		}
+
+		// check entities
+		const spriteHits = [];
+		for (let e of entities) {
+			if (e instanceof Player) {
+				continue;
+			}
+			const bbox = e.getBoundingBox();
+			const spriteX = (bbox.left + bbox.right) / 2;
+			const spriteY = (bbox.up + bbox.down) / 2;
+			const sprite = e.get3DSprite();
+			const distFromSpriteToRay = //Math.abs(
+				_cos[a] * (playerY - spriteY) - _sin[a] * (playerX - spriteX)
+			//);
+			if (Math.abs(distFromSpriteToRay) < sprite.width / 2) {
+				// we hit the sprite, hooray!!!
+				const hitDistance = (a === 0 || a === angle_180) ? Math.abs(spriteX - playerX)
+					: (a === angle_90 || a === angle_270) ? Math.abs(spriteY - playerY)
+					: Math.abs((Math.abs(playerX - spriteX) + Math.abs(distFromSpriteToRay) * _sin[a]) / _cos[a]);
+				spriteHits.push({
+					entity: e,
+					sprite,
+					spriteX,
+					spriteY,
+					distFromSpriteToRay,
+					hitDistance
+				});
+			}
+		}
+		spriteHits.sort((a, b) => b.hitDistance - a.hitDistance);
+		for (let spriteHit of spriteHits) {
+			if (spriteHit.hitDistance >= distHoriz) {
+				continue; // too distant, behind wall
+			}
+			// remove fish-bowl defformation //
+			spriteHit.hitDistance = spriteHit.hitDistance * _cos[ Math.floor(Math.abs( a - player.angle )) ];
+			// calculate sprite slice height //
+			const spriteHeight = 290 * spriteHit.sprite.height / (1 + spriteHit.hitDistance)
+			const spriteColumn = Math.floor(
+				clamp(
+					Math.abs(
+						spriteHit.sprite.width / 2 - spriteHit.distFromSpriteToRay
+					),
+					0, spriteHit.sprite.width - 1
+				)
+			);
+			// draw a slice of the sprite
+			drawtex(i, 100 - spriteHeight / 2, spriteHit.sprite, spriteColumn, spriteHeight, true);
 		}
 
 		a++;

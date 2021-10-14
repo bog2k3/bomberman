@@ -52,4 +52,13 @@ export class Fire extends GridEntity {
 			collisionResult.entity.fry();
 		}
 	}
+
+	/**
+	 * @override
+	 * @returns {dosemuSprite.Sprite}
+	 */
+	 get3DSprite() {
+		const frames = fireSprites["middleH"].frames;
+		return frames[Math.floor(this.animationFrame) % frames.length];
+	}
 }

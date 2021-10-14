@@ -48,4 +48,12 @@ export class CharacterExplodeAnimation extends Entity {
 	getCurrentSprite() {
 		return this.spriteSet.frames[Math.floor(this.animationFrame) % this.spriteSet.frames.length];
 	}
+
+	/**
+	 * @override
+	 * @returns {dosemuSprite.Sprite}
+	 */
+	 get3DSprite() {
+		return this.getCurrentSprite();
+	}
 }

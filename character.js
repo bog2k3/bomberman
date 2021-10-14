@@ -159,4 +159,13 @@ export class Character extends Entity {
 		new CharacterExplodeAnimation(this.spriteSet.explode, this.x, this.y);
 		this.destroy();
 	}
+
+	/**
+	 * @override
+	 * @returns {dosemuSprite.Sprite}
+	 */
+	 get3DSprite() {
+		const currentFrame = Math.floor(this.animationFrame) % this.spriteSet[this.orientation].frames.length;
+		return this.spriteSet.down.frames[currentFrame];
+	 }
 }

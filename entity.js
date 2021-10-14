@@ -1,4 +1,4 @@
-import { dosemuBBox } from "./node_modules/dosemu/index.js";
+import { dosemuBBox, dosemuSprite } from "./node_modules/dosemu/index.js";
 
 export class Entity {
 
@@ -33,6 +33,12 @@ export class Entity {
 	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
 	 **/
 	draw(mapOffsX, mapOffsY) { throw "you must override abstract method."; }
+
+	/**
+	 * @abstract
+	 * @returns {dosemuSprite.Sprite}
+	 */
+	get3DSprite() { throw "you must override abstract method"; }
 
 	/** @virtual override this to implement update */
 	update(dt) {}

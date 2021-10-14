@@ -85,4 +85,12 @@ export class Bomb extends GridEntity {
 	fry() {
 		this.explode();
 	}
+
+	/**
+	 * @override
+	 * @returns {dosemuSprite.Sprite}
+	 */
+	 get3DSprite() {
+		 return this.getCurrentSprite();
+	 }
 }
