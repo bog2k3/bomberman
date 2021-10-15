@@ -207,12 +207,6 @@ export function render(map, player, entities, theme) {
 				while (ty < 0) ty += tileSize;
 				dosemu.drawPixel(i, 99 + j, theme.fieldSprite.pixels[ty][tx]);
 				dosemu.drawPixel(i, 100 - j, 117);
-				if (false /* enableCeiling*/) {
-
-					// let cofs = i+(maxy-(wh>>1))*320-32000;
-					// buffer[cofs] = ceilling.pixels[ty][tx];
-					// cofs -= 320;
-				}
 			}
 		}
 

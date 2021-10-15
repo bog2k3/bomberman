@@ -2,6 +2,7 @@ import { dosemuSprite } from "./node_modules/dosemu/index.js";
 import { GridEntity } from "./grid-entity.js";
 import { fireSprites } from "./fire-sprites.js";
 import { checkCollision } from "./collision.js";
+import { layers } from "./layers.js";
 
 export class Fire extends GridEntity {
 
@@ -13,9 +14,7 @@ export class Fire extends GridEntity {
 		super(row, column);
 		this.type = type;
 		this.isSolid = false; // don't prevent other entities from going over fire
-		this.setLayer(-1); // appear behind bricks
-
-		this.checkCollision();
+		this.setLayer(layers.Fire); // appear behind bricks
 	}
 
 	/** @returns {string} the type of entity */

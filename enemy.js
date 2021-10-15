@@ -3,6 +3,7 @@ import { Character } from "./character.js";
 import { CollisionResult } from "./collision.js";
 import { Player } from "./player.js";
 import * as world from "./world.js";
+import * as constants from "./constants.js";
 
 export class Enemy extends Character {
 	type = 0;
@@ -10,7 +11,8 @@ export class Enemy extends Character {
 	constructor(data) {
 		super({
 			...data,
-			boundingBox: {up: -7, down: 7, left: -6, right: 6}
+			boundingBox: {up: -7, down: 7, left: -6, right: 6},
+			baseSpeed: constants.ENEMY_SPEED[data.type]
 		});
 		this.type = data.type || 0;
 	}
@@ -35,6 +37,9 @@ export class Enemy extends Character {
 		if (collision.entity && collision.entity instanceof Player) {
 			// we've just eaten a player :-)
 			collision.entity.die();
+			return;
+		}
+		if (collision.entity && !collision.entity.isSolid) {
 			return;
 		}
 		const [myRow, myCol] = [this.getRow(), this.getColumn()];

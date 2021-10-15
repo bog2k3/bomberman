@@ -3,10 +3,11 @@ import * as collision from "./collision.js";
 import { Entity } from "./entity.js";
 import * as constants from "./constants.js";
 
-/** @type {{map: number[][], entities: Entity[]}} */
+/** @type {{map: number[][], entities: Entity[], onBrickDestroyed: (row: number, col: number) => void}} */
 const data = {
 	map: [],
-	entities: []
+	entities: [],
+	onBrickDestroyed: null,
 };
 
 /** @param {number[][]} map */
@@ -85,4 +86,18 @@ export function getEntitiesInCell(row, col) {
 	bbox.left = col * constants.TILE_SIZE;
 	bbox.right = bbox.left + constants.TILE_SIZE - 1;
 	return getEntitiesInArea(bbox);
+}
+
+export function destroyBrick(row, col) {
+	if (getMapCell(row, col) === 1) {
+		setMapCell(row, col, 0);
+		if (data.onBrickDestroyed) {
+			data.onBrickDestroyed(row, col);
+		}
+	}
+}
+
+/** @param {(row: number, col: number) => void} callback */
+export function setOnBrickDestroyedCallback(callback) {
+	data.onBrickDestroyed = callback;
 }

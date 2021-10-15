@@ -3,6 +3,7 @@ import * as constants from "./constants.js";
 import { dosemu, dosemuBBox } from "./node_modules/dosemu/index.js";
 import { Entity } from "./entity.js";
 
+/** @abstract */
 export class GridEntity extends Entity {
 	row = 0;
 	column = 0;

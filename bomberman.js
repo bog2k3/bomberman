@@ -14,11 +14,15 @@ import { Enemy } from "./enemy.js";
 import { enemySprites } from "./enemy-sprites.js";
 import { mapsCollection } from "./maps.js";
 import * as raycast from "./raycast.js"
+import { PowerupBomb } from "./powerup-bomb.js";
+import { PowerupRadius } from "./powerup-radius.js";
+import { PowerupSpeed } from "./powerup-speed.js";
 
 export function init() {
 	buildThemes();
 	Entity.onEntityCreated = handleEntityCreated;
 	Entity.onEntityDestroyed = handleEntityDestroyed;
+	world.setOnBrickDestroyedCallback(handleBrickDestroyed);
 	reset();
 	// selectMap(mapsCollection[1]); // select a specific map
 	selectMap(); // no arguments will create a random map
@@ -169,7 +173,6 @@ function spawnEntities() {
 					player = new Player({
 						x: playerX,
 						y: playerY,
-						speed: constants.PLAYER_INITIAL_SPEED * constants.TILE_SIZE,
 						spriteSet: playerSprites[0]
 					});
 					break;
@@ -182,7 +185,6 @@ function spawnEntities() {
 						x: enemyX,
 						y: enemyY,
 						type: enemyType,
-						speed: constants.ENEMY_SPEED[enemyType] * constants.TILE_SIZE,
 						spriteSet: enemySprites[enemyType]
 					});
 					break;
@@ -615,5 +617,29 @@ function nextEditTileType() {
 	editTileType = (editTileType + 1) % 10;
 	if (editTileType > 3 && editTileType < 9) {
 		editTileType = 9; // skip types that are not currently used
+	}
+}
+
+function handleBrickDestroyed(row, col) {
+	const diceFaces = [{
+		chance: constants.CHANCE_SPAWN_SPEED_POWERUP,
+		action: () => new PowerupSpeed(row, col)
+	}, {
+		chance: constants.CHANCE_SPAWN_BOMB_POWERUP,
+		action: () => new PowerupBomb(row, col)
+	}, {
+		chance: constants.CHANCE_SPAWN_RADIUS_POWERUP,
+		action: () => new PowerupRadius(row, col)
+	}, ];
+	const totalChanceToSpawn = diceFaces.reduce((prev, crt) => prev + crt.chance, 0);
+	const chanceToNotSpawnPowerup = diceFaces.reduce((prev, crt) => prev * (1 - crt.chance), 1);
+	let dice = Math.random() * (totalChanceToSpawn + chanceToNotSpawnPowerup);
+	for (let face of diceFaces) {
+		if (dice < face.chance) {
+			face.action();
+			break;
+		} else {
+			dice -= face.chance;
+		}
 	}
 }

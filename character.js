@@ -4,10 +4,12 @@ import { dosemu, dosemuBBox, dosemuSprite } from "./node_modules/dosemu/index.js
 import { SpriteSequence } from "./sprite-sequence.js";
 import * as constants from "./constants.js";
 import { CharacterExplodeAnimation } from "./character-explode-animation.js";
+import { layers } from "./layers.js";
 
 export class Character extends Entity {
 	x = 0;
 	y = 0;
+	baseSpeed = 0;
 	speed = 0;
 
 	/** @private */
@@ -32,7 +34,8 @@ export class Character extends Entity {
 		if (data) {
 			Object.assign(this, data);
 		}
-		this.setLayer(1);
+		this.setLayer(layers.Character);
+		this.speed = this.baseSpeed;
 	}
 
 	/** @returns {dosemuBBox.BoundingBox} the bounding box of this entity, in world space*/
@@ -99,7 +102,8 @@ export class Character extends Entity {
 	update(dt) {
 		if (!this.isStopped) {
 			// update animation
-			this.animationFrame += dt * this.spriteSet[this.orientation].animationSpeed;
+			const speedFactor = Math.sqrt(this.speed / this.baseSpeed);
+			this.animationFrame += dt * speedFactor * this.spriteSet[this.orientation].animationSpeed;
 			// update position
 			const delta = this.speed * dt;
 			const prevX = this.x, prevY = this.y;

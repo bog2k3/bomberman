@@ -1,10 +1,14 @@
 import { dosemuBBox, dosemuSprite } from "./node_modules/dosemu/index.js";
 
+/** @abstract */
 export class Entity {
 
 	layer = 0;
 	isSolid = true;
 	isDestroyed = false;
+
+	/** @type {(this: Entity) => void} callback to be invoked when the entity is destroyed. */
+	onDestroy = null;
 
 	constructor() {
 		if (Entity.onEntityCreated) {
@@ -15,6 +19,9 @@ export class Entity {
 	destroy() {
 		if (!this.isDestroyed) {
 			this.isDestroyed = true;
+			if (this.onDestroy) {
+				this.onDestroy(this);
+			}
 			if (Entity.onEntityDestroyed) {
 				Entity.onEntityDestroyed(this);
 			}
@@ -44,7 +51,7 @@ export class Entity {
 	update(dt) {}
 
 	/**
- * Sets the layer in which this entity resides. The layering affects the draw order.
+	 * Sets the layer in which this entity resides. The layering affects the draw order.
 	 * The base layer (containing the bricks) is zero. Positive layers appear on top, and negative layers below.
 	 * @param {number} layerNumber
 	 */

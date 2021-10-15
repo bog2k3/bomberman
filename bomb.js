@@ -66,16 +66,17 @@ export class Bomb extends GridEntity {
 					dir.blocked = true;
 					continue;
 				}
-				// spawn the right type of fire
-				const isCap = i === this.power-1 || cellType === 1;
-				const fireType = isCap ? `cap${dirKey}` : (
-					["Up", "Down"].includes(dirKey) ? "middleV" : "middleH"
-				);
-				new Fire(fireType, fRow, fColumn);
 				// if we hit a regular brick, we stop here and destroy the brick
 				if (cellType === 1) {
 					dir.blocked = true;
-					world.setMapCell(fRow, fColumn, 0);
+					world.destroyBrick(fRow, fColumn);
+				} else {
+					// spawn the right type of fire
+					const isCap = i === this.power-1 || cellType === 1;
+					const fireType = isCap ? `cap${dirKey}` : (
+						["Up", "Down"].includes(dirKey) ? "middleV" : "middleH"
+					);
+					new Fire(fireType, fRow, fColumn);
 				}
 			}
 		}
