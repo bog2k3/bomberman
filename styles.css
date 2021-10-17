@@ -1,5 +1,6 @@
 body {
-	background-color: black;
+	background-color: #000;
+	font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
 
 #root {
@@ -8,4 +9,67 @@ body {
 
 #emuscreen {
 	margin: 0 auto;
+}
+
+#login {
+	width: 300px;
+	position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -187px;
+    margin-left: -150px;
+	display: flex;
+	flex-direction: column;
+	border: 1px solid #0e505a;
+}
+
+#login .image {
+	width: 300px;
+	height: 224px;
+	background-image: url("images/login-screen.png");
+	background-repeat: no-repeat;
+	background-position: center;
+	border-bottom: 2px solid #0e505a;
+}
+
+#login .join {
+	padding-top: 20px;
+	padding-bottom: 20px;
+	background-color: #008197;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+#login .join #login-input{
+	display: flex;
+	flex-direction: row;
+}
+
+#login .join #login-textbox-icon {
+	color: #fff;
+	border-top: 1px solid #005564;
+	border-left: 1px solid #005564;
+	border-bottom: 1px solid #005564;
+	padding: 5px;
+	background-color: #006476;
+}
+
+#login .join #login-textbox {
+	width: 100%;
+	padding: 5px 10px;
+}
+
+#login .join #login-button {
+	margin: 5px 10px;
+	width: 65px;
+	padding: 5px 10px;
+	background-color: #005564;
+	border: 2px solid #006476;
+	color: #fff;
+	font-weight: bold;
+}
+#login .join #login-button:hover {
+	background-color: #00424e;
+	cursor: pointer;
 }
