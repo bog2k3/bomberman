@@ -4,14 +4,18 @@ import * as bomberman from "./bomberman.js";
 let lastTime = new Date().getTime();
 
 function init() {
-	// dosemu.setNoiseStrength(0);
-	requestAnimationFrame(step);
-	dosemu.hideMouse();
-
-	bomberman.init();
+	join().then(() => {
+		removeJoinScreen();
+		dosemu.init(document.querySelector("#emuscreen"), null);
+		// dosemu.setNoiseStrength(0);
+		requestAnimationFrame(step);
+		dosemu.hideMouse();
+		bomberman.init();
+	})
 }
 
 function step() {
+
 	draw();
 
 	const now = new Date().getTime();
@@ -28,9 +32,30 @@ function draw() {
 	bomberman.draw();
 }
 
+function join() {
+	let resolveFn;
+	const joinPromise = new Promise((resolve, reject) => {
+		resolveFn = resolve;
+	});
+
+	const joinButton = document.getElementById("join-button");
+
+	joinButton.addEventListener("click", (ev) => {
+		const inputText = document.getElementById("join-textbox");
+		resolveFn();
+	});
+
+	return joinPromise;
+}
+
+function removeJoinScreen() {
+	const bodyElement = document.getElementsByTagName("body")[0];
+	const joinScreenElement = document.getElementById("join");
+	bodyElement.removeChild(joinScreenElement);
+}
+
 (function main() {
 	document.onreadystatechange = () => {
-		dosemu.init(document.querySelector("#emuscreen"), null);
 		init();
 	};
 })();
