@@ -61,6 +61,9 @@ function join() {
 
 	joinButton.addEventListener("click", (ev) => {
 		const inputText = document.getElementById("join-textbox");
+		if (!inputText.value) {
+			return;
+		}
 		socket.joinGame(inputText.value)
 		.then(() => {
 			// TODO: after user joined the server change to waiting for other users screen (Create it!).
