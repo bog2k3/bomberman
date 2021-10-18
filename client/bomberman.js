@@ -35,7 +35,7 @@ export function init() {
 
 export function update(dt) {
 	if (!EDIT_MODE) {
-		entities.forEach(e => e.update(dt));
+		world.update(dt);
 		if (enable3DMode) {
 			raycast.update(player, dt);
 		}
@@ -86,10 +86,6 @@ let maxMapY = 0;
 let scrollX = 0;
 let scrollY = 0;
 
-/** @type {Entity[]} */
-let entities = [];
-
-
 function buildThemes() {
 	themes.push({
 		brickSprites: [
@@ -115,6 +111,8 @@ function draw2D() {
 			}
 		}
 	}
+
+	const entities = world.getEntities();
 
 	// draw entities below layer 0:
 	let iEntity = 0;
@@ -148,12 +146,11 @@ function draw2D() {
 }
 
 function draw3D() {
-	raycast.render(map, player, entities, themes[selectedTheme]);
+	raycast.render(map, player, world.getEntities(), themes[selectedTheme]);
 }
 
 function reset() {
 	world.clearData();
-	entities = [];
 	player = null;
 	playerHasDied = false;
 }
@@ -256,14 +253,12 @@ function drawTile(row, col, mapDX, mapDY) {
 
 /** @param {Entity} entity */
 function handleEntityCreated(entity) {
-	entities.push(entity);
-	entities.sort((a, b) => a.layer - b.layer);
 	world.addEntity(entity);
+	world.getEntities().sort((a, b) => a.layer - b.layer);
 }
 
 /** @param {Entity} entity */
 function handleEntityDestroyed(entity) {
-	entities.splice(entities.indexOf(entity), 1);
 	world.removeEntity(entity);
 
 	if (entity === player) {

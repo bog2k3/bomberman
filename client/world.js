@@ -28,10 +28,20 @@ export function removeEntity(entity) {
 	collision.removeEntity(entity);
 }
 
+/** @returns {Entity[]} */
+export function getEntities() {
+	return data.entities;
+}
+
 export function clearData() {
 	data.map = [];
 	data.entities = [];
 	collision.clearData();
+}
+
+/** @param {number} dt */
+export function update(dt) {
+	data.entities.forEach(e => e.update(dt));
 }
 
 /**
