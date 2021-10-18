@@ -8,7 +8,13 @@ const data = {
 	map: [],
 	entities: [],
 	onBrickDestroyed: null,
+	headlessMode: true
 };
+
+/** @returns {boolean} true if the game is running in headless mode (no graphics) */
+export function headlessMode() {
+	return data.headlessMode;
+}
 
 /** @param {number[][]} map */
 export function setMap(map) {

@@ -1,0 +1,14 @@
+{
+  "name": "bomberman-common",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bomberman.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bogdan Ionita <bog2k3@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "dosemu": "*"
+  }
+}

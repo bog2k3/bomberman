@@ -1,5 +1,6 @@
 import { dosemu, dosemuSound } from "./node_modules/dosemu/index.js";
-import * as bomberman from "./bomberman.js";
+import * as bomberman from "../common/bomberman.js";
+import { mapsCollection } from "./maps.js";
 
 import * as socket from "./socket.js";
 
@@ -18,7 +19,10 @@ function init() {
 		// dosemu.setNoiseStrength(0);
 		requestAnimationFrame(step);
 		dosemu.hideMouse();
-		bomberman.init();
+		bomberman.init(false);
+		// const map = mapsCollection[1]; // select a specific map
+		const map = bomberman.generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS);
+		bomberman.startGame(map);
 	});
 }
 

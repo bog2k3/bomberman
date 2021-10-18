@@ -1,9 +1,9 @@
 import { dosemu, dosemuSprite } from "./node_modules/dosemu/index.js";
-import { Player } from "./player.js";
-import { Entity } from "./entity.js";
+import { Player } from "../common/player.js";
+import { Entity } from "../common/entity.js";
 import { Theme } from "./theme.js";
-import * as constants from "./constants.js";
-import { clamp } from "./math.js";
+import * as constants from "../common/constants.js";
+import { clamp } from "../common/math.js";
 
 export function init() {
 	// building trigonometric tables //
