@@ -37,10 +37,6 @@ class SocketService {
 		});
 	}
 
-	generateNickname() {
-		return uuidV4();
-	}
-
 	subscribeToEvents(server) {
 
 		server.on('connection', (socket) => {
@@ -76,14 +72,9 @@ class SocketService {
 
 	onUserJoindGame(socket) {
 		socket.on(ClientEvent.JOIN_GAME, (clientNickname , ackFn) => {
-
-			const nickname = clientNickname
-				? clientNickname
-				: this.generateNickname();
-
-			this.userService.addNicknameToSessioId(nickname, socket);
+			this.userService.addNicknameToSessioId(clientNickname, socket);
 			socket.join(SocketRoom.GAME_ROOM);
-			this.sendUserJoined(nickname, socket);
+			this.sendUserJoined(clientNickname, socket);
 			ackFn();
 		});
 	}
