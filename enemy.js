@@ -29,8 +29,10 @@ export class Enemy extends Character {
 	/**
 	 * @override
 	 * @param {CollisionResult} collision
+	 * @param {number} deltaOverlap the difference in overlap between this frame and the previous one
+	 * @param {number} dt time delta since last frame
 	 * */
-	reactToCollision(collision, deltaOverlap) {
+	reactToCollision(collision, deltaOverlap, dt) {
 		if (deltaOverlap < 0) {
 			return; // we don't react to decreasing collisions
 		}

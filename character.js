@@ -77,9 +77,10 @@ export class Character extends Entity {
 	 * @virtual override this to take action when colliding with a brick/entity
 	 * @param {CollisionResult} collision
 	 * @param {number} deltaOverlap the difference in overlap between this frame and the previous one
+	 * @param {number} dt time delta since last frame
 	 * (if positive, the collision is "bigger" than last time, if negative it is "smaller")
 	 * */
-	reactToCollision(collision, deltaOverlap) {
+	reactToCollision(collision, deltaOverlap, dt) {
 		return;
 	}
 
@@ -125,7 +126,7 @@ export class Character extends Entity {
 					this.y = prevY;
 					this.isStopped = true;
 				}
-				this.reactToCollision(collisionResultAfter, deltaOverlap);
+				this.reactToCollision(collisionResultAfter, deltaOverlap, dt);
 			}
 			for (let i=0; i<this.overlapingBombs.length;) {
 				if (!dosemuBBox.getBoundingBoxOverlap(this.getBoundingBox(), this.overlapingBombs[i].getBoundingBox())) {
