@@ -1,8 +1,7 @@
-const { Server } = require("socket.io");
-
-const ClientEvent = require("./client-event.js");
-const ServerEvents = require("./server-events.js");
-const SocketRoom = require("./socket-room");
+import { Server } from "socket.io";
+import { ClientEvent } from "./client-event.js";
+import { ServerEvents } from "./server-events.js";
+import { SocketRoom } from "./socket-room.js";
 
 const WEBSOCKET_CONSTANTS = {
 	PORT : 7075,
@@ -11,7 +10,7 @@ const WEBSOCKET_CONSTANTS = {
 	MAX_HTTP_BUFFER_SIZE : 1e7, // 1e7 = 100mb (default socket io value is 1e6 = 1mb)
 }
 
-class SocketService {
+export class SocketService {
 
 	constructor(
 		httpServer,
@@ -92,5 +91,3 @@ class SocketService {
 		socket.emit(ServerEvents.SEND_USER_IDENTITY, sessionId);
 	}
 }
-
-module.exports = { SocketService };
