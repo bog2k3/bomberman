@@ -47,6 +47,16 @@ export class Player extends Character {
 		}
 	}
 
+	/**
+	 * @param {number} mapOffsX the position of the map, relative to the screen, in pixels
+	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
+	 **/
+	 draw(mapOffsX, mapOffsY) {
+		 super.draw(mapOffsX, mapOffsY);
+		//  dosemu.drawText(this.x+5, this.y - 24, "Name", 0, "center");
+		//  dosemu.drawText(this.x+4, this.y - 25, "Name", 10, "center");
+	 }
+
 	spawnBomb() {
 		if (this.bombCount >= this.maxBombCount) {
 			return;

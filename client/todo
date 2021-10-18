@@ -1,4 +1,26 @@
 * respawn with Enter
-* powerups
 * HUD
 * sound
+
+
+NETWORK:
+	* refactor - extract all game logic into a client-agnostic module (that can also run in a back-end environment, without graphics)
+	* clients send keyboard inputs to server
+	* server decides on all actions based on AI, timers and clients' input
+	* server broadcasts updates to all clients which include:
+		* entity positions and orientations (every 50ms)
+		* events: (whenever they happen)
+			* player pressed/released key
+			* player spawned
+			* bomb spawned
+			* bomb exploded
+			* fire spawned
+			* fire expired
+			* enemy changed direction
+			* brick destroyed
+			* powerup spawned
+			* powerup consumed
+			* player speed changed (as a result of consuming a powerup)
+			* enemy fried
+			* player fried
+	* all "animation" entities are not handled by the server, but created only by the clients (characterExplodeAnimation for example).
