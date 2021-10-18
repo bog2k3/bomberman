@@ -1,18 +1,16 @@
 import * as constants from "./constants.js";
-import { dosemu } from "./node_modules/dosemu/index.js";
-// import { Theme } from "./theme.js";
-// import { buildThemes } from "../client/themes.js";
 import { Player } from "./player.js";
-// import { playerSprites } from "./player-sprites.js";
 import * as world from "./world.js";
-import { clamp } from "./math.js";
 import { Entity } from "./entity.js";
 import { Enemy } from "./enemy.js";
-// import { enemySprites } from "./enemy-sprites.js";
-// import * as raycast from "./raycast.js"
 import { PowerupBomb } from "./powerup-bomb.js";
 import { PowerupRadius } from "./powerup-radius.js";
 import { PowerupSpeed } from "./powerup-speed.js";
+
+/** @type {SpriteLoader} */
+let spriteLoader = null;
+
+let raycast = null;
 
 export function reset() {
 	world.clearData();
@@ -20,21 +18,33 @@ export function reset() {
 	playerHasDied = false;
 }
 
-/** @param {boolean} headlessMode True to run in headless mode (no graphics, no user inputs) */
-export function init(headlessMode) {
+/**
+ * @param {boolean} headlessMode True to run in headless mode (no graphics, no user inputs)
+ * @returns {Promise<void>} a promise that is resolved after loading is done.
+ **/
+export async function init(headlessMode) {
 	Entity.onEntityCreated = handleEntityCreated;
 	Entity.onEntityDestroyed = handleEntityDestroyed;
 	world.setOnBrickDestroyedCallback(handleBrickDestroyed);
 	reset();
+	world.setHeadlessMode(headlessMode);
 
 	if (!headlessMode) {
 		registerCommandHandlers();
 		raycast.init();
+		spriteLoader = (await import("../client/sprite-loader.js")).SpriteLoader;
+		themes = (await import("../client/themes.js")).buildThemes();
+		raycast = await import("../client/raycast.js");
 	}
 }
 
-export function startGame(mapTemplate) {
+/**
+ * @param {number[][]} mapTemplate,
+ * @param {number} playerSpawnSlot
+ */
+export function startGame(mapTemplate, playerSpawnSlot) {
 	selectMap(mapTemplate);
+	spawnEntities(playerSpawnSlot);
 }
 
 export function update(dt) {
@@ -55,7 +65,7 @@ let enable3DMode = false;
 let EDIT_MODE = false;
 
 /** @type {Theme[]} */
-const themes = buildThemes();
+let themes = null;
 
 let selectedTheme = 0;
 
@@ -73,7 +83,9 @@ let maxMapY = 0;
 let scrollX = 0;
 let scrollY = 0;
 
-function spawnEntities() {
+/** @param {number} playerSpawnSlot */
+function spawnEntities(playerSpawnSlot) {
+	let crtPlayerSlot = 0;
 	for (let i = 0; i < map.length; i++) {
 		for (let j = 0; j < map[i].length; j++) {
 			if (map[i][j] <= 2) {
@@ -82,16 +94,16 @@ function spawnEntities() {
 			// some entity type
 			switch (map[i][j]) {
 				case 9: // player
-					if (player) {
-						break; // player is already spawned
+					if (playerSpawnSlot == crtPlayerSlot) {
+						const playerX = j * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
+						const playerY = i * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
+						player = new Player({
+							x: playerX,
+							y: playerY,
+							spriteSet: spriteLoader?.getPlayerSprites(0)
+						});
 					}
-					const playerX = j * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
-					const playerY = i * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
-					player = new Player({
-						x: playerX,
-						y: playerY,
-						spriteSet: playerSprites[0]
-					});
+					crtPlayerSlot++;
 					break;
 				default: // enemy
 					const enemyX = j * constants.TILE_SIZE + constants.ENEMY_INITIAL_X_OFFS;
@@ -102,7 +114,7 @@ function spawnEntities() {
 						x: enemyX,
 						y: enemyY,
 						type: enemyType,
-						spriteSet: enemySprites[enemyType]
+						spriteSet: spriteLoader?.getEnemySprites(enemyType)
 					});
 					break;
 			}
@@ -110,7 +122,7 @@ function spawnEntities() {
 		}
 	}
 	if (!player) {
-		console.error(`Player spawn position not found in map!`);
+		console.error(`Player spawn position #${playerSpawnSlot} not found in map!`);
 	}
 }
 
@@ -125,13 +137,14 @@ function selectMap(template) {
 	maxMapY = map.length * constants.TILE_SIZE;
 
 	world.setMap(map);
-	spawnEntities();
 }
 
 /** @param {Entity} entity */
 function handleEntityCreated(entity) {
 	world.addEntity(entity);
-	world.getEntities().sort((a, b) => a.layer - b.layer);
+	if (!world.headlessMode()) {
+		world.getEntities().sort((a, b) => a.layer - b.layer);
+	}
 }
 
 /** @param {Entity} entity */

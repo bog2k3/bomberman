@@ -1,7 +1,7 @@
 import { dosemu, dosemuBBox } from "./node_modules/dosemu/index.js";
 import { Entity } from "../common/entity.js";
 import { SpriteSequence } from "./sprite-sequence.js";
-import { layers } from "./layers.js";
+import { layers } from "../common/layers.js";
 
 export class CharacterExplodeAnimation extends Entity {
 	/** @private */

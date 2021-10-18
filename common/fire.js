@@ -1,6 +1,5 @@
 import { dosemuSprite } from "./node_modules/dosemu/index.js";
 import { GridEntity } from "./grid-entity.js";
-import { fireSprites } from "./fire-sprites.js";
 import { checkCollision } from "./collision.js";
 import { layers } from "./layers.js";
 
@@ -8,6 +7,7 @@ export class Fire extends GridEntity {
 
 	animationFrame = 0;
 	animationDirection = 1;
+	sprites = null;
 
 	/** @param {"center"|"middleV"|"middleH"|"capRight"|"capLeft"|"capUp"|"capDown"} type */
 	constructor(type, row, column) {
@@ -28,7 +28,7 @@ export class Fire extends GridEntity {
 
 	/** @private */
 	getSpriteSequence() {
-		return fireSprites[this.type];
+		return this.sprites ? this.sprites[this.type] : null;
 	}
 
 	update(dt) {

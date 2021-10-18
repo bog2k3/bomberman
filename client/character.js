@@ -1,9 +1,10 @@
 import { checkCollision, CollisionResult } from "./collision.js";
 import { Entity } from "./entity.js";
-import { dosemu, dosemuBBox } from "./node_modules/dosemu/index.js";
+import { dosemu, dosemuBBox, dosemuSprite } from "./node_modules/dosemu/index.js";
+import { SpriteSequence } from "./sprite-sequence.js";
 import * as constants from "./constants.js";
-// import { CharacterExplodeAnimation } from "./character-explode-animation.js";
-import { layers } from "./layers.js";
+import { CharacterExplodeAnimation } from "./character-explode-animation.js";
+import { layers } from "../common/layers.js";
 
 export class Character extends Entity {
 	x = 0;

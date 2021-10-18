@@ -3,13 +3,17 @@ import * as collision from "./collision.js";
 import { Entity } from "./entity.js";
 import * as constants from "./constants.js";
 
-/** @type {{map: number[][], entities: Entity[], onBrickDestroyed: (row: number, col: number) => void}} */
+/** @type {{map: number[][], entities: Entity[], onBrickDestroyed: (row: number, col: number) => void, headlessMode: boolean}} */
 const data = {
 	map: [],
 	entities: [],
 	onBrickDestroyed: null,
 	headlessMode: true
 };
+
+export function setHeadlessMode(value) {
+	data.headlessMode = value;
+}
 
 /** @returns {boolean} true if the game is running in headless mode (no graphics) */
 export function headlessMode() {

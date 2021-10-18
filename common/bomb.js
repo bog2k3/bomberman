@@ -1,5 +1,4 @@
 import { dosemuSprite } from "./node_modules/dosemu/index.js";
-import { bombSprites } from "./bomb-sprites.js";
 import * as constants from "./constants.js";
 import { GridEntity } from "./grid-entity.js";
 import { Fire } from "./fire.js";
