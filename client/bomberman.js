@@ -18,6 +18,7 @@ import { PowerupBomb } from "./powerup-bomb.js";
 import { PowerupRadius } from "./powerup-radius.js";
 import { PowerupSpeed } from "./powerup-speed.js";
 
+
 export function init() {
 	buildThemes();
 	Entity.onEntityCreated = handleEntityCreated;
@@ -87,6 +88,7 @@ let scrollY = 0;
 
 /** @type {Entity[]} */
 let entities = [];
+
 
 function buildThemes() {
 	themes.push({

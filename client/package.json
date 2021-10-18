@@ -9,6 +9,8 @@
   "author": "bogdan",
   "license": "ISC",
   "dependencies": {
-    "dosemu": "*"
+    "dosemu": "*",
+    "rxjs": "^7.4.0",
+    "socket.io-client": "^4.3.2"
   }
 }
