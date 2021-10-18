@@ -1,20 +1,20 @@
 const express = require('express');
 const app = express();
 const http = require('http');
-const { Server } = require("socket.io");
+const { SocketService } = require("./socket/socket.service.js");
+const { UserService } = require("./user.service.js");
 
-const server = http.createServer(app);
-const io = new Server(server);
+const PORT = 7075;
+
+const httpServer = http.createServer(app);
+
+const userService = new UserService();
+const socketService = new SocketService(httpServer, userService);
 
 app.get('/', (req, res) => {
 	res.send('<h1>Hello world</h1>');
 });
 
-
-io.on('connection', (socket) => {
-	console.log('a user connected');
-});
-
-server.listen(3000, () => {
-	console.log('listening on *:3000');
+httpServer.listen(PORT, () => {
+	console.log(`listening on *:${PORT}`);
 });

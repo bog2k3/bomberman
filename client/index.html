@@ -1,0 +1,25 @@
+<html>
+	<head>
+		<title>Bomberman 3D</title>
+		<link rel="stylesheet" href="styles.css">
+		<script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+		<script src="node_modules/rxjs/dist/bundles/rxjs.umd.min.js"></script>
+		<script src="https://use.fontawesome.com/075fea5f7a.js"></script>
+	</head>
+	<body>
+		<div id="root">
+			<div id="emuscreen"></div>
+		</div>
+		<div id="join">
+			<div class="image"></div>
+			<div class="join-component">
+				<div id="join-input">
+					<i class="fa fa-user" id="join-textbox-icon" aria-hidden="true"></i>
+					<input type="text" id="join-textbox">
+				</div>
+				<button id="join-button">JOIN</button>
+			</div>
+		</div>
+	</body>
+	<script type="module" src="main.js"></script>
+</html>
