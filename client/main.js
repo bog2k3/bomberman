@@ -65,8 +65,8 @@ function join() {
 		.then(() => {
 			// TODO: after user joined the server change to waiting for other users screen (Create it!).
 			// when all users joined then resolveFn();
-			// resolveFn();
-		})
+			resolveFn();
+		});
 	});
 
 	return joinPromise;
