@@ -1,10 +1,9 @@
+import { dosemuBBox } from "./node_modules/dosemu/index.js";
 import { checkCollision, CollisionResult } from "./collision.js";
 import { Entity } from "./entity.js";
-import { dosemuBBox } from "../client/node_modules/dosemu/index.js";
-import { SpriteSequence } from "../client/sprite-sequence.js";
-import * as constants from "./constants.js";
-import { CharacterExplodeAnimation } from "../client/character-explode-animation.js";
 import { layers } from "./layers.js";
+import * as constants from "./constants.js";
+import * as world from "./world.js";
 
 export class Character extends Entity {
 	x = 0;
@@ -108,8 +107,11 @@ export class Character extends Entity {
 		if (!["up", "down", "left", "right"].includes(direction)) {
 			return;
 		}
-		this.isStopped = false;
 		this.orientation = direction;
+		if (!this.isStopped) {
+			this.startAnimation(this.orientation);
+		}
+		this.isStopped = false;
 	}
 
 	/** @override we've been fried by an explosion */
@@ -118,8 +120,9 @@ export class Character extends Entity {
 	}
 
 	die() {
-		// create a dummy explode animation entity
-		new CharacterExplodeAnimation(this.spriteSet.explode, this.x, this.y);
+		if (!world.headlessMode()) {
+			world.requestClientCreateCharacterExplodeAnimation(this.getType(), this.x, this.y);
+		}
 		this.destroy();
 	}
 }

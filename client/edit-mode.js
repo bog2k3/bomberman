@@ -119,18 +119,14 @@ export function update(dt) {
 	}
 }
 
-function withinMap(row, col) {
-	return row >= 0 && row < map.length && col >= 0 && col < map[0].length;
-}
-
-function nextEditTileType() {
+export function nextEditTileType() {
 	editTileType = (editTileType + 1) % 10;
 	if (editTileType > 3 && editTileType < 9) {
 		editTileType = 9; // skip types that are not currently used
 	}
 }
 
-function handleEditModeKey(key) {
+export function handleKey(key) {
 	switch (key) {
 		case '`': editTileType = 0; break;
 		case '1': editTileType = 1; break;
@@ -146,6 +142,12 @@ function handleEditModeKey(key) {
 		case 'c': clearMap(); break;
 		case 'r': map = mapTemplate = generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS); break;
 	}
+}
+
+// --------------------------------------------------------------------------------------------------
+
+function withinMap(row, col) {
+	return row >= 0 && row < map.length && col >= 0 && col < map[0].length;
 }
 
 function fillMapWithBricks() {

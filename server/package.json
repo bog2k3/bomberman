@@ -9,7 +9,6 @@
   "author": "Alin Simina <alinsimy@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "dosemu": "^1.2.1",
     "express": "^4.17.1",
     "socket.io": "^4.3.0",
     "uuid": "^8.3.2"

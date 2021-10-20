@@ -26,17 +26,18 @@ export function reset() {
 }
 
 /**
- * @param {boolean} headlessMode True to run in headless mode (no graphics, no user inputs)
+ * @param {boolean} headlessMode True to run in headless mode (no graphics, no keyboard inputs)
  * @returns {Promise<void>} a promise that is resolved after loading is done.
  **/
 export async function init(headlessMode) {
-	Entity.onEntityCreated = handleEntityCreated;
-	Entity.onEntityDestroyed = handleEntityDestroyed;
+	Entity.onEntityCreated.subscribe(handleEntityCreated);
+	Entity.onEntityDestroyed.subscribe(handleEntityDestroyed);
 	world.setOnBrickDestroyedCallback(handleBrickDestroyed);
 	world.setHeadlessMode(headlessMode);
 
 	if (!headlessMode) {
 		client = await import("../client/client.js");
+		world.setClient(client);
 	}
 
 	reset();
@@ -132,14 +133,6 @@ function handleEntityCreated(entity) {
 /** @param {Entity} entity */
 function handleEntityDestroyed(entity) {
 	world.removeEntity(entity);
-
-	// if (entity === player) {
-	// 	// player was destroyed, we wait for the explode animation to finish
-	// 	setTimeout(() => {
-	// 		// TODO respawn or whatever
-	// 		playerHasDied = true;
-	// 	}, 1500);
-	// }
 }
 
 function handleBrickDestroyed(row, col) {

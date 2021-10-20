@@ -1,3 +1,4 @@
+import { dosemu } from "../common/node_modules/dosemu/index.js";
 import { Bomb } from "../common/bomb.js";
 import { Enemy } from "../common/enemy.js";
 import { Entity } from "../common/entity.js";
@@ -14,9 +15,10 @@ import { SpriteSequence } from "./sprite-sequence.js";
 import { clientState } from "./client-state.js";
 import { buildThemes } from "./themes.js";
 import { clamp } from "../common/math.js";
+import { CharacterExplodeAnimation } from "./character-explode-animation.js";
 import * as world from "../common/world.js";
 import * as constants from "../common/constants.js";
-import { dosemu } from "./node_modules/dosemu/index.js";
+import { powerupSprites } from "./powerup-sprites.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -157,7 +159,16 @@ function drawEntity(entity, offsX, offsY) {
 			return drawBomb(entity, offsX, offsY);
 		case "fire":
 			return drawFire(entity, offsX, offsY);
-		default: throw `entity type not handled in draw: ${entity.getType()}`;
+		case "character-explode-animation":
+			return drawCharacterExplodeAnimation(entity, offsX, offsY);
+		case "powerup-bomb":
+			return drawGridEntity(entity, powerupSprites.bomb, offsX, offsY);
+		case "powerup-radius":
+			return drawGridEntity(entity, powerupSprites.radius, offsX, offsY);
+		case "powerup-speed":
+			return drawGridEntity(entity, powerupSprites.speed, offsX, offsY);
+		default:
+			throw `entity type not handled in draw: ${entity.getType()}`;
 	}
 }
 
@@ -196,7 +207,7 @@ function drawCharacter(character, spriteSet, offsX, offsY) {
 		console.error(`Missing spriteSet for orientation="${character.orientation}" in Character `, character);
 		return;
 	}
-	const currentFrame = character.animationController.getCurrentFrame(spriteSeq.frames.length, spriteSeq.animationSpeed);
+	const currentFrame = character.animationController.getCurrentFrame(spriteSeq.frames.length);
 	if (!spriteSeq.frames || !spriteSeq.frames[currentFrame]) {
 		console.error(`Missing animation frame ${currentFrame} in spriteSet for orientation="${character.orientation}" in Character `, character);
 		return
@@ -209,10 +220,75 @@ function drawCharacter(character, spriteSet, offsX, offsY) {
  * @param {SpriteSequence} spriteSequence
  * */
 function drawGridEntity(entity, spriteSequence, offsX, offsY) {
-	const currentFrame = entity.animationController.getCurrentFrame(spriteSequence.frames.length, spriteSequence.animationSpeed);
+	const currentFrame = entity.animationController.getCurrentFrame(spriteSequence.frames.length);
 	dosemu.drawSprite(
 		offsX + (entity.column + 0.5) * constants.TILE_SIZE,
 		offsY + (entity.row + 0.5) * constants.TILE_SIZE,
 		spriteSequence.frames[currentFrame]
 	);
 }
+
+/**
+ * @param {CharacterExplodeAnimation} entity
+ * @param {number} offsX
+ * @param {number} offsY
+ */
+function drawCharacterExplodeAnimation(entity, offsX, offsY) {
+	const currentFrame = todo; //entity.animationController.getCurrentFrame(entity.spriteSequence.frames.length);
+	dosemu.drawSprite(
+		offsX + entity.x,
+		offsY + entity.y,
+		entity.spriteSequence[currentFrame]
+	);
+}
+
+/**
+ * @param {string} entityType
+ * @param {string} animationName
+ * @returns {SpriteSequence}
+ */
+function getSpriteSequenceForAnimation(entityType, animationName) {
+	switch(entityType) {
+		case "player":
+			return playerSprites[0][animationName];
+		case "enemy-0":
+			return enemySprites[0][animationName];
+		case "bomb":
+			return bombSprites;
+		case "fire":
+			return fireSprites[animationName];
+		case "character-explode-animation":
+			return todo;
+		case "powerup-bomb":
+			return powerupSprites.bomb;
+		case "powerup-radius":
+			return powerupSprites.radius;
+		case "powerup-speed":
+			return powerupSprites.speed;
+		default:
+			throw `entity type not handled in getSpriteSequenceForAnimation: ${entityType}`;
+	}
+}
+
+/**
+ * @param {Entity} entity
+ * @param {String} animationName
+ **/
+function configureAnimationController(entity, animationName) {
+	entity.animationController.setDurationFromSpriteSeq(
+		getSpriteSequenceForAnimation(entity.getType(), animationName)
+	);
+}
+
+/** @param {Entity} entity */
+function handleEntityCreated(entity) {
+	entity.onAnimationStart.subscribe(
+		(animationName) => configureAnimationController(entity, animationName)
+	)
+}
+
+// --------------------------------------------------------------------------------------------------
+
+(function init() {
+	Entity.onEntityCreated.subscribe(handleEntityCreated);
+})();

@@ -1,5 +1,5 @@
-import * as constants from "./constants.js";
 import { dosemuBBox } from "./node_modules/dosemu/index.js";
+import * as constants from "./constants.js";
 import { Entity } from "./entity.js";
 
 /** @abstract */

@@ -1,4 +1,4 @@
-import { dosemu, dosemuSprite } from "./node_modules/dosemu/index.js";
+import { dosemu, dosemuSprite } from "../common/node_modules/dosemu/index.js";
 import { Player } from "../common/player.js";
 import { Entity } from "../common/entity.js";
 import { Theme } from "./theme.js";

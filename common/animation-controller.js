@@ -1,5 +1,3 @@
-import { SpriteSequence } from "../client/sprite-sequence.js";
-
 export class AnimationController {
 
 	animationDuration = 1.0; // seconds
@@ -9,14 +7,15 @@ export class AnimationController {
 	animationProgress = 0.0; // seconds
 
 	/** @param {SpriteSequence} spriteSequence Configures animation duration/speed from the default values within the sprite sequence. */
-	defaultFromSpriteSequence(spriteSequence) {
-		this.animationDirection = 1.0;
+	setDurationFromSpriteSeq(spriteSequence) {
 		this.animationDuration = spriteSequence.frames.length / spriteSequence.animationSpeed;
-		this.enableLoop = true;
 	}
 
 	/** @param {number} dt */
 	update(dt) {
+		if (this.animationDuration == 0) {
+			return;
+		}
 		const direction = Math.sign(this.animationDirection);
 		this.animationProgress += dt * direction;
 		if (this.animationProgress > this.animationDuration || this.animationProgress < 0) {
@@ -34,7 +33,7 @@ export class AnimationController {
 					// backward animation
 					this.animationProgress = 0;
 				}
-				this.animationDirection = 0; // stop the animation
+				this.animationDuration = 0; // stop the animation
 				if (this.onAnimationFinished) {
 					this.onAnimationFinished();
 				}
@@ -47,8 +46,11 @@ export class AnimationController {
 	 * @param {number} fps number of frames per second for the animation
 	 * @returns {number} an integer representing the current frame of animation
 	 **/
-	getCurrentFrame(frameCount, fps) {
-		return Math.floor(this.animationProgress * frameCount / fps);
+	getCurrentFrame(frameCount) {
+		if (this.animationDuration === 0) {
+			return 0;
+		}
+		return Math.floor(this.animationProgress / this.animationDuration * frameCount);
 	}
 
 	/** @type {() => void} Set a callback to be invoked when the animation loops (if loop is enabled) */

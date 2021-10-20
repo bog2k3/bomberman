@@ -1,5 +1,6 @@
-import { AnimationController } from "./animation-controller.js";
 import { dosemuBBox } from "./node_modules/dosemu/index.js";
+import { AnimationController } from "./animation-controller.js";
+import { Event } from "./event.js";
 
 /** @abstract */
 export class Entity {
@@ -12,10 +13,11 @@ export class Entity {
 	/** @type {(this: Entity) => void} callback to be invoked when the entity is destroyed. */
 	onDestroy = null;
 
+	/** @type {Event} This event receives the animation name and is triggered every time a new animation is started. */
+	onAnimationStart = new Event();
+
 	constructor() {
-		if (Entity.onEntityCreated) {
-			Entity.onEntityCreated(this);
-		}
+		Entity.onEntityCreated.trigger(this);
 	}
 
 	destroy() {
@@ -24,9 +26,7 @@ export class Entity {
 			if (this.onDestroy) {
 				this.onDestroy(this);
 			}
-			if (Entity.onEntityDestroyed) {
-				Entity.onEntityDestroyed(this);
-			}
+			Entity.onEntityDestroyed.trigger(this);
 		}
 	}
 
@@ -54,14 +54,25 @@ export class Entity {
 	fry() {}
 
 	/**
-	 * @type {(entity: Entity) => void}
-	 * This event is triggered every time a new entity is created
+	 * @param {string} name the name of the animation to start
+	 * @param {number} direction +1 to play forward or -1 to play backward
 	 **/
-	static onEntityCreated = null;
+	startAnimation(name, direction = +1) {
+		this.animationController.animationDirection = Math.sign(direction);
+		this.onAnimationStart.trigger(name);
+	}
 
 	/**
-	 * @type {(entity: Entity) => void}
-	 * This event is triggered every time a new entity is destroyed
+	 * This event is triggered every time a new entity is created
+	 * @type {Event}
+	 * @param {Entity} entity
 	 **/
-	 static onEntityDestroyed = null;
+	static onEntityCreated = new Event();
+
+	/**
+	 * This event is triggered every time a new entity is destroyed
+	 * @type {Event}
+	 * @param {Entity} entity
+	 **/
+	 static onEntityDestroyed = new Event();
 }

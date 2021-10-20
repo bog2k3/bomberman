@@ -5,8 +5,6 @@ import * as constants from "./constants.js";
 
 export class Fire extends GridEntity {
 
-	animationFrame = 0;
-	animationDirection = 1;
 	type = "";
 
 	/** @param {"center"|"middleV"|"middleH"|"capRight"|"capLeft"|"capUp"|"capDown"} type */
@@ -17,7 +15,8 @@ export class Fire extends GridEntity {
 		this.setLayer(layers.Fire); // appear behind bricks
 		this.animationController.animationDuration = constants.FIRE_DURATION;
 		this.animationController.enableLoop = false;
-		this.animationController.onAnimationFinished = () => this.handleAnimationLoop();
+		this.animationController.onAnimationFinished = () => this.handleAnimationFinished();
+		this.startAnimation(this.type);
 	}
 
 	/** @returns {string} the type of entity */
@@ -32,7 +31,7 @@ export class Fire extends GridEntity {
 		if (this.animationController.animationDirection === -1) {
 			this.destroy();
 		} else {
-			this.animationController.animationDirection = -1;
+			this.startAnimation(this.type, -1);
 		}
 	}
 

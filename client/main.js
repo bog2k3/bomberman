@@ -1,16 +1,22 @@
-import { dosemu, dosemuSound } from "./node_modules/dosemu/index.js";
+import { dosemu, dosemuSound } from "../common/node_modules/dosemu/index.js";
 import * as bomberman from "../common/bomberman.js";
 import { generateRandomMap } from "../common/random-map.js";
-import { mapsCollection } from "../common/maps.js";
 import * as constants from "../common/constants.js";
 
 import * as socket from "./socket.js";
 
+//---------------------------------------------------------------------------------
+
+class GameDetails {
+	/** @type {number[][]} */
+	map;
+	/** @type {number} */
+	playerSlot;
+}
+
 let lastTime = new Date().getTime();
 
-/**
- * @type string
- */
+/** @type {string} */
  let sessionId = undefined;
 
 async function init() {
@@ -27,13 +33,11 @@ async function init() {
 
 	// init game:
 	await bomberman.init(false);
-	// const map = mapsCollection[1]; // select a specific map
-	const map = generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS);
-	const playerSpawnSlot = 0; // TODO this will be received from the server
-	bomberman.startGame(map, playerSpawnSlot);
 
-	// start game loop:
-	requestAnimationFrame(step);
+	receiveGameDetails().then(
+		/** @param {GameDetails} gameDetails */
+		(gameDetails) => startRound(gameDetails.map, gameDetails.playerSlot)
+	);
 }
 
 function subscribeToSocketEvents() {
@@ -46,6 +50,25 @@ function subscribeToSocketEvents() {
 	});
 }
 
+/** @returns {Promise<GameDetails>} */
+function receiveGameDetails() {
+	// TODO request this from the server
+	// TODO for now we'll hardcode them
+	const map = generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS);
+	return Promise.resolve({
+		map,
+		playerSlot: 0
+	});
+}
+
+/** @param {number[][]} map */
+function startRound(map, playerSlot) {
+	bomberman.reset();
+	bomberman.startGame(map, playerSlot);
+
+	// start game loop:
+	requestAnimationFrame(step);
+}
 
 function step() {
 

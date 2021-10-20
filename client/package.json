@@ -6,10 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "bogdan",
+  "author": "Bogdan Ionita <bog2k3@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "dosemu": "*",
     "rxjs": "^7.4.0",
     "socket.io-client": "^4.3.2"
   }

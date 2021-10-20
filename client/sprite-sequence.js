@@ -1,4 +1,4 @@
-import { dosemuSprite } from "./node_modules/dosemu/index.js";
+import { dosemuSprite } from "../common/node_modules/dosemu/index.js";
 
 export class SpriteSequence {
 	/** @type {dosemuSprite.Sprite[]} */

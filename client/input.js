@@ -1,3 +1,13 @@
+import { dosemu } from "../common/node_modules/dosemu/index.js";
+import { clientState } from "./client-state.js";
+import * as raycast  from "./raycast.js";
+import * as editMode from "./edit-mode.js";
+
+// --------------------------------------------------------------------------------------------------
+
+let wasSpacePressed = false;
+
+// --------------------------------------------------------------------------------------------------
 
 export function getMouseRowCol() {
 	const [mouseX, mouseY] = dosemu.getMousePosition();
@@ -6,6 +16,27 @@ export function getMouseRowCol() {
 	return [mouseRow, mouseCol];
 }
 
+
+export function update(dt) {
+	if (!clientState.enable3DMode) {
+		if (dosemu.isKeyPressed("ArrowDown")) {
+			clientState.player.move("down");
+		} else if (dosemu.isKeyPressed("ArrowUp")) {
+			clientState.player.move("up");
+		} else if (dosemu.isKeyPressed("ArrowLeft")) {
+			clientState.player.move("left");
+		} else if (dosemu.isKeyPressed("ArrowRight")) {
+			clientState.player.move("right");
+		}
+	}
+	if (dosemu.isKeyPressed(" ") && !wasSpacePressed) {
+		clientState.player.spawnBomb();
+		wasSpacePressed = true;
+	}
+	if (!dosemu.isKeyPressed(" ")) {
+		wasSpacePressed = false;
+	}
+}
 
 function registerCommandHandlers() {
 	dosemu.onKeyDown((key) => {
@@ -17,36 +48,42 @@ function registerCommandHandlers() {
 				toggle3dMode();
 				break;
 			default:
-				if (EDIT_MODE) {
-					handleEditModeKey(key);
+				if (editMode.ENABLED) {
+					editMode.handleKey(key);
 				}
 		}
 	});
 	dosemu.onMouseDown((x, y, btn) => {
 		if (btn === 2) {
-			nextEditTileType();
+			editMode.nextEditTileType();
 		}
 	})
 }
 
+// --------------------------------------------------------------------------------------------------
+
 function toggle3dMode() {
-	enable3DMode = !enable3DMode;
-	player.movementInputEnabled = !enable3DMode;
-	if (enable3DMode) {
+	clientState.enable3DMode = !clientState.enable3DMode;
+	if (clientState.enable3DMode) {
 		raycast.updatePlayerAngle(player);
 	}
 }
 
 function toggleEditMode() {
-	EDIT_MODE = !EDIT_MODE;
-	enable3DMode = false;
-	if (EDIT_MODE) {
+	editMode.ENABLED = !editMode.ENABLED;
+	clientState.enable3DMode = false;
+	if (editMode.ENABLED) {
 		dosemu.showMouse();
 		map = mapTemplate; // operate on the template directly while editing
 	} else {
 		dosemu.hideMouse();
-		writeMapToConsole();
-		reset();
-		selectMap(mapTemplate);
+		editMode.writeMapToConsole();
+		// TODO: perhaps send the map to server and update for all players? or perhaps do it real-time?
+		// reset();
+		// selectMap(mapTemplate);
 	}
 }
+
+(function init() {
+	registerCommandHandlers();
+})();

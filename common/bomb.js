@@ -19,7 +19,8 @@ export class Bomb extends GridEntity {
 					entity.overlapingBombs.push(this);
 				}
 			}
-		)
+		);
+		this.startAnimation("idle");
 	}
 
 	/** @returns {string} the type of entity */

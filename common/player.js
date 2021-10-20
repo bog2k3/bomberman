@@ -7,11 +7,9 @@ import { CollisionResult } from "./collision.js";
 
 export class Player extends Character {
 
-	wasSpacePressed = false;
 	bombPower = 2;
 	maxBombCount = 1;
 	bombCount = 0;
-	movementInputEnabled = true;
 
 	/** @param {Character} data */
 	constructor(data) {
@@ -22,30 +20,7 @@ export class Player extends Character {
 	}
 
 	/** @override @returns {string} the type of entity */
-	getType() { return "player"; }
-
-	/** @override */
-	update(dt) {
-		super.update(dt);
-		if (this.movementInputEnabled) {
-			if (dosemu.isKeyPressed("ArrowDown")) {
-				this.move("down");
-			} else if (dosemu.isKeyPressed("ArrowUp")) {
-				this.move("up");
-			} else if (dosemu.isKeyPressed("ArrowLeft")) {
-				this.move("left");
-			} else if (dosemu.isKeyPressed("ArrowRight")) {
-				this.move("right");
-			}
-		}
-		if (dosemu.isKeyPressed(" ") && !this.wasSpacePressed) {
-			this.spawnBomb();
-			this.wasSpacePressed = true;
-		}
-		if (!dosemu.isKeyPressed(" ")) {
-			this.wasSpacePressed = false;
-		}
-	}
+	getType() { return "player"; } // TODO return "player-n" where n is the skin number
 
 	spawnBomb() {
 		if (this.bombCount >= this.maxBombCount) {

@@ -1,3 +1,5 @@
+import { dosemuSprite } from "../common/node_modules/dosemu/index.js";
+
 import { SpriteSequence } from "./sprite-sequence.js";
 import center1 from "./sprites/fire/center-1.png.js";
 import center2 from "./sprites/fire/center-2.png.js";
@@ -11,8 +13,6 @@ import cap1 from "./sprites/fire/cap-1.png.js";
 import cap2 from "./sprites/fire/cap-2.png.js";
 import cap3 from "./sprites/fire/cap-3.png.js";
 import cap4 from "./sprites/fire/cap-4.png.js";
-
-import { dosemuSprite } from "./node_modules/dosemu/index.js";
 
 const fireAnimationSpeed = 8;
 

@@ -5,12 +5,18 @@ import * as constants from "./constants.js";
 
 // --------------------------------------------------------------------------------------------------
 
-/** @type {{map: number[][], entities: Entity[], onBrickDestroyed: (row: number, col: number) => void, headlessMode: boolean}} */
 const data = {
+	/** @type {number[][]} */
 	map: [],
+	/** @type {Entity[]} */
 	entities: [],
+	/** @type {(row: number, col: number) => void} */
 	onBrickDestroyed: null,
-	headlessMode: true
+	/** @type {boolean} */
+	headlessMode: true,
+
+	/** @type {dynamically imported client module (or null in headless mode)} */
+	client: null
 };
 
 // --------------------------------------------------------------------------------------------------
@@ -129,4 +135,15 @@ export function destroyBrick(row, col) {
 /** @param {(row: number, col: number) => void} callback */
 export function setOnBrickDestroyedCallback(callback) {
 	data.onBrickDestroyed = callback;
+}
+
+export function setClient(client) {
+	data.client = client;
+}
+
+/** @param {"player-n" | "enemy-n"} type the type of animation to create, where "n" is the skin number */
+export function requestClientCreateCharacterExplodeAnimation(type, x, y) {
+	if (!data.headlessMode && data.client) {
+		data.client.createCharacterExplodeAnimation(type, x, y);
+	}
 }
