@@ -1,6 +1,6 @@
 import { checkCollision, CollisionResult } from "./collision.js";
 import { Entity } from "./entity.js";
-import { dosemu, dosemuBBox, dosemuSprite } from "../client/node_modules/dosemu/index.js";
+import { dosemuBBox } from "../client/node_modules/dosemu/index.js";
 import { SpriteSequence } from "../client/sprite-sequence.js";
 import * as constants from "./constants.js";
 import { CharacterExplodeAnimation } from "../client/character-explode-animation.js";
@@ -99,12 +99,6 @@ export class Character extends Entity {
 					i++;
 				}
 			}
-		}
-		if (this.isStopped) {
-			// reset to the first frame, but right before switching to the second,
-			// so when player presses a key, the animation starts right away
-			this.animationFrame = 0.9;
-			throw ("find another method");
 		}
 		this.isStopped = true;
 	}

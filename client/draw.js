@@ -187,6 +187,11 @@ function drawFire(fire, offsX, offsY) {
  **/
 function drawCharacter(character, spriteSet, offsX, offsY) {
 	const spriteSeq = spriteSet[character.orientation];
+	if (character.isStopped) {
+		// reset to the first frame, but right before switching to the second,
+		// so when the character starts moving, the animation starts right away.
+		character.animationController.animationProgress = 0.9 / spriteSeq.animationSpeed;
+	}
 	if (!spriteSeq) {
 		console.error(`Missing spriteSet for orientation="${character.orientation}" in Character `, character);
 		return;

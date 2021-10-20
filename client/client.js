@@ -22,7 +22,7 @@ export function draw() {
 export function update(dt) {
 	if (editMode.ENABLED) {
 		editMode.update(dt);
-	} else if (enable3DMode) {
+	} else if (clientState.enable3DMode) {
 		raycast.update(clientState.player, dt);
 	}
 }
