@@ -1,3 +1,5 @@
-export class GameService {
+class GameService {
 	constructor() {}
 }
+
+module.exports = { GameService };

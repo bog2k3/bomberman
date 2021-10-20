@@ -11,26 +11,40 @@ import { enemySprites } from "./enemy-sprites.js";
 import { fireSprites } from "./fire-sprites.js";
 import { playerSprites } from "./player-sprites.js";
 import { SpriteSequence } from "./sprite-sequence.js";
+import { clientState } from "./client-state.js";
+import { buildThemes } from "./themes.js";
+import { clamp } from "../common/math.js";
+import * as world from "../common/world.js";
+import * as constants from "../common/constants.js";
+import { dosemu } from "./node_modules/dosemu/index.js";
+
+// --------------------------------------------------------------------------------------------------
+
+const themes = buildThemes();
+let selectedTheme = 0;
+
+// --------------------------------------------------------------------------------------------------
 
 export function draw() {
-	if (!EDIT_MODE) {
-		[scrollX, scrollY] = getScrollOffsets();
-	}
+	[clientState.scrollX, clientState.scrollY] = getScrollOffsets();
 
-	if (!EDIT_MODE && enable3DMode) {
+	if (clientState.enable3DMode) {
 		draw3D();
 	} else {
 		draw2D();
 	}
-	if (!EDIT_MODE && playerHasDied) {
+	if (clientState.playerHasDied) {
 		drawLoserBox();
 	}
 }
 
+// --------------------------------------------------------------------------------------------------
+
 function draw2D() {
+	const map = world.getMap();
 	// on which tile we start drawing:
-	const tileOffsX = clamp(Math.floor(scrollX / constants.TILE_SIZE), 0, map[0].length - 1);
-	const tileOffsY = clamp(Math.floor(scrollY / constants.TILE_SIZE), 0, map.length - 1);
+	const tileOffsX = clamp(Math.floor(clientState.scrollX / constants.TILE_SIZE), 0, map[0].length - 1);
+	const tileOffsY = clamp(Math.floor(clientState.scrollY / constants.TILE_SIZE), 0, map.length - 1);
 	// how many tiles to draw:
 	const nTilesX = Math.min(Math.ceil(constants.SCREEN_WIDTH / constants.TILE_SIZE) + 1, map[0].length - tileOffsX);
 	const nTilesY = Math.min(Math.ceil(constants.SCREEN_HEIGHT / constants.TILE_SIZE) + 1, map.length - tileOffsY);
@@ -39,7 +53,7 @@ function draw2D() {
 	for (let i = tileOffsY; i < map.length && i < tileOffsY + nTilesY; i++) {
 		for (let j = tileOffsX; j < map[0].length && j < tileOffsX + nTilesX; j++) {
 			if (map[i][j] === 0) {
-				drawTile(i, j, -scrollX, -scrollY);
+				drawTile(map, i, j, -clientState.scrollX, -clientState.scrollY);
 			}
 		}
 	}
@@ -48,36 +62,35 @@ function draw2D() {
 
 	// draw entities below layer 0:
 	let iEntity = 0;
-	if (!EDIT_MODE) {
-		while (iEntity < entities.length && entities[iEntity].layer < 0) {
-			drawEntity(entities[iEntity], -scrollX, -scrollY);
-			iEntity++;
-		}
+	while (iEntity < entities.length && entities[iEntity].layer < 0) {
+		drawEntity(entities[iEntity], -clientState.scrollX, -clientState.scrollY);
+		iEntity++;
 	}
 
 	// draw bricks (layer 0):
 	for (let i = tileOffsY; i < map.length && i < tileOffsY + nTilesY; i++) {
 		for (let j = tileOffsX; j < map[0].length && j < tileOffsX + nTilesX; j++) {
 			if (map[i][j] !== 0) {
-				drawTile(i, j, -scrollX, -scrollY);
+				drawTile(map, i, j, -clientState.scrollX, -clientState.scrollY);
 			}
 		}
 	}
 
-	if (!EDIT_MODE) {
-		// draw entities above layer 0:
-		while (iEntity < entities.length) {
-			drawEntity(entities[iEntity], -scrollX, -scrollY);
-			iEntity++;
-		}
-	}
-
-	if (EDIT_MODE) {
-		drawEditModeOverlay(tileOffsX, tileOffsY, nTilesX, nTilesY);
+	// draw entities above layer 0:
+	while (iEntity < entities.length) {
+		drawEntity(entities[iEntity], -clientState.scrollX, -clientState.scrollY);
+		iEntity++;
 	}
 }
 
-function drawTile(row, col, mapDX, mapDY) {
+/**
+ * @param {number[][]} map
+ * @param {number} row
+ * @param {number} col
+ * @param {number} mapDX
+ * @param {number} mapDY
+ */
+function drawTile(map, row, col, mapDX, mapDY) {
 	const tileX = col * constants.TILE_SIZE + mapDX;
 	const tileY = row * constants.TILE_SIZE + mapDY;
 	let sprite = null;
@@ -100,17 +113,17 @@ function drawLoserBox() {
 
 
 function draw3D() {
-	raycast.render(map, player, world.getEntities(), themes[selectedTheme]);
+	raycast.render(world.getMap(), clientState.player, world.getEntities(), themes[selectedTheme]);
 }
 
 /** @returns {[ofsX: number, ofsY: number]} */
 function getScrollOffsets() {
 	// start from the last scroll position
-	let viewportX = scrollX;
-	let viewportY = scrollY;
+	let viewportX = clientState.scrollX;
+	let viewportY = clientState.scrollY;
 	// only adjust if the player moves outside a central region
-	const playerScreenX = player.x - scrollX;
-	const playerScreenY = player.y - scrollY;
+	const playerScreenX = clientState.player.x - clientState.scrollX;
+	const playerScreenY = clientState.player.y - clientState.scrollY;
 	const toleranceX = constants.SCREEN_WIDTH / 8;
 	const toleranceY = constants.SCREEN_HEIGHT / 8;
 	const centerX = constants.SCREEN_WIDTH / 2;
@@ -123,6 +136,9 @@ function getScrollOffsets() {
 	if (Math.abs(differenceY) > toleranceY) {
 		viewportY += differenceY - toleranceY * Math.sign(differenceY);
 	}
+	const map = world.getMap();
+	const maxMapX = map[0].length * constants.TILE_SIZE;
+	const maxMapY = map.length * constants.TILE_SIZE;
 	// only scroll as much as the map limits
 	viewportX = clamp(viewportX, 0, maxMapX - constants.SCREEN_WIDTH);
 	viewportY = clamp(viewportY, 0, maxMapY - constants.SCREEN_HEIGHT);
@@ -141,12 +157,13 @@ function drawEntity(entity, offsX, offsY) {
 			return drawBomb(entity, offsX, offsY);
 		case "fire":
 			return drawFire(entity, offsX, offsY);
+		default: throw `entity type not handled in draw: ${entity.getType()}`;
 	}
 }
 
 /** @param {Player} player */
 function drawPlayer(player, offsX, offsY) {
-	drawCharacter(player, playerSprites, offsX, offsY);
+	drawCharacter(player, playerSprites[0], offsX, offsY); // TODO use skin by spawn slot id
 }
 
 /** @param {Enemy} enemy */
@@ -161,7 +178,7 @@ function drawBomb(bomb, offsX, offsY) {
 
 /** @param {Fire} fire */
 function drawFire(fire, offsX, offsY) {
-	drawGridEntity(fire, fireSprites, offsX, offsY);
+	drawGridEntity(fire, fireSprites[fire.type], offsX, offsY);
 }
 
 /**
@@ -172,12 +189,14 @@ function drawCharacter(character, spriteSet, offsX, offsY) {
 	const spriteSeq = spriteSet[character.orientation];
 	if (!spriteSeq) {
 		console.error(`Missing spriteSet for orientation="${character.orientation}" in Character `, character);
+		return;
 	}
-	const currentFrame = Math.floor(character.animationTime * spriteSeq.animationSpeed) % spriteSeq.frames.length;
+	const currentFrame = character.animationController.getCurrentFrame(spriteSeq.frames.length, spriteSeq.animationSpeed);
 	if (!spriteSeq.frames || !spriteSeq.frames[currentFrame]) {
 		console.error(`Missing animation frame ${currentFrame} in spriteSet for orientation="${character.orientation}" in Character `, character);
+		return
 	}
-	dosemu.drawSprite(character.x + mapOffsX, character.y + mapOffsY, spriteSeq.frames[currentFrame]);
+	dosemu.drawSprite(character.x + offsX, character.y + offsY, spriteSeq.frames[currentFrame]);
 }
 
 /**
@@ -185,7 +204,7 @@ function drawCharacter(character, spriteSet, offsX, offsY) {
  * @param {SpriteSequence} spriteSequence
  * */
 function drawGridEntity(entity, spriteSequence, offsX, offsY) {
-	const currentFrame = Math.floor(entity.animationTime * spriteSequence.animationSpeed) % spriteSequence.frames.length;
+	const currentFrame = entity.animationController.getCurrentFrame(spriteSequence.frames.length, spriteSequence.animationSpeed);
 	dosemu.drawSprite(
 		offsX + (entity.column + 0.5) * constants.TILE_SIZE,
 		offsY + (entity.row + 0.5) * constants.TILE_SIZE,

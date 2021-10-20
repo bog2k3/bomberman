@@ -1,11 +1,9 @@
+export let ENABLED = false;
+
 const EDIT_MODE_SCROLL_SPEED = 150; // pixels per second
 let editTileType = 1; // the type of tile under cursor
 
-function withinMap(row, col) {
-	return row >= 0 && row < map.length && col >= 0 && col < map[0].length;
-}
-
-function drawEditModeOverlay(tileOffsX, tileOffsY, nTilesX, nTilesY) {
+export function draw(tileOffsX, tileOffsY, nTilesX, nTilesY) {
 	for (let i=tileOffsY; i<tileOffsY + nTilesY; i++) {
 		for (let j=tileOffsX; j<tileOffsX + nTilesX; j++) {
 			switch (map[i][j]) {
@@ -100,7 +98,7 @@ function drawEditModeOverlay(tileOffsX, tileOffsY, nTilesX, nTilesY) {
 	);
 }
 
-function updateEditMode(dt) {
+export function update(dt) {
 	if (dosemu.isMouseButtonDown(0)) {
 		const [mouseRow, mouseCol] = getMouseRowCol();
 		if (withinMap(mouseRow, mouseCol)) {
@@ -121,14 +119,16 @@ function updateEditMode(dt) {
 	}
 }
 
+function withinMap(row, col) {
+	return row >= 0 && row < map.length && col >= 0 && col < map[0].length;
+}
+
 function nextEditTileType() {
 	editTileType = (editTileType + 1) % 10;
 	if (editTileType > 3 && editTileType < 9) {
 		editTileType = 9; // skip types that are not currently used
 	}
 }
-
-
 
 function handleEditModeKey(key) {
 	switch (key) {

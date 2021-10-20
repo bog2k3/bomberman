@@ -1,6 +1,8 @@
 import { dosemu, dosemuSound } from "./node_modules/dosemu/index.js";
 import * as bomberman from "../common/bomberman.js";
+import { generateRandomMap } from "../common/random-map.js";
 import { mapsCollection } from "../common/maps.js";
+import * as constants from "../common/constants.js";
 
 import * as socket from "./socket.js";
 
@@ -11,19 +13,27 @@ let lastTime = new Date().getTime();
  */
  let sessionId = undefined;
 
-function init() {
+async function init() {
+	// set up network:
 	subscribeToSocketEvents();
-	join().then(async () => {
-		removeJoinScreen();
-		dosemu.init(document.querySelector("#emuscreen"), null);
-		// dosemu.setNoiseStrength(0);
-		requestAnimationFrame(step);
-		dosemu.hideMouse();
-		await bomberman.init(false);
-		// const map = mapsCollection[1]; // select a specific map
-		const map = bomberman.generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS);
-		bomberman.startGame(map);
-	});
+	// join a game:
+	await join();
+	removeJoinScreen();
+
+	// init dosemu:
+	dosemu.init(document.querySelector("#emuscreen"), null);
+	// dosemu.setNoiseStrength(0);
+	dosemu.hideMouse();
+
+	// init game:
+	await bomberman.init(false);
+	// const map = mapsCollection[1]; // select a specific map
+	const map = generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS);
+	const playerSpawnSlot = 0; // TODO this will be received from the server
+	bomberman.startGame(map, playerSpawnSlot);
+
+	// start game loop:
+	requestAnimationFrame(step);
 }
 
 function subscribeToSocketEvents() {

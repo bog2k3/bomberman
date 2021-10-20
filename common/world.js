@@ -3,6 +3,8 @@ import * as collision from "./collision.js";
 import { Entity } from "./entity.js";
 import * as constants from "./constants.js";
 
+// --------------------------------------------------------------------------------------------------
+
 /** @type {{map: number[][], entities: Entity[], onBrickDestroyed: (row: number, col: number) => void, headlessMode: boolean}} */
 const data = {
 	map: [],
@@ -10,6 +12,8 @@ const data = {
 	onBrickDestroyed: null,
 	headlessMode: true
 };
+
+// --------------------------------------------------------------------------------------------------
 
 export function setHeadlessMode(value) {
 	data.headlessMode = value;
@@ -24,6 +28,11 @@ export function headlessMode() {
 export function setMap(map) {
 	data.map = map;
 	collision.setMap(map);
+}
+
+/** @returns {number[][]} */
+export function getMap() {
+	return data.map;
 }
 
 /** @param {Entity} entity */

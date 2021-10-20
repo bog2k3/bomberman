@@ -7,15 +7,22 @@ import { PowerupBomb } from "./powerup-bomb.js";
 import { PowerupRadius } from "./powerup-radius.js";
 import { PowerupSpeed } from "./powerup-speed.js";
 
-/** @type {SpriteLoader} */
-let spriteLoader = null;
+// --------------------------------------------------------------------------------------------------
 
-let raycast = null;
+let client = null;
+
+/** @type {number[][]} */
+let mapTemplate = []; // the map template
+/** @type {number[][]} */
+let map = []; // the map instance
+
+// --------------------------------------------------------------------------------------------------
 
 export function reset() {
 	world.clearData();
-	player = null;
-	playerHasDied = false;
+	if (!world.headlessMode()) {
+		client.reset();
+	}
 }
 
 /**
@@ -26,16 +33,13 @@ export async function init(headlessMode) {
 	Entity.onEntityCreated = handleEntityCreated;
 	Entity.onEntityDestroyed = handleEntityDestroyed;
 	world.setOnBrickDestroyedCallback(handleBrickDestroyed);
-	reset();
 	world.setHeadlessMode(headlessMode);
 
 	if (!headlessMode) {
-		registerCommandHandlers();
-		raycast.init();
-		spriteLoader = (await import("../client/sprite-loader.js")).SpriteLoader;
-		themes = (await import("../client/themes.js")).buildThemes();
-		raycast = await import("../client/raycast.js");
+		client = await import("../client/client.js");
 	}
+
+	reset();
 }
 
 /**
@@ -48,40 +52,19 @@ export function startGame(mapTemplate, playerSpawnSlot) {
 }
 
 export function update(dt) {
-	if (!EDIT_MODE) {
-		world.update(dt);
-		if (enable3DMode) {
-			raycast.update(player, dt);
-		}
-	} else {
-		updateEditMode(dt);
+	world.update(dt);
+	if (!world.headlessMode()) {
+		client.update(dt);
+	}
+}
+
+export function draw() {
+	if (!world.headlessMode()) {
+		client.draw();
 	}
 }
 
 // --------------------------------------------------------------------------------------------------
-
-let enable3DMode = false;
-
-let EDIT_MODE = false;
-
-/** @type {Theme[]} */
-let themes = null;
-
-let selectedTheme = 0;
-
-/** @type {Player} */
-let player = null;
-
-let playerHasDied = false;
-
-/** @type {number[][]} */
-let mapTemplate = []; // the map template
-/** @type {number[][]} */
-let map = []; // the map instance
-let maxMapX = 0;
-let maxMapY = 0;
-let scrollX = 0;
-let scrollY = 0;
 
 /** @param {number} playerSpawnSlot */
 function spawnEntities(playerSpawnSlot) {
@@ -97,11 +80,13 @@ function spawnEntities(playerSpawnSlot) {
 					if (playerSpawnSlot == crtPlayerSlot) {
 						const playerX = j * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
 						const playerY = i * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
-						player = new Player({
+						const player = new Player({
 							x: playerX,
-							y: playerY,
-							spriteSet: spriteLoader?.getPlayerSprites(0)
+							y: playerY
 						});
+						if (!world.headlessMode()) {
+							client.setPlayer(player);
+						}
 					}
 					crtPlayerSlot++;
 					break;
@@ -113,15 +98,14 @@ function spawnEntities(playerSpawnSlot) {
 					new Enemy({
 						x: enemyX,
 						y: enemyY,
-						type: enemyType,
-						spriteSet: spriteLoader?.getEnemySprites(enemyType)
+						type: enemyType
 					});
 					break;
 			}
 			map[i][j] = 0; // leave an empty space below entity
 		}
 	}
-	if (!player) {
+	if (!world.headlessMode() && !client.getPlayer()) {
 		console.error(`Player spawn position #${playerSpawnSlot} not found in map!`);
 	}
 }
@@ -133,8 +117,6 @@ function selectMap(template) {
 	map = mapTemplate.map(
 		row => row.map(x => x)
 	);
-	maxMapX = map[0].length * constants.TILE_SIZE;
-	maxMapY = map.length * constants.TILE_SIZE;
 
 	world.setMap(map);
 }
@@ -151,13 +133,13 @@ function handleEntityCreated(entity) {
 function handleEntityDestroyed(entity) {
 	world.removeEntity(entity);
 
-	if (entity === player) {
-		// player was destroyed, we wait for the explode animation to finish
-		setTimeout(() => {
-			// TODO respawn or whatever
-			playerHasDied = true;
-		}, 1500);
-	}
+	// if (entity === player) {
+	// 	// player was destroyed, we wait for the explode animation to finish
+	// 	setTimeout(() => {
+	// 		// TODO respawn or whatever
+	// 		playerHasDied = true;
+	// 	}, 1500);
+	// }
 }
 
 function handleBrickDestroyed(row, col) {

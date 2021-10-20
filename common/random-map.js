@@ -1,3 +1,5 @@
+import * as constants from "../common/constants.js";
+
 /**
  * Generates and returns a random map
  * @param {number} nRows number of rows for the map

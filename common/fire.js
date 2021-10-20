@@ -7,7 +7,7 @@ export class Fire extends GridEntity {
 
 	animationFrame = 0;
 	animationDirection = 1;
-	sprites = null;
+	type = "";
 
 	/** @param {"center"|"middleV"|"middleH"|"capRight"|"capLeft"|"capUp"|"capDown"} type */
 	constructor(type, row, column) {
