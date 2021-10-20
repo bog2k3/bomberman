@@ -1,3 +1,16 @@
+import { Bomb } from "../common/bomb.js";
+import { Enemy } from "../common/enemy.js";
+import { Entity } from "../common/entity.js";
+import { Fire } from "../common/fire.js";
+import { GridEntity } from "../common/grid-entity.js";
+import { Player } from "../common/player.js";
+import { bombSprites } from "./bomb-sprites.js";
+import { CharacterSpriteSet } from "./character-sprite-set.js";
+import { Character } from "../common/character.js";
+import { enemySprites } from "./enemy-sprites.js";
+import { fireSprites } from "./fire-sprites.js";
+import { playerSprites } from "./player-sprites.js";
+import { SpriteSequence } from "./sprite-sequence.js";
 
 export function draw() {
 	if (!EDIT_MODE) {
@@ -37,7 +50,7 @@ function draw2D() {
 	let iEntity = 0;
 	if (!EDIT_MODE) {
 		while (iEntity < entities.length && entities[iEntity].layer < 0) {
-			entities[iEntity].draw(-scrollX, -scrollY);
+			drawEntity(entities[iEntity], -scrollX, -scrollY);
 			iEntity++;
 		}
 	}
@@ -54,7 +67,7 @@ function draw2D() {
 	if (!EDIT_MODE) {
 		// draw entities above layer 0:
 		while (iEntity < entities.length) {
-			entities[iEntity].draw(-scrollX, -scrollY);
+			drawEntity(entities[iEntity], -scrollX, -scrollY);
 			iEntity++;
 		}
 	}
@@ -115,4 +128,67 @@ function getScrollOffsets() {
 	viewportY = clamp(viewportY, 0, maxMapY - constants.SCREEN_HEIGHT);
 
 	return [viewportX, viewportY];
+}
+
+/** @param {Entity} entity */
+function drawEntity(entity, offsX, offsY) {
+	switch (entity.getType()) {
+		case "player":
+			return drawPlayer(entity, offsX, offsY);
+		case "enemy-0":
+			return drawEnemy(entity, 0, offsX, offsY);
+		case "bomb":
+			return drawBomb(entity, offsX, offsY);
+		case "fire":
+			return drawFire(entity, offsX, offsY);
+	}
+}
+
+/** @param {Player} player */
+function drawPlayer(player, offsX, offsY) {
+	drawCharacter(player, playerSprites, offsX, offsY);
+}
+
+/** @param {Enemy} enemy */
+function drawEnemy(enemy, type, offsX, offsY) {
+	drawCharacter(enemy, enemySprites[type], offsX, offsY);
+}
+
+/** @param {Bomb} bomb */
+function drawBomb(bomb, offsX, offsY) {
+	drawGridEntity(bomb, bombSprites, offsX, offsY);
+}
+
+/** @param {Fire} fire */
+function drawFire(fire, offsX, offsY) {
+	drawGridEntity(fire, fireSprites, offsX, offsY);
+}
+
+/**
+ * @param {Character} character
+ * @param {CharacterSpriteSet} spriteSet
+ **/
+function drawCharacter(character, spriteSet, offsX, offsY) {
+	const spriteSeq = spriteSet[character.orientation];
+	if (!spriteSeq) {
+		console.error(`Missing spriteSet for orientation="${character.orientation}" in Character `, character);
+	}
+	const currentFrame = Math.floor(character.animationTime * spriteSeq.animationSpeed) % spriteSeq.frames.length;
+	if (!spriteSeq.frames || !spriteSeq.frames[currentFrame]) {
+		console.error(`Missing animation frame ${currentFrame} in spriteSet for orientation="${character.orientation}" in Character `, character);
+	}
+	dosemu.drawSprite(character.x + mapOffsX, character.y + mapOffsY, spriteSeq.frames[currentFrame]);
+}
+
+/**
+ * @param {GridEntity} entity
+ * @param {SpriteSequence} spriteSequence
+ * */
+function drawGridEntity(entity, spriteSequence, offsX, offsY) {
+	const currentFrame = Math.floor(entity.animationTime * spriteSequence.animationSpeed) % spriteSequence.frames.length;
+	dosemu.drawSprite(
+		offsX + (entity.column + 0.5) * constants.TILE_SIZE,
+		offsY + (entity.row + 0.5) * constants.TILE_SIZE,
+		spriteSequence.frames[currentFrame]
+	);
 }

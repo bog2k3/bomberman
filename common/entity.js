@@ -1,4 +1,5 @@
-import { dosemuBBox, dosemuSprite } from "./node_modules/dosemu/index.js";
+import { AnimationController } from "./animation-controller.js";
+import { dosemuBBox } from "./node_modules/dosemu/index.js";
 
 /** @abstract */
 export class Entity {
@@ -6,6 +7,7 @@ export class Entity {
 	layer = 0;
 	isSolid = true;
 	isDestroyed = false;
+	animationController = new AnimationController();
 
 	/** @type {(this: Entity) => void} callback to be invoked when the entity is destroyed. */
 	onDestroy = null;
@@ -34,21 +36,10 @@ export class Entity {
 	/** @abstract @returns {dosemuBBox.BoundingBox} the bounding box of this entity, in world space*/
 	getBoundingBox() { throw "you must override abstract method."; }
 
-	/**
-	 * @abstract
-	 * @param {number} mapOffsX the position of the map, relative to the screen, in pixels
-	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
-	 **/
-	draw(mapOffsX, mapOffsY) { throw "you must override abstract method."; }
-
-	/**
-	 * @abstract
-	 * @returns {dosemuSprite.Sprite}
-	 */
-	get3DSprite() { throw "you must override abstract method"; }
-
-	/** @virtual override this to implement update */
-	update(dt) {}
+	/** @virtual override this to implement update; you must call super.update(dt) */
+	update(dt) {
+		this.animationController.update(dt);
+	}
 
 	/**
 	 * Sets the layer in which this entity resides. The layering affects the draw order.

@@ -1,4 +1,4 @@
-import { dosemu, dosemuBBox } from "./node_modules/dosemu/index.js";
+import { dosemu } from "./node_modules/dosemu/index.js";
 import { Character } from "./character.js";
 import * as world from "./world.js";
 import * as constants from "./constants.js";
@@ -46,16 +46,6 @@ export class Player extends Character {
 			this.wasSpacePressed = false;
 		}
 	}
-
-	/**
-	 * @param {number} mapOffsX the position of the map, relative to the screen, in pixels
-	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
-	 **/
-	 draw(mapOffsX, mapOffsY) {
-		 super.draw(mapOffsX, mapOffsY);
-		//  dosemu.drawText(this.x+5, this.y - 24, "Name", 0, "center");
-		//  dosemu.drawText(this.x+4, this.y - 25, "Name", 10, "center");
-	 }
 
 	spawnBomb() {
 		if (this.bombCount >= this.maxBombCount) {

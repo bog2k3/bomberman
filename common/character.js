@@ -1,8 +1,9 @@
 import { checkCollision, CollisionResult } from "./collision.js";
 import { Entity } from "./entity.js";
-import { dosemu, dosemuBBox } from "./node_modules/dosemu/index.js";
+import { dosemu, dosemuBBox, dosemuSprite } from "../client/node_modules/dosemu/index.js";
+import { SpriteSequence } from "../client/sprite-sequence.js";
 import * as constants from "./constants.js";
-// import { CharacterExplodeAnimation } from "./character-explode-animation.js";
+import { CharacterExplodeAnimation } from "../client/character-explode-animation.js";
 import { layers } from "./layers.js";
 
 export class Character extends Entity {
@@ -11,15 +12,10 @@ export class Character extends Entity {
 	baseSpeed = 0;
 	speed = 0;
 
-	/** @private */
-	animationFrame = 0;
-
 	/** @type {"up" | "down" | "left" | "right"} */
 	orientation = "down";
 	/** @private */
 	isStopped = true;
-	/** @type {{left: SpriteSequence, right: SpriteSequence, up: SpriteSequence, down: SpriteSequence, explode: SpriteSequence}} */
-	spriteSet = {};
 
 	/** @type {dosemuBBox.BoundingBox} */
 	boundingBox = {up: -10, down: 2, left: -6, right: 6};
@@ -42,18 +38,6 @@ export class Character extends Entity {
 		return dosemuBBox.moveBoundingBox(this.boundingBox, this.x, this.y);
 	}
 
-	/** @returns {dosemuSprite.Sprite} */
-	getCurrentSprite() {
-		if (!this.spriteSet[this.orientation]) {
-			console.error(`Missing spriteSet for orientation="${this.orientation}" in Character `, this);
-		}
-		const currentFrame = Math.floor(this.animationFrame) % this.spriteSet[this.orientation].frames.length;
-		if (!this.spriteSet[this.orientation].frames || !this.spriteSet[this.orientation].frames[currentFrame]) {
-			console.error(`Missing animation frame ${currentFrame} in spriteSet for orientation="${this.orientation}" in Character `, this);
-		}
-		return this.spriteSet[this.orientation].frames[currentFrame];
-	}
-
 	/** @returns {number} the row the character is on */
 	getRow() {
 		return Math.floor(this.y / constants.TILE_SIZE);
@@ -62,25 +46,6 @@ export class Character extends Entity {
 	/** @returns {number} the column the character is on */
 	getColumn() {
 		return Math.floor(this.x / constants.TILE_SIZE);
-	}
-
-	/**
-	 * @param {number} mapOffsX the position of the map, relative to the screen, in pixels
-	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
-	 **/
-	draw(mapOffsX, mapOffsY) {
-		dosemu.drawSprite(this.x + mapOffsX, this.y + mapOffsY, this.getCurrentSprite());
-	}
-
-	/**
-	 * @virtual override this to take action when colliding with a brick/entity
-	 * @param {CollisionResult} collision
-	 * @param {number} deltaOverlap the difference in overlap between this frame and the previous one
-	 * @param {number} dt time delta since last frame
-	 * (if positive, the collision is "bigger" than last time, if negative it is "smaller")
-	 * */
-	reactToCollision(collision, deltaOverlap, dt) {
-		return;
 	}
 
 	/**
@@ -100,10 +65,9 @@ export class Character extends Entity {
 
 	/** @override @virtual */
 	update(dt) {
+		const speedFactor = Math.sqrt(this.speed / this.baseSpeed);
+		super.update(dt * speedFactor); // animation should be updated faster when speed is higher
 		if (!this.isStopped) {
-			// update animation
-			const speedFactor = Math.sqrt(this.speed / this.baseSpeed);
-			this.animationFrame += dt * speedFactor * this.spriteSet[this.orientation].animationSpeed;
 			// update position
 			const delta = this.speed * dt;
 			const prevX = this.x, prevY = this.y;
@@ -140,6 +104,7 @@ export class Character extends Entity {
 			// reset to the first frame, but right before switching to the second,
 			// so when player presses a key, the animation starts right away
 			this.animationFrame = 0.9;
+			throw ("find another method");
 		}
 		this.isStopped = true;
 	}
@@ -163,13 +128,4 @@ export class Character extends Entity {
 		new CharacterExplodeAnimation(this.spriteSet.explode, this.x, this.y);
 		this.destroy();
 	}
-
-	/**
-	 * @override
-	 * @returns {dosemuSprite.Sprite}
-	 */
-	 get3DSprite() {
-		const currentFrame = Math.floor(this.animationFrame) % this.spriteSet[this.orientation].frames.length;
-		return this.spriteSet.down.frames[currentFrame];
-	 }
 }

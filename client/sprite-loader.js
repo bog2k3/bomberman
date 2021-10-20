@@ -9,38 +9,38 @@ import powerupRadiusSprite from "./sprites/powerups/powerup-radius.png.js";
 import powerupSpeedSprite from "./sprites/powerups/powerup-speed.png.js";
 import { fireSprites } from "./fire-sprites.js";
 
-export const SpriteLoader = {
-	/** @returns {CharacterSpriteSet[]} @param {number} index player skin index*/
-	getPlayerSprites: function(index) {
-		return playerSprites[index];
-	},
+// export const SpriteLoader = {
+// 	/** @returns {CharacterSpriteSet[]} @param {number} index player skin index*/
+// 	getPlayerSprites: function(index) {
+// 		return playerSprites[index];
+// 	},
 
-	/** @returns {CharacterSpriteSet[]} @param {number} type type of enemy */
-	getEnemySprites: function(type) {
-		return enemySprites[type];
-	},
+// 	/** @returns {CharacterSpriteSet[]} @param {number} type type of enemy */
+// 	getEnemySprites: function(type) {
+// 		return enemySprites[type];
+// 	},
 
-	/** @returns {SpriteSequence} */
-	getBombSprites: function() {
-		return bombSprites;
-	},
+// 	/** @returns {SpriteSequence} */
+// 	getBombSprites: function() {
+// 		return bombSprites;
+// 	},
 
-	/** @returns {dosemuSprite.Sprite} */
-	getPowerupBombSprite: function() {
-		return powerupBombSprite;
-	},
+// 	/** @returns {dosemuSprite.Sprite} */
+// 	getPowerupBombSprite: function() {
+// 		return powerupBombSprite;
+// 	},
 
-	/** @returns {dosemuSprite.Sprite} */
-	getPowerupRadiusSprite: function() {
-		return powerupRadiusSprite;
-	},
+// 	/** @returns {dosemuSprite.Sprite} */
+// 	getPowerupRadiusSprite: function() {
+// 		return powerupRadiusSprite;
+// 	},
 
-	/** @returns {dosemuSprite.Sprite} */
-	getPowerupSpeedSprite: function() {
-		return powerupSpeedSprite;
-	},
+// 	/** @returns {dosemuSprite.Sprite} */
+// 	getPowerupSpeedSprite: function() {
+// 		return powerupSpeedSprite;
+// 	},
 
-	getFireSprites: function() {
-		return fireSprites;
-	}
-}
+// 	getFireSprites: function() {
+// 		return fireSprites;
+// 	}
+// }

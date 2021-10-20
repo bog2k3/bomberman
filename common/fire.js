@@ -1,7 +1,7 @@
-import { dosemuSprite } from "./node_modules/dosemu/index.js";
 import { GridEntity } from "./grid-entity.js";
 import { checkCollision } from "./collision.js";
 import { layers } from "./layers.js";
+import * as constants from "./constants.js";
 
 export class Fire extends GridEntity {
 
@@ -15,33 +15,25 @@ export class Fire extends GridEntity {
 		this.type = type;
 		this.isSolid = false; // don't prevent other entities from going over fire
 		this.setLayer(layers.Fire); // appear behind bricks
+		this.animationController.animationDuration = constants.FIRE_DURATION;
+		this.animationController.enableLoop = false;
+		this.animationController.onAnimationFinished = () => this.handleAnimationLoop();
 	}
 
 	/** @returns {string} the type of entity */
 	getType() { return "fire"; }
 
-	/** @returns {dosemuSprite.Sprite} the current sprite to use for drawing */
-	getCurrentSprite() {
-		const frames = this.getSpriteSequence().frames;
-		return frames[Math.floor(this.animationFrame) % frames.length];
-	}
-
-	/** @private */
-	getSpriteSequence() {
-		return this.sprites ? this.sprites[this.type] : null;
-	}
-
 	update(dt) {
-		this.animationFrame += dt * this.getSpriteSequence().animationSpeed * this.animationDirection;
-		if (this.animationFrame >= this.getSpriteSequence().frames.length - 0.5) {
-			// reverse the animation
-			this.animationDirection = -1;
-		}
-		if (this.animationFrame < 0) {
-			// reached the end of the line
-			this.destroy();
-		}
+		super.update(dt);
 		this.checkCollision();
+	}
+
+	handleAnimationFinished() {
+		if (this.animationController.animationDirection === -1) {
+			this.destroy();
+		} else {
+			this.animationController.animationDirection = -1;
+		}
 	}
 
 	checkCollision() {
@@ -50,14 +42,5 @@ export class Fire extends GridEntity {
 			// we hit an entity
 			collisionResult.entity.fry();
 		}
-	}
-
-	/**
-	 * @override
-	 * @returns {dosemuSprite.Sprite}
-	 */
-	 get3DSprite() {
-		const frames = fireSprites["middleH"].frames;
-		return frames[Math.floor(this.animationFrame) % frames.length];
 	}
 }
