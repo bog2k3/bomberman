@@ -1,10 +1,11 @@
-const express = require('express');
-const app = express();
-const http = require('http');
-const { GameService } = require('./game.service.js');
-const { SocketService } = require("./socket/socket.service.js");
-const { UserService } = require("./user.service.js");
+import  express from "express";
+import  http from "http";
 
+import { SocketService } from "./socket/socket.service.js";
+import { UserService } from "./user.service.js";
+import { GameService } from "./game.service.js";
+
+const app = express();
 const PORT = 7075;
 
 const httpServer = http.createServer(app);

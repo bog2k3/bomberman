@@ -5,17 +5,28 @@ const socket = new io("http://localhost:7075", {
 const SERVER_EVENTS = {
 	SEND_USER_IDENTITY: "send_user_identity",
 	USER_JOINED: "user_joined",
-	PLAYER_UPDATED: "player_updated"
+	USER_JOINED_LOBBY: "user_joined_lobby",
+	PLAYER_UPDATED: "player_updated",
+	PLAYER_DISCONNECTED : "player_disconnected",
+	PLAYER_READY: "player_ready"
 }
 
 const CLIENT_EVENTS = {
 	JOIN_GAME: "join_game",
-	PLAYER_UPDATE: "player_update"
+	JOIN_LOBBY: "join_lobby",
+	PLAYER_UPDATE: "player_update",
+	GET_USERS_FROM_LOBBY: "get_users_from_lobby",
+	PLAYER_READY: "player_ready"
 }
 
-socket.on("connect", function() {
-	console.log("Socket connected");
-});
+export function socketConnected() {
+	return new rxjs.Observable(observer => {
+		socket.on("connect", function() {
+			observer.next();
+		});
+	});
+}
+
 
 /**
  * Request server for a new session id. The session will be provided after the socket will connect.
@@ -23,7 +34,7 @@ socket.on("connect", function() {
  */
 export function requestUserIdentity() {
 	return new rxjs.Observable(observer => {
-		socket.on(SERVER_EVENTS.SEND_USER_IDENTITY, (sessionId) => observer.next(sessionId));
+		socket.on(SERVER_EVENTS.SEND_USER_IDENTITY, (userIdentityId) => observer.next(userIdentityId));
 	});
 }
 
@@ -35,10 +46,26 @@ export function joinGame(nickname) {
 	});
 }
 
+export function joinLobby(nickname) {
+	return new Promise((resolve, reject) => {
+		socket.emit(CLIENT_EVENTS.JOIN_LOBBY, nickname, () => {
+			resolve();
+		});
+	});
+}
+
 export function onUserJoindGame() {
 	return new rxjs.Observable(observer => {
-		socket.on(SERVER_EVENTS.USER_JOINED, (nickname) => {
-			observer.next(nickname);
+		socket.on(SERVER_EVENTS.USER_JOINED, (player) => {
+			observer.next(player);
+		})
+	})
+}
+
+export function onUserJoindLobby() {
+	return new rxjs.Observable(observer => {
+		socket.on(SERVER_EVENTS.USER_JOINED_LOBBY, (player) => {
+			observer.next(player);
 		})
 	})
 }
@@ -76,6 +103,34 @@ export function goPlayer() {
 	})
 }
 
-socket.on("mesg", (msg) => {
-	console.log(msg);
-})
+export function getUsersFromLobby() {
+	return new Promise((resolve, reject) => {
+		socket.emit(CLIENT_EVENTS.GET_USERS_FROM_LOBBY, "", (players) => {
+			resolve(players);
+		});
+	});
+}
+
+export function onUserDisconnected() {
+	return new rxjs.Observable(observer => {
+		socket.on(SERVER_EVENTS.PLAYER_DISCONNECTED, (userIdentityId) => {
+			observer.next(userIdentityId);
+		});
+	});
+}
+
+export function sendPlayerReady() {
+	return new Promise((resolve, reject) => {
+		socket.emit(CLIENT_EVENTS.PLAYER_READY, "", () => {
+			resolve();
+		});
+	});
+}
+
+export function onPlayerReady() {
+	return new rxjs.Observable(observer => {
+		socket.on(SERVER_EVENTS.PLAYER_READY, (userIdentityId) => {
+			observer.next(userIdentityId);
+		});
+	});
+}

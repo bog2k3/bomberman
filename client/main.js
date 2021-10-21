@@ -5,6 +5,8 @@ import * as constants from "../common/constants.js";
 import * as client from "./client.js";
 
 import * as socket from "./socket.js";
+import { addPlayerToLobby, attachCallbackToJoinButtonClick, attachCallbackToUserReadyCheckbox, changePlayerStatus, createJoinElements, createLobbyElement, deleteJoinDOMElement, deleteLobbyDOMElement, deleteUserDomElement, getJoinInputValue } from "./dom-elements.service.js";
+import { LobbyUserStatus } from "./lobby-user.status.js";
 
 //---------------------------------------------------------------------------------
 
@@ -18,15 +20,27 @@ class GameDetails {
 let lastTime = new Date().getTime();
 
 /** @type {string} */
- let sessionId = undefined;
+let sessionId = undefined;
+let gameScreenDOMElement;
+/** @type string */
+let userIdentityId = undefined;
 
-async function init() {
-	// set up network:
+/**
+ * @type {{
+ *		nickname: string,
+ *		status: "loading" | "ready",
+ *		userIdentityId: string
+ * }[]}
+ */
+let lobbyUsers = [];
+
+function initJoinGame() {
+	gameScreenDOMElement = document.getElementById("game-screen");
+	showJoinScreen();
 	subscribeToSocketEvents();
-	// join a game:
-	await join();
-	removeJoinScreen();
+}
 
+function initGame() {
 	// init dosemu:
 	dosemu.init(document.querySelector("#emuscreen"), null);
 	// dosemu.setNoiseStrength(0);
@@ -39,16 +53,6 @@ async function init() {
 		/** @param {GameDetails} gameDetails */
 		(gameDetails) => startRound(gameDetails.map, gameDetails.playerSlot)
 	);
-}
-
-function subscribeToSocketEvents() {
-	socket.requestUserIdentity().subscribe((userSessionId) => {
-		sessionId = userSessionId;
-	});
-
-	socket.onUserJoindGame().subscribe((userJoinDetails) => {
-		// create user list. This list will be passed to bomberman.init() fn from init()
-	});
 }
 
 /** @returns {Promise<GameDetails>} */
@@ -89,38 +93,95 @@ function draw() {
 	bomberman.draw();
 }
 
-function join() {
+function joinedLobby() {
 	let resolveFn;
 	const joinPromise = new Promise((resolve, reject) => {
 		resolveFn = resolve;
 	});
 
-	const joinButton = document.getElementById("join-button");
-
-	joinButton.addEventListener("click", (ev) => {
-		const inputText = document.getElementById("join-textbox");
-		if (!inputText.value) {
+	attachCallbackToJoinButtonClick((ev) => {
+		const nickname = getJoinInputValue();
+		if (!nickname) {
 			return;
 		}
-		socket.joinGame(inputText.value)
-		.then(() => {
-			// TODO: after user joined the server change to waiting for other users screen (Create it!).
-			// when all users joined then resolveFn();
-			resolveFn();
-		});
+		socket.joinLobby(nickname).then(() => resolveFn());
 	});
 
 	return joinPromise;
 }
 
-function removeJoinScreen() {
-	const bodyElement = document.getElementsByTagName("body")[0];
-	const joinScreenElement = document.getElementById("join");
-	bodyElement.removeChild(joinScreenElement);
+function showLobbyScreen() {
+	resetGameScreen();
+	gameScreenDOMElement.appendChild(
+		createLobbyElement()
+	);
+	socket.getUsersFromLobby().then((users) => {
+		addUsersToLobby(users, userIdentityId);
+		attachCallbackToUserReadyCheckbox(userIdentityId, (event, element) => {
+			if (event.currentTarget.checked) {
+				element.disabled  = true;
+			}
+			socket.sendPlayerReady();
+		});
+	});
+}
+
+function showJoinScreen() {
+	resetGameScreen();
+	gameScreenDOMElement.appendChild(
+		createJoinElements()
+	);
+}
+
+function resetGameScreen() {
+	deleteJoinDOMElement();
+	deleteLobbyDOMElement();
+}
+
+function subscribeToSocketEvents() {
+	socket.socketConnected().subscribe(() => {
+		joinedLobby().then(() => showLobbyScreen());
+	});
+	socket.requestUserIdentity().subscribe((newUserIdentityId) => {
+		userIdentityId = newUserIdentityId;
+	});
+	socket.onUserJoindLobby().subscribe((user) => {
+		addUsersToLobby([user], userIdentityId);
+	});
+
+	socket.onUserDisconnected().subscribe((userIdentityId) => {
+		deleteUserDomElement(userIdentityId);
+	});
+
+	socket.onPlayerReady().subscribe((userIdentityId) => {
+		changePlayerStatus(userIdentityId, LobbyUserStatus.READY);
+	});
+}
+
+function addUsersToLobby(users, userIdentityId) {
+	if (!userIdentityId) {
+		return;
+	}
+	for (const user of users) {
+		if ((!user || isUserInLobby(user))) {
+			return;
+		}
+		addPlayerToLobby(user.nickname, user.status, user.userIdentityId, userIdentityId)
+		lobbyUsers.push(user);
+	}
+}
+
+function isUserInLobby(user) {
+	for (const currentUser of lobbyUsers) {
+		if (user.userIdentityId === currentUser.userIdentityId) {
+			return true;
+		}
+	}
+	return false;
 }
 
 (function main() {
 	document.onreadystatechange = () => {
-		init();
+		initJoinGame();
 	};
 })();

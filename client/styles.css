@@ -11,7 +11,7 @@ body {
 	margin: 0 auto;
 }
 
-#join {
+#game-screen {
 	width: 300px;
 	position: absolute;
     top: 50%;
@@ -23,7 +23,7 @@ body {
 	border: 1px solid #0e505a;
 }
 
-#join .image {
+#game-screen .image {
 	width: 300px;
 	height: 224px;
 	background-image: url("images/join-screen.png");
@@ -32,7 +32,7 @@ body {
 	border-bottom: 2px solid #0e505a;
 }
 
-#join .join-component {
+#game-screen #join {
 	padding-top: 20px;
 	padding-bottom: 20px;
 	background-color: #008197;
@@ -41,12 +41,12 @@ body {
 	align-items: center;
 }
 
-#join .join-component #join-input{
+#game-screen #join #join-input{
 	display: flex;
 	flex-direction: row;
 }
 
-#join .join-component #join-textbox-icon {
+#game-screen #join #join-textbox-icon {
 	color: #fff;
 	border-top: 1px solid #005564;
 	border-left: 1px solid #005564;
@@ -55,12 +55,12 @@ body {
 	background-color: #006476;
 }
 
-#join .join-component #join-textbox {
+#game-screen #join #join-textbox {
 	width: 100%;
 	padding: 5px 10px;
 }
 
-#join .join-component #join-button {
+#game-screen #join #join-button {
 	margin: 5px 10px;
 	width: 65px;
 	padding: 5px 10px;
@@ -69,7 +69,25 @@ body {
 	color: #fff;
 	font-weight: bold;
 }
-#join .join-component #join-button:hover {
+#game-screen #join #join-button:hover {
 	background-color: #00424e;
 	cursor: pointer;
+}
+
+#game-screen #lobby {
+	background-color: #008197;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+
+#game-screen #lobby .player {
+	color: #fff;
+	font-weight: bold;
+	padding: 5px 10px;
+	border: 1px solid #005564;
+	width: 78px;
+	word-wrap: break-word;
+	text-align: center;
 }
