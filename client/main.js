@@ -19,8 +19,7 @@ class GameDetails {
 
 let lastTime = new Date().getTime();
 
-/** @type {string} */
-let sessionId = undefined;
+/** @type {HTMLElement} */
 let gameScreenDOMElement;
 /** @type string */
 let userIdentityId = undefined;
@@ -122,6 +121,12 @@ function showLobbyScreen() {
 				element.disabled  = true;
 			}
 			socket.sendPlayerReady();
+			{
+				// TODO remove this when the proper flow is in place !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				console.log("TODO remove this when the proper flow is in place !!!!!!!!!!!!!!!!!!!!!");
+				gameScreenDOMElement.remove();
+				initGame();
+			}
 		});
 	});
 }
