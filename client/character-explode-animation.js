@@ -15,6 +15,7 @@ export class CharacterExplodeAnimation extends Entity {
 		this.y = y;
 		this.type = type;
 		this.setLayer(layers.CharacterExplodeAnimation);
+		this.animationController.enableLoop = false;
 		this.animationController.onAnimationFinished = () => this.handleAnimationFinished();
 		this.startAnimation("explode");
 	}

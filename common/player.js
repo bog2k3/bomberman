@@ -10,17 +10,19 @@ export class Player extends Character {
 	bombPower = 2;
 	maxBombCount = 1;
 	bombCount = 0;
+	skinNumber = 0;
 
-	/** @param {Character} data */
+	/** @param {Character & {skinNumber: number}} data */
 	constructor(data) {
 		super({
 			...data,
 			baseSpeed: constants.PLAYER_INITIAL_SPEED
 		});
+		this.skinNumber = data.skinNumber || 0;
 	}
 
 	/** @override @returns {string} the type of entity */
-	getType() { return "player"; } // TODO return "player-n" where n is the skin number
+	getType() { return `player-${this.skinNumber}`; } // TODO return "player-n" where n is the skin number
 
 	spawnBomb() {
 		if (this.bombCount >= this.maxBombCount) {

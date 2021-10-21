@@ -150,11 +150,15 @@ function getScrollOffsets() {
 
 /** @param {Entity} entity */
 function drawEntity(entity, offsX, offsY) {
+	if (entity.getType().startsWith("player")) {
+		const skinId = Number.parseInt(entity.getType().substr("player-".length));
+		return drawPlayer(entity, skinId, offsX, offsY);
+	}
+	if (entity.getType().startsWith("enemy")) {
+		const skinId = Number.parseInt(entity.getType().substr("enemy-".length));
+		return drawEnemy(entity, skinId, offsX, offsY);
+	}
 	switch (entity.getType()) {
-		case "player":
-			return drawPlayer(entity, offsX, offsY);
-		case "enemy-0":
-			return drawEnemy(entity, 0, offsX, offsY);
 		case "bomb":
 			return drawBomb(entity, offsX, offsY);
 		case "fire":
@@ -173,13 +177,13 @@ function drawEntity(entity, offsX, offsY) {
 }
 
 /** @param {Player} player */
-function drawPlayer(player, offsX, offsY) {
-	drawCharacter(player, playerSprites[0], offsX, offsY); // TODO use skin by spawn slot id
+function drawPlayer(player, skinId, offsX, offsY) {
+	drawCharacter(player, playerSprites[skinId], offsX, offsY); // TODO use skin by spawn slot id
 }
 
 /** @param {Enemy} enemy */
-function drawEnemy(enemy, type, offsX, offsY) {
-	drawCharacter(enemy, enemySprites[type], offsX, offsY);
+function drawEnemy(enemy, skinId, offsX, offsY) {
+	drawCharacter(enemy, enemySprites[skinId], offsX, offsY);
 }
 
 /** @param {Bomb} bomb */
@@ -234,31 +238,36 @@ function drawGridEntity(entity, spriteSequence, offsX, offsY) {
  * @param {number} offsY
  */
 function drawCharacterExplodeAnimation(entity, offsX, offsY) {
-	const currentFrame = todo; //entity.animationController.getCurrentFrame(entity.spriteSequence.frames.length);
+	const spriteSeq = getSpriteSequenceForAnimation(entity, "explode");
+	const currentFrame = entity.animationController.getCurrentFrame(spriteSeq.frames.length);
 	dosemu.drawSprite(
 		offsX + entity.x,
 		offsY + entity.y,
-		entity.spriteSequence[currentFrame]
+		spriteSeq.frames[currentFrame]
 	);
 }
 
 /**
- * @param {string} entityType
+ * @param {Entity} entity
  * @param {string} animationName
  * @returns {SpriteSequence}
  */
-function getSpriteSequenceForAnimation(entityType, animationName) {
-	switch(entityType) {
-		case "player":
-			return playerSprites[0][animationName];
-		case "enemy-0":
-			return enemySprites[0][animationName];
+function getSpriteSequenceForAnimation(entity, animationName) {
+	if (entity.getType().startsWith("player")) {
+		const skinId = Number.parseInt(entity.getType().substr("player-".length));
+		return playerSprites[skinId][animationName];
+	}
+	if (entity.getType().startsWith("enemy")) {
+		const skinId = Number.parseInt(entity.getType().substr("enemy-".length));
+		return enemySprites[skinId][animationName];
+	}
+	switch(entity.getType()) {
 		case "bomb":
 			return bombSprites;
 		case "fire":
 			return fireSprites[animationName];
 		case "character-explode-animation":
-			return todo;
+			return getSpriteSequenceForCharacterExplodeAnimation(entity);
 		case "powerup-bomb":
 			return powerupSprites.bomb;
 		case "powerup-radius":
@@ -270,13 +279,26 @@ function getSpriteSequenceForAnimation(entityType, animationName) {
 	}
 }
 
+/** @param {CharacterExplodeAnimation} entity */
+function getSpriteSequenceForCharacterExplodeAnimation(entity) {
+	if (entity.type.startsWith("player")) {
+		const skinId = Number.parseInt(entity.type.substr("player-".length));
+		return playerSprites[skinId].explode;
+	} else if (entity.type.startsWith("enemy")) {
+		const skinId = Number.parseInt(entity.type.substr("enemy-".length));
+		return enemySprites[skinId].explode;
+	} else {
+		throw `unhandled CharacterExplodeAnimation type "${entity.type}" in getSpriteSequenceForCharacterExplodeAnimation()"`;
+	}
+}
+
 /**
  * @param {Entity} entity
  * @param {String} animationName
  **/
 function configureAnimationController(entity, animationName) {
 	entity.animationController.setDurationFromSpriteSeq(
-		getSpriteSequenceForAnimation(entity.getType(), animationName)
+		getSpriteSequenceForAnimation(entity, animationName)
 	);
 }
 

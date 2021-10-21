@@ -79,7 +79,8 @@ function spawnEntities(playerSpawnSlot) {
 						const playerY = i * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
 						const player = new Player({
 							x: playerX,
-							y: playerY
+							y: playerY,
+							skinNumber: playerSpawnSlot
 						});
 						if (!world.headlessMode()) {
 							world.getClient().setPlayer(player);
