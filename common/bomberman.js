@@ -9,8 +9,6 @@ import { PowerupSpeed } from "./powerup-speed.js";
 
 // --------------------------------------------------------------------------------------------------
 
-let client = null;
-
 /** @type {number[][]} */
 let mapTemplate = []; // the map template
 /** @type {number[][]} */
@@ -21,22 +19,20 @@ let map = []; // the map instance
 export function reset() {
 	world.clearData();
 	if (!world.headlessMode()) {
-		client.reset();
+		world.getClient().reset();
 	}
 }
 
 /**
- * @param {boolean} headlessMode True to run in headless mode (no graphics, no keyboard inputs)
- * @returns {Promise<void>} a promise that is resolved after loading is done.
+ * @param {Client Module or null} client null to run in headless mode, or a valid client module to use as front-end.
  **/
-export async function init(headlessMode) {
+export function init(client) {
 	Entity.onEntityCreated.subscribe(handleEntityCreated);
 	Entity.onEntityDestroyed.subscribe(handleEntityDestroyed);
 	world.setOnBrickDestroyedCallback(handleBrickDestroyed);
-	world.setHeadlessMode(headlessMode);
+	world.setHeadlessMode(!client);
 
-	if (!headlessMode) {
-		client = await import("../client/client.js");
+	if (client) {
 		world.setClient(client);
 	}
 
@@ -55,13 +51,13 @@ export function startGame(mapTemplate, playerSpawnSlot) {
 export function update(dt) {
 	world.update(dt);
 	if (!world.headlessMode()) {
-		client.update(dt);
+		world.getClient().update(dt);
 	}
 }
 
 export function draw() {
 	if (!world.headlessMode()) {
-		client.draw();
+		world.getClient().draw();
 	}
 }
 
@@ -86,7 +82,7 @@ function spawnEntities(playerSpawnSlot) {
 							y: playerY
 						});
 						if (!world.headlessMode()) {
-							client.setPlayer(player);
+							world.getClient().setPlayer(player);
 						}
 					}
 					crtPlayerSlot++;
@@ -106,7 +102,7 @@ function spawnEntities(playerSpawnSlot) {
 			map[i][j] = 0; // leave an empty space below entity
 		}
 	}
-	if (!world.headlessMode() && !client.getPlayer()) {
+	if (!world.headlessMode() && !world.getClient().getPlayer()) {
 		console.error(`Player spawn position #${playerSpawnSlot} not found in map!`);
 	}
 }

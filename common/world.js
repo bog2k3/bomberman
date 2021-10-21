@@ -141,6 +141,10 @@ export function setClient(client) {
 	data.client = client;
 }
 
+export function getClient() {
+	return data.client;
+}
+
 /** @param {"player-n" | "enemy-n"} type the type of animation to create, where "n" is the skin number */
 export function requestClientCreateCharacterExplodeAnimation(type, x, y) {
 	if (!data.headlessMode && data.client) {

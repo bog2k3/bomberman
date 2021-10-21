@@ -2,6 +2,7 @@ import { dosemu, dosemuSound } from "../common/node_modules/dosemu/index.js";
 import * as bomberman from "../common/bomberman.js";
 import { generateRandomMap } from "../common/random-map.js";
 import * as constants from "../common/constants.js";
+import * as client from "./client.js";
 
 import * as socket from "./socket.js";
 
@@ -32,7 +33,7 @@ async function init() {
 	dosemu.hideMouse();
 
 	// init game:
-	await bomberman.init(false);
+	bomberman.init(client);
 
 	receiveGameDetails().then(
 		/** @param {GameDetails} gameDetails */

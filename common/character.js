@@ -108,9 +108,7 @@ export class Character extends Entity {
 			return;
 		}
 		this.orientation = direction;
-		if (!this.isStopped) {
-			this.startAnimation(this.orientation);
-		}
+		this.startAnimation(this.orientation);
 		this.isStopped = false;
 	}
 
