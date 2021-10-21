@@ -2,10 +2,12 @@ import { dosemu } from "../common/node_modules/dosemu/index.js";
 import { clientState } from "./client-state.js";
 import * as raycast  from "./raycast.js";
 import * as editMode from "./edit-mode.js";
+import * as socket from "./socket.js";
+import { InputSource } from "../common/input-source.js";
 
 // --------------------------------------------------------------------------------------------------
 
-let wasSpacePressed = false;
+export const localInputSource = new InputSource();
 
 // --------------------------------------------------------------------------------------------------
 
@@ -16,29 +18,19 @@ export function getMouseRowCol() {
 	return [mouseRow, mouseCol];
 }
 
+// --------------------------------------------------------------------------------------------------
 
-export function update(dt) {
-	if (!clientState.enable3DMode) {
-		if (dosemu.isKeyPressed("ArrowDown")) {
-			clientState.player.move("down");
-		} else if (dosemu.isKeyPressed("ArrowUp")) {
-			clientState.player.move("up");
-		} else if (dosemu.isKeyPressed("ArrowLeft")) {
-			clientState.player.move("left");
-		} else if (dosemu.isKeyPressed("ArrowRight")) {
-			clientState.player.move("right");
-		}
-	}
-	if (dosemu.isKeyPressed(" ") && !wasSpacePressed) {
-		clientState.player.spawnBomb();
-		wasSpacePressed = true;
-	}
-	if (!dosemu.isKeyPressed(" ")) {
-		wasSpacePressed = false;
-	}
+function isPlayerControlKey(key) {
+	return [
+		"ArrowLeft",
+		"ArrowRight",
+		"ArrowUp",
+		"ArrowDown",
+		" "
+	].includes(key);
 }
 
-function registerCommandHandlers() {
+function registerKeyboardEventHandlers() {
 	dosemu.onKeyDown((key) => {
 		switch (key) {
 			case "q":
@@ -50,9 +42,28 @@ function registerCommandHandlers() {
 			default:
 				if (editMode.ENABLED) {
 					editMode.handleKey(key);
+				} else {
+					if (isPlayerControlKey(key)) {
+						if (!clientState.enable3DMode) {
+							localInputSource.setKeyStatus(key, true);
+						}
+						notifyServer({
+							event: "key-pressed",
+							key
+						});
+					}
 				}
 		}
 	});
+	dosemu.onKeyUp((key) => {
+		if (!editMode.ENABLED && isPlayerControlKey(key)) {
+			localInputSource.setKeyStatus(key, false);
+			notifyServer({
+				event: "key-released",
+				key
+			});
+		}
+	})
 	dosemu.onMouseDown((x, y, btn) => {
 		if (btn === 2) {
 			editMode.nextEditTileType();
@@ -60,7 +71,10 @@ function registerCommandHandlers() {
 	})
 }
 
-// --------------------------------------------------------------------------------------------------
+/** @param {{event: "key-pressed" | "key-released", key: string}} event */
+function notifyServer(event) {
+	socket.sendPlayerKeyEvent(event);
+}
 
 function toggle3dMode() {
 	clientState.enable3DMode = !clientState.enable3DMode;
@@ -85,5 +99,5 @@ function toggleEditMode() {
 }
 
 (function init() {
-	registerCommandHandlers();
+	registerKeyboardEventHandlers();
 })();

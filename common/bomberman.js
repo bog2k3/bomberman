@@ -13,6 +13,8 @@ import { PowerupSpeed } from "./powerup-speed.js";
 let mapTemplate = []; // the map template
 /** @type {number[][]} */
 let map = []; // the map instance
+/** @type {{row: number, col: number}[]} */
+let playerSpawnPositions = [];
 
 // --------------------------------------------------------------------------------------------------
 
@@ -34,6 +36,7 @@ export function init(client) {
 
 	if (client) {
 		world.setClient(client);
+		client.init();
 	}
 
 	reset();
@@ -61,10 +64,22 @@ export function draw() {
 	}
 }
 
+/**
+ * @param {number} slotId
+ * @returns [x: number, y: number]
+ */
+export function getPlayerSpawnPosition(slotId) {
+	return [
+		playerSpawnPositions[slotId].col * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS,
+		playerSpawnPositions[slotId].row * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS
+	];
+}
+
 // --------------------------------------------------------------------------------------------------
 
 /** @param {number} playerSpawnSlot */
 function spawnEntities(playerSpawnSlot) {
+	playerSpawnPositions = [];
 	let crtPlayerSlot = 0;
 	for (let i = 0; i < map.length; i++) {
 		for (let j = 0; j < map[i].length; j++) {
@@ -74,6 +89,7 @@ function spawnEntities(playerSpawnSlot) {
 			// some entity type
 			switch (map[i][j]) {
 				case 9: // player
+					playerSpawnPositions.push({ row: i, col: j });
 					if (playerSpawnSlot == crtPlayerSlot) {
 						const playerX = j * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
 						const playerY = i * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;

@@ -4,6 +4,7 @@ import * as world from "./world.js";
 import * as constants from "./constants.js";
 import { Bomb } from "./bomb.js";
 import { CollisionResult } from "./collision.js";
+import { InputSource } from "./input-source.js";
 
 export class Player extends Character {
 
@@ -11,6 +12,9 @@ export class Player extends Character {
 	maxBombCount = 1;
 	bombCount = 0;
 	skinNumber = 0;
+	/** @type {InputSource} */
+	inputSource;
+	wasSpacePressed = false;
 
 	/** @param {Character & {skinNumber: number}} data */
 	constructor(data) {
@@ -21,8 +25,33 @@ export class Player extends Character {
 		this.skinNumber = data.skinNumber || 0;
 	}
 
+	/** @type {InputSource} source */
+	setInputSource(source) {
+		this.inputSource = source;
+	}
+
 	/** @override @returns {string} the type of entity */
 	getType() { return `player-${this.skinNumber}`; } // TODO return "player-n" where n is the skin number
+
+	update(dt) {
+		super.update(dt);
+		if (this.inputSource.isKeyPressed("ArrowDown")) {
+			this.move("down");
+		} else if (this.inputSource.isKeyPressed("ArrowUp")) {
+			this.move("up");
+		} else if (this.inputSource.isKeyPressed("ArrowLeft")) {
+			this.move("left");
+		} else if (this.inputSource.isKeyPressed("ArrowRight")) {
+			this.move("right");
+		}
+		if (this.inputSource.isKeyPressed(" ") && !this.wasSpacePressed) {
+			this.spawnBomb();
+			this.wasSpacePressed = true;
+		}
+		if (!this.inputSource.isKeyPressed(" ")) {
+			this.wasSpacePressed = false;
+		}
+	}
 
 	spawnBomb() {
 		if (this.bombCount >= this.maxBombCount) {
