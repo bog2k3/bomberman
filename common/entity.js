@@ -1,4 +1,6 @@
-import { dosemuBBox, dosemuSprite } from "./node_modules/dosemu/index.js";
+import { dosemuBBox } from "./node_modules/dosemu/index.js";
+import { AnimationController } from "./animation-controller.js";
+import { Event } from "./event.js";
 
 /** @abstract */
 export class Entity {
@@ -6,14 +8,16 @@ export class Entity {
 	layer = 0;
 	isSolid = true;
 	isDestroyed = false;
+	animationController = new AnimationController();
 
 	/** @type {(this: Entity) => void} callback to be invoked when the entity is destroyed. */
 	onDestroy = null;
 
+	/** @type {Event} This event receives the animation name and is triggered every time a new animation is started. */
+	onAnimationStart = new Event();
+
 	constructor() {
-		if (Entity.onEntityCreated) {
-			Entity.onEntityCreated(this);
-		}
+		Entity.onEntityCreated.trigger(this);
 	}
 
 	destroy() {
@@ -22,9 +26,7 @@ export class Entity {
 			if (this.onDestroy) {
 				this.onDestroy(this);
 			}
-			if (Entity.onEntityDestroyed) {
-				Entity.onEntityDestroyed(this);
-			}
+			Entity.onEntityDestroyed.trigger(this);
 		}
 	}
 
@@ -34,21 +36,10 @@ export class Entity {
 	/** @abstract @returns {dosemuBBox.BoundingBox} the bounding box of this entity, in world space*/
 	getBoundingBox() { throw "you must override abstract method."; }
 
-	/**
-	 * @abstract
-	 * @param {number} mapOffsX the position of the map, relative to the screen, in pixels
-	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
-	 **/
-	draw(mapOffsX, mapOffsY) { throw "you must override abstract method."; }
-
-	/**
-	 * @abstract
-	 * @returns {dosemuSprite.Sprite}
-	 */
-	get3DSprite() { throw "you must override abstract method"; }
-
-	/** @virtual override this to implement update */
-	update(dt) {}
+	/** @virtual override this to implement update; you must call super.update(dt) */
+	update(dt) {
+		this.animationController.update(dt);
+	}
 
 	/**
 	 * Sets the layer in which this entity resides. The layering affects the draw order.
@@ -63,14 +54,25 @@ export class Entity {
 	fry() {}
 
 	/**
-	 * @type {(entity: Entity) => void}
-	 * This event is triggered every time a new entity is created
+	 * @param {string} name the name of the animation to start
+	 * @param {number} direction +1 to play forward or -1 to play backward
 	 **/
-	static onEntityCreated = null;
+	startAnimation(name, direction = +1) {
+		this.animationController.animationDirection = Math.sign(direction);
+		this.onAnimationStart.trigger(name);
+	}
 
 	/**
-	 * @type {(entity: Entity) => void}
-	 * This event is triggered every time a new entity is destroyed
+	 * This event is triggered every time a new entity is created
+	 * @type {Event}
+	 * @param {Entity} entity
 	 **/
-	 static onEntityDestroyed = null;
+	static onEntityCreated = new Event();
+
+	/**
+	 * This event is triggered every time a new entity is destroyed
+	 * @type {Event}
+	 * @param {Entity} entity
+	 **/
+	 static onEntityDestroyed = new Event();
 }

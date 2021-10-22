@@ -1,15 +1,14 @@
 {
-  "name": "bomberman",
+  "name": "bomberman-common",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "bomberman.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Bogdan Ionita <bog2k3@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "rxjs": "^7.4.0",
-    "socket.io-client": "^4.3.2"
+    "dosemu": "*"
   }
 }

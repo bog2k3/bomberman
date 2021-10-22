@@ -3,17 +3,42 @@ import * as collision from "./collision.js";
 import { Entity } from "./entity.js";
 import * as constants from "./constants.js";
 
-/** @type {{map: number[][], entities: Entity[], onBrickDestroyed: (row: number, col: number) => void}} */
+// --------------------------------------------------------------------------------------------------
+
 const data = {
+	/** @type {number[][]} */
 	map: [],
+	/** @type {Entity[]} */
 	entities: [],
+	/** @type {(row: number, col: number) => void} */
 	onBrickDestroyed: null,
+	/** @type {boolean} */
+	headlessMode: true,
+
+	/** @type {dynamically imported client module (or null in headless mode)} */
+	client: null
 };
+
+// --------------------------------------------------------------------------------------------------
+
+export function setHeadlessMode(value) {
+	data.headlessMode = value;
+}
+
+/** @returns {boolean} true if the game is running in headless mode (no graphics) */
+export function headlessMode() {
+	return data.headlessMode;
+}
 
 /** @param {number[][]} map */
 export function setMap(map) {
 	data.map = map;
 	collision.setMap(map);
+}
+
+/** @returns {number[][]} */
+export function getMap() {
+	return data.map;
 }
 
 /** @param {Entity} entity */
@@ -28,10 +53,20 @@ export function removeEntity(entity) {
 	collision.removeEntity(entity);
 }
 
+/** @returns {Entity[]} */
+export function getEntities() {
+	return data.entities;
+}
+
 export function clearData() {
 	data.map = [];
 	data.entities = [];
 	collision.clearData();
+}
+
+/** @param {number} dt */
+export function update(dt) {
+	data.entities.forEach(e => e.update(dt));
 }
 
 /**
@@ -100,4 +135,19 @@ export function destroyBrick(row, col) {
 /** @param {(row: number, col: number) => void} callback */
 export function setOnBrickDestroyedCallback(callback) {
 	data.onBrickDestroyed = callback;
+}
+
+export function setClient(client) {
+	data.client = client;
+}
+
+export function getClient() {
+	return data.client;
+}
+
+/** @param {"player-n" | "enemy-n"} type the type of animation to create, where "n" is the skin number */
+export function requestClientCreateCharacterExplodeAnimation(type, x, y) {
+	if (!data.headlessMode && data.client) {
+		data.client.createCharacterExplodeAnimation(type, x, y);
+	}
 }

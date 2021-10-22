@@ -17,9 +17,9 @@ import player1_explode4 from "./sprites/player1/explode-4.png.js";
 import player1_explode5 from "./sprites/player1/explode-5.png.js";
 import player1_explode6 from "./sprites/player1/explode-6.png.js";
 import player1_explode7 from "./sprites/player1/explode-7.png.js";
-import { SpriteSequence } from "./sprite-sequence.js";
+import { CharacterSpriteSet } from "./character-sprite-set.js";
 
-/** @type {{"up": SpriteSequence, "down": SpriteSequence, "left": SpriteSequence, "right": SpriteSequence, "explode": SpriteSequence}[]} */
+/** @type {CharacterSpriteSet[]} */
 export const playerSprites = [
 	// Player 1
 	{

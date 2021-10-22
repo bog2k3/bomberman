@@ -134,3 +134,39 @@ export function onPlayerReady() {
 		});
 	});
 }
+
+/** @param {{event: "key-pressed" | "key-released", key: string}} event */
+export function sendPlayerKeyEvent(event) {
+	// TODO send the event to the server which will broadcast back to all other players in order for them to move their representation of our player
+	console.log("TODO implement this")
+}
+
+export function sendPlayerSpanwed(playerSlot) {
+	// TODO send an event to the server which will broadcast to all other players, letting them instantiate dummy player objects representing our player
+	// the other players will receive the onNetworkPlayerSpawned(slotId) event
+	console.log("TODO implement this too");
+}
+
+/**
+ * emits the slot id when another player is spawned
+ * @returns {rxjs.Observable}
+ **/
+export function onNetworkPlayerSpawned() {
+	return new rxjs.Observable(observer => {
+		// TODO listen to server....
+		const networkPlayerSlot = 1; // this will be received from the server
+		observer.next(networkPlayerSlot);
+	});
+}
+
+/**
+ * emits the input event {playerId: number, key: string, status: boolean} when another player presses/releases a key
+ * @returns {rxjs.Observable}
+ **/
+export function onNetworkPlayerInput() {
+	return new rxjs.Observable(observer => {
+		// TODO listen to server...
+		const event = {playerId: 1, key: "ArrowLeft", status: true}; // this will be received from the server
+		observer.next(event);
+	});
+}

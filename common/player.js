@@ -1,61 +1,57 @@
-import { dosemu, dosemuBBox } from "./node_modules/dosemu/index.js";
+import { dosemu } from "./node_modules/dosemu/index.js";
 import { Character } from "./character.js";
 import * as world from "./world.js";
 import * as constants from "./constants.js";
 import { Bomb } from "./bomb.js";
 import { CollisionResult } from "./collision.js";
+import { InputSource } from "./input-source.js";
 
 export class Player extends Character {
 
-	wasSpacePressed = false;
 	bombPower = 2;
 	maxBombCount = 1;
 	bombCount = 0;
-	movementInputEnabled = true;
+	skinNumber = 0;
+	/** @type {InputSource} */
+	inputSource;
+	wasSpacePressed = false;
 
-	/** @param {Character} data */
+	/** @param {Character & {skinNumber: number}} data */
 	constructor(data) {
 		super({
 			...data,
 			baseSpeed: constants.PLAYER_INITIAL_SPEED
 		});
+		this.skinNumber = data.skinNumber || 0;
+	}
+
+	/** @type {InputSource} source */
+	setInputSource(source) {
+		this.inputSource = source;
 	}
 
 	/** @override @returns {string} the type of entity */
-	getType() { return "player"; }
+	getType() { return `player-${this.skinNumber}`; } // TODO return "player-n" where n is the skin number
 
-	/** @override */
 	update(dt) {
 		super.update(dt);
-		if (this.movementInputEnabled) {
-			if (dosemu.isKeyPressed("ArrowDown")) {
-				this.move("down");
-			} else if (dosemu.isKeyPressed("ArrowUp")) {
-				this.move("up");
-			} else if (dosemu.isKeyPressed("ArrowLeft")) {
-				this.move("left");
-			} else if (dosemu.isKeyPressed("ArrowRight")) {
-				this.move("right");
-			}
+		if (this.inputSource.isKeyPressed("ArrowDown")) {
+			this.move("down");
+		} else if (this.inputSource.isKeyPressed("ArrowUp")) {
+			this.move("up");
+		} else if (this.inputSource.isKeyPressed("ArrowLeft")) {
+			this.move("left");
+		} else if (this.inputSource.isKeyPressed("ArrowRight")) {
+			this.move("right");
 		}
-		if (dosemu.isKeyPressed(" ") && !this.wasSpacePressed) {
+		if (this.inputSource.isKeyPressed(" ") && !this.wasSpacePressed) {
 			this.spawnBomb();
 			this.wasSpacePressed = true;
 		}
-		if (!dosemu.isKeyPressed(" ")) {
+		if (!this.inputSource.isKeyPressed(" ")) {
 			this.wasSpacePressed = false;
 		}
 	}
-
-	/**
-	 * @param {number} mapOffsX the position of the map, relative to the screen, in pixels
-	 * @param {number} mapOffsY the position of the map, relative to the screen, in pixels
-	 **/
-	 draw(mapOffsX, mapOffsY) {
-		 super.draw(mapOffsX, mapOffsY);
-		//  dosemu.drawText(this.x+5, this.y - 24, "Name", 0, "center");
-		//  dosemu.drawText(this.x+4, this.y - 25, "Name", 10, "center");
-	 }
 
 	spawnBomb() {
 		if (this.bombCount >= this.maxBombCount) {

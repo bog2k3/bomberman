@@ -1,26 +1,36 @@
-import { dosemu, dosemuSound } from "./node_modules/dosemu/index.js";
-import * as bomberman from "./bomberman.js";
+import { dosemu, dosemuSound } from "../common/node_modules/dosemu/index.js";
+import * as bomberman from "../common/bomberman.js";
+import { generateRandomMap } from "../common/random-map.js";
+import * as constants from "../common/constants.js";
+import * as client from "./client.js";
 
 import * as socket from "./socket.js";
 import { addPlayerToLobby, attachCallbackToJoinButtonClick, attachCallbackToUserReadyCheckbox, changePlayerStatus, createJoinElements, createLobbyElement, deleteJoinDOMElement, deleteLobbyDOMElement, deleteUserDomElement, getJoinInputValue } from "./dom-elements.service.js";
 import { LobbyUserStatus } from "./lobby-user.status.js";
 
+//---------------------------------------------------------------------------------
+
+class GameDetails {
+	/** @type {number[][]} */
+	map;
+	/** @type {number} */
+	playerSlot;
+}
+
 let lastTime = new Date().getTime();
 
+/** @type {HTMLElement} */
 let gameScreenDOMElement;
-
-/**
- * @type string
- */
+/** @type string */
 let userIdentityId = undefined;
 
 /**
- * @type [
- *		nickname,
-*		status: "loading", "ready",
-*		userIdentityId
-* ]
-*/
+ * @type {{
+ *		nickname: string,
+ *		status: "loading" | "ready",
+ *		userIdentityId: string
+ * }[]}
+ */
 let lobbyUsers = [];
 
 function initJoinGame() {
@@ -30,11 +40,38 @@ function initJoinGame() {
 }
 
 function initGame() {
+	// init dosemu:
 	dosemu.init(document.querySelector("#emuscreen"), null);
 	// dosemu.setNoiseStrength(0);
-	requestAnimationFrame(step);
 	dosemu.hideMouse();
-	bomberman.init();
+
+	// init game:
+	bomberman.init(client);
+
+	receiveGameDetails().then(
+		/** @param {GameDetails} gameDetails */
+		(gameDetails) => startRound(gameDetails.map, gameDetails.playerSlot)
+	);
+}
+
+/** @returns {Promise<GameDetails>} */
+function receiveGameDetails() {
+	// TODO request this from the server
+	// TODO for now we'll hardcode them
+	const map = generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS);
+	return Promise.resolve({
+		map,
+		playerSlot: 0
+	});
+}
+
+/** @param {number[][]} map */
+function startRound(map, playerSlot) {
+	bomberman.reset();
+	bomberman.startGame(map, playerSlot);
+
+	// start game loop:
+	requestAnimationFrame(step);
 }
 
 function step() {
@@ -84,6 +121,12 @@ function showLobbyScreen() {
 				element.disabled  = true;
 			}
 			socket.sendPlayerReady();
+			{
+				// TODO remove this when the proper flow is in place !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				console.log("TODO remove this when the proper flow is in place !!!!!!!!!!!!!!!!!!!!!");
+				gameScreenDOMElement.remove();
+				initGame();
+			}
 		});
 	});
 }

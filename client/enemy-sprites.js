@@ -10,9 +10,9 @@ import enemy1_explode3 from "./sprites/enemy1/explode3.png.js";
 import enemy1_explode4 from "./sprites/enemy1/explode4.png.js";
 import enemy1_explode5 from "./sprites/enemy1/explode5.png.js";
 import enemy1_explode6 from "./sprites/enemy1/explode6.png.js";
-import { SpriteSequence } from "./sprite-sequence.js";
+import { CharacterSpriteSet } from "./character-sprite-set.js";
 
-/** @type {{"up": SpriteSequence, "down": SpriteSequence, "left": SpriteSequence, "right": SpriteSequence, "explode": SpriteSequence}[]} */
+/** @type {CharacterSpriteSet[]} */
 export const enemySprites = [
 	// Enemy type #0
 	{
