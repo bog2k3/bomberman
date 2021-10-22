@@ -1,4 +1,5 @@
 import { InputSource } from "../common/input-source.js";
+import { Player } from "../common/player.js";
 
 export const clientState = {
 	enable3DMode: false,

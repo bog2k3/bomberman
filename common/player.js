@@ -22,6 +22,7 @@ export class Player extends Character {
 			...data,
 			baseSpeed: constants.PLAYER_INITIAL_SPEED
 		});
+		this.speed = this.baseSpeed;
 		this.skinNumber = data.skinNumber || 0;
 	}
 
@@ -51,6 +52,23 @@ export class Player extends Character {
 		if (!this.inputSource.isKeyPressed(" ")) {
 			this.wasSpacePressed = false;
 		}
+	}
+
+	/** @returns {Player} the new player instance */
+	respawn(x, y) {
+		// create a new player entity that is a copy of this one
+		const player = new Player({
+			x, y,
+			skinNumber: this.skinNumber,
+		});
+		// if we've respawned on top of a bomb, add it to array so we can walk away from it.
+		if (world.isBombAt(this.getRow(), this.getColumn())) {
+			this.overlapingBombs.push(
+				...world.getEntitiesInCell(this.getRow(), this.getColumn())
+					.filter(e => e.getType() == "bomb")
+			);
+		}
+		return player;
 	}
 
 	spawnBomb() {

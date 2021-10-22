@@ -21,5 +21,5 @@ export const DEFAULT_MAP_ROWS = 21;
 export const DEFAULT_MAP_COLS = 31;
 
 export const CHANCE_SPAWN_BOMB_POWERUP = 0.3;
-export const CHANCE_SPAWN_RADIUS_POWERUP = 0.3;
-export const CHANCE_SPAWN_SPEED_POWERUP = 0.1;
+export const CHANCE_SPAWN_RADIUS_POWERUP = 0.25;
+export const CHANCE_SPAWN_SPEED_POWERUP = 0.15;

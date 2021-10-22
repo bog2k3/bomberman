@@ -1,4 +1,4 @@
-const socket = new io("http://localhost:7075", {
+const socket = new io("http://localhost:7042", {
 	path: "/bomberman.io"
 });
 

@@ -18,7 +18,15 @@ export function getMouseRowCol() {
 	return [mouseRow, mouseCol];
 }
 
+/** @param {() => void} callback */
+export function onPlayerRespawnKeyPressed(callback) {
+	playerRespawnKeyPressedCallback = callback;
+}
+
 // --------------------------------------------------------------------------------------------------
+
+/** @type {() => void} callback to invoke when the player is dead and the respawn key was pressed. */
+let playerRespawnKeyPressedCallback = null;
 
 function isPlayerControlKey(key) {
 	return [
@@ -39,6 +47,10 @@ function registerKeyboardEventHandlers() {
 			case "e":
 				toggle3dMode();
 				break;
+			case "Enter":
+				if (clientState.playerHasDied && playerRespawnKeyPressedCallback) {
+					playerRespawnKeyPressedCallback();
+				}
 			default:
 				if (editMode.ENABLED) {
 					editMode.handleKey(key);

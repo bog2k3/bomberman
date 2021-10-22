@@ -106,11 +106,44 @@ function drawTile(map, row, col, mapDX, mapDY) {
 	dosemu.drawSprite(tileX, tileY, sprite);
 }
 
+/**
+ * @param {string} text
+ * @param {"left" | "center" | "right"} alignment
+ **/
+function drawShadowedText(x, y, text, color, shadowColor, alignment) {
+	dosemu.drawText(x + 1, y + 1, text, shadowColor, alignment);
+	dosemu.drawText(x, y, text, color, alignment);
+}
+
 function drawLoserBox() {
-	dosemu.drawBar(70, 85, 245, 115, 0);
-	dosemu.drawRectangle(70, 85, 245, 115, 9);
-	dosemu.drawRectangle(68, 83, 247, 117, 0);
-	dosemu.drawText(160, 100, "You're dead! Loser!", 9, "center");
+	const texts = [{
+		text: "You're dead! Loser!",
+		color: 9
+	}, {
+		text: "Press ENTER to respawn",
+		color: 11
+	}];
+	const padding = 15;
+	const lineHeight = 10;
+	const lineGap = 5;
+	const charWidth = 8;
+	const maxLength = Math.max(...texts.map(t => t.text.length));
+	const boxWidth = maxLength * charWidth + padding * 2 + 2;
+	const boxHalfWidth = boxWidth >> 1;
+	const boxHeight = texts.length * lineHeight + (texts.length-1) * lineGap + padding * 2 + 2;
+	const boxHalfHeight = boxHeight >> 1;
+	const x1 = 160 - boxHalfWidth;
+	const y1 = 100 - boxHalfHeight;
+	const x2 = 160 + boxHalfWidth;
+	const y2 = 100 + boxHalfHeight;
+	dosemu.drawBar(x1, y1, x2, y2, 0);
+	dosemu.drawRectangle(x1, y1, x2, y2, 9);
+	dosemu.drawRectangle(x1 - 2, y1 - 2, x2 + 2, y2 + 2, 0);
+	let textY = y1 + lineHeight / 2 + padding + 2;
+	for (let i=0; i<texts.length; i++) {
+		drawShadowedText(160, textY, texts[i].text, texts[i].color, 235, "center");
+		textY += lineHeight + lineGap;
+	}
 }
 
 

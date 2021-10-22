@@ -4,7 +4,7 @@ import { ServerEvents } from "./server-events.js";
 import { SocketRoom } from "./socket-room.js";
 
 const WEBSOCKET_CONSTANTS = {
-	PORT : 7075,
+	PORT : 7042,
 	PATH : "/bomberman.io",
 	TIMEOUT_SEC : 60, // timeout in seconds
 	MAX_HTTP_BUFFER_SIZE : 1e7, // 1e7 = 100mb (default socket io value is 1e6 = 1mb)

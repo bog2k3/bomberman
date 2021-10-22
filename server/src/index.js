@@ -6,7 +6,7 @@ import { UserService } from "./user.service.js";
 import { GameService } from "./game.service.js";
 
 const app = express();
-const PORT = 7075;
+const PORT = 7042;
 
 const httpServer = http.createServer(app);
 

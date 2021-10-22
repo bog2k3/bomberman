@@ -15,6 +15,7 @@ import { InputSource } from "../common/input-source.js";
 export function init() {
 	raycast.init();
 	Entity.onEntityDestroyed.subscribe(handleEntityDestroyed);
+	input.onPlayerRespawnKeyPressed(respawnPlayer);
 
 	socket.onNetworkPlayerSpawned().subscribe((slotId) => {
 		// spawnNetworkPlayer(slotId);
@@ -76,7 +77,6 @@ function handleEntityDestroyed(entity) {
 	if (entity === clientState.player) {
 		// player was destroyed, we wait for the explode animation to finish
 		setTimeout(() => {
-			// TODO respawn or whatever
 			clientState.playerHasDied = true;
 		}, 1500);
 	}
@@ -94,4 +94,10 @@ function spawnNetworkPlayer(slotId) {
 function createNetworkInputSource(slotId) {
 	clientState.networkInputSources[slotId] =  new InputSource();
 	return clientState.networkInputSources[slotId];
+}
+
+function respawnPlayer() {
+	const [x, y] = bomberman.getPlayerSpawnPosition(clientState.player.skinNumber);
+	setPlayer(clientState.player.respawn(x, y));
+	clientState.playerHasDied = false;
 }
