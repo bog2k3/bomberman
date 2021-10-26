@@ -84,8 +84,9 @@ function drawtex(x, y, tex, col, h, transparent = false) {
  * @param {Player} player
  * @param {Entity[]} entities
  * @param {Theme} theme
+ * @param {(e: Entity, orientation: "up"|"down"|"left"|"right") => dosemuSprite.Sprite} get3DSpriteFunc
  */
-export function render(map, player, entities, theme) {
+export function render(map, player, entities, theme, get3DSpriteFunc) {
 	const map_maxx = map[0].length * tileSize - 1;
 	const map_maxy = map.length * tileSize - 1;
 
@@ -219,7 +220,16 @@ export function render(map, player, entities, theme) {
 			const bbox = e.getBoundingBox();
 			const spriteX = (bbox.left + bbox.right) / 2;
 			const spriteY = (bbox.up + bbox.down) / 2;
-			const sprite = e.get3DSprite();
+			let sprite;
+			if (e.getType().startsWith("fire")) {
+				sprite = get3DSpriteFunc(e, "middleH");
+			} else {
+				sprite = get3DSpriteFunc(e, "down"); // TODO don't hard-code orientation, determine from relative orientation to player
+			}
+			if (!sprite) {
+				console.log("bad");
+				get3DSpriteFunc(e, "down");
+			}
 			const distFromSpriteToRay = //Math.abs(
 				_cos[a] * (playerY - spriteY) - _sin[a] * (playerX - spriteX)
 			//);

@@ -9,6 +9,7 @@ export class AnimationController {
 	/** @param {SpriteSequence} spriteSequence Configures animation duration/speed from the default values within the sprite sequence. */
 	setDurationFromSpriteSeq(spriteSequence) {
 		this.animationDuration = spriteSequence.frames.length / spriteSequence.animationSpeed;
+		this.update(0);
 	}
 
 	/** @param {number} dt */
@@ -18,7 +19,7 @@ export class AnimationController {
 		}
 		const direction = Math.sign(this.animationDirection);
 		this.animationProgress += dt * direction;
-		if (this.animationProgress > this.animationDuration || this.animationProgress < 0) {
+		if (this.animationProgress >= this.animationDuration || this.animationProgress < 0) {
 			// animation reached the end
 			if (this.enableLoop) {
 				this.animationProgress -= this.animationDuration * direction;
@@ -50,7 +51,7 @@ export class AnimationController {
 		if (this.animationDuration === 0) {
 			return 0;
 		}
-		return Math.floor(this.animationProgress / this.animationDuration * frameCount);
+		return Math.floor(this.animationProgress / this.animationDuration * frameCount) % frameCount;
 	}
 
 	/** @type {() => void} Set a callback to be invoked when the animation loops (if loop is enabled) */

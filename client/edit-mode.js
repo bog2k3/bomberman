@@ -1,16 +1,56 @@
+import { dosemu } from "../common/node_modules/dosemu/index.js";
+import { generateRandomMap } from "../common/random-map.js";
+import { clientState } from "./client-state.js";
+import { playerSprites } from "./player-sprites.js";
+import { enemySprites } from "./enemy-sprites.js";
+import { clamp } from "../common/math.js";
+import * as bombermanDraw from "./draw.js";
+import * as constants from "../common/constants.js";
+
 export let ENABLED = false;
 
 const EDIT_MODE_SCROLL_SPEED = 150; // pixels per second
 let editTileType = 1; // the type of tile under cursor
+let mapTemplate = [];
+let scrollX = 0, scrollY = 0;
 
-export function draw(tileOffsX, tileOffsY, nTilesX, nTilesY) {
+/** @param {boolean} enabled */
+export function setEnabled(enabled) {
+	ENABLED = enabled;
+	if (ENABLED) {
+		scrollX = clientState.scrollX;
+		scrollY = clientState.scrollY;
+	}
+}
+
+/** @param {number[][]} map */
+export function setMap(map) {
+	// make a deep copy, so we don't alter the original map while editing
+	mapTemplate = map.map(
+		row => [...row]
+	);
+}
+
+export function draw() {
+	// on which tile we start drawing:
+	const tileOffsX = clamp(Math.floor(scrollX / constants.TILE_SIZE), 0, mapTemplate[0].length - 1);
+	const tileOffsY = clamp(Math.floor(scrollY / constants.TILE_SIZE), 0, mapTemplate.length - 1);
+	// how many tiles to draw:
+	const nTilesX = Math.min(Math.ceil(constants.SCREEN_WIDTH / constants.TILE_SIZE) + 1, mapTemplate[0].length - tileOffsX);
+	const nTilesY = Math.min(Math.ceil(constants.SCREEN_HEIGHT / constants.TILE_SIZE) + 1, mapTemplate.length - tileOffsY);
+
 	for (let i=tileOffsY; i<tileOffsY + nTilesY; i++) {
 		for (let j=tileOffsX; j<tileOffsX + nTilesX; j++) {
-			switch (map[i][j]) {
+			if (![1, 2].includes(mapTemplate[i][j])) {
+				bombermanDraw.drawTile(mapTemplate, i, j, -scrollX, -scrollY);
+			}
+			switch (mapTemplate[i][j]) {
 				case 0:
+					break; // field is already drawn above
 				case 1:
 				case 2:
-					break; // these are bricks already drawn
+					bombermanDraw.drawTile(mapTemplate, i, j, -scrollX, -scrollY);
+					break;
 				case 9:
 					// draw the player spawn position
 					dosemu.drawSprite(
@@ -39,7 +79,7 @@ export function draw(tileOffsX, tileOffsY, nTilesX, nTilesY) {
 					dosemu.drawText(
 						j * constants.TILE_SIZE - scrollX + 8,
 						i * constants.TILE_SIZE - scrollY + 8,
-						map[i][j].toString(),
+						mapTemplate[i][j].toString(),
 						9,
 						"center"
 					);
@@ -54,9 +94,9 @@ export function draw(tileOffsX, tileOffsY, nTilesX, nTilesY) {
 	let spriteOffsX = 0;
 	let spriteOffsY = 0;
 	switch (editTileType) {
-		case 0: sprite = themes[selectedTheme].fieldSprite; break;
+		case 0: sprite = bombermanDraw.getTheme().fieldSprite; break;
 		case 1:
-		case 2: sprite = themes[selectedTheme].brickSprites[editTileType - 1]; break;
+		case 2: sprite = bombermanDraw.getTheme().brickSprites[editTileType - 1]; break;
 		case 3:
 			sprite = enemySprites[0].down.frames[0];
 			spriteOffsX = constants.ENEMY_INITIAL_X_OFFS;
@@ -102,7 +142,7 @@ export function update(dt) {
 	if (dosemu.isMouseButtonDown(0)) {
 		const [mouseRow, mouseCol] = getMouseRowCol();
 		if (withinMap(mouseRow, mouseCol)) {
-			map[mouseRow][mouseCol] = editTileType;
+			mapTemplate[mouseRow][mouseCol] = editTileType;
 		}
 	}
 	if (dosemu.isKeyPressed("a")) {
@@ -140,39 +180,47 @@ export function handleKey(key) {
 		case '9': editTileType = 9; break;
 		case 'f': fillMapWithBricks(); break;
 		case 'c': clearMap(); break;
-		case 'r': map = mapTemplate = generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS); break;
+		case 'r': mapTemplate = generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS); break;
 	}
 }
 
+export function writeMapToConsole() {
+	let str = "[\n";
+	for (let i=0; i<mapTemplate.length; i++) {
+		str += `\t[${mapTemplate[i].join(', ')}],\n`;
+	}
+	str += "]\n";
+	console.log(str);
+}
+
+
 // --------------------------------------------------------------------------------------------------
 
+function getMouseRowCol() {
+	const [mouseX, mouseY] = dosemu.getMousePosition();
+	const mouseCol = Math.floor((mouseX + scrollX) / constants.TILE_SIZE);
+	const mouseRow = Math.floor((mouseY + scrollY) / constants.TILE_SIZE);
+	return [mouseRow, mouseCol];
+}
+
 function withinMap(row, col) {
-	return row >= 0 && row < map.length && col >= 0 && col < map[0].length;
+	return row >= 0 && row < mapTemplate.length && col >= 0 && col < mapTemplate[0].length;
 }
 
 function fillMapWithBricks() {
-	for (let i=0; i<map.length; i++) {
-		for (let j=0; j<map[0].length; j++) {
-			if (map[i][j] === 0) {
-				map[i][j] = 1;
+	for (let i=0; i<mapTemplate.length; i++) {
+		for (let j=0; j<mapTemplate[0].length; j++) {
+			if (mapTemplate[i][j] === 0) {
+				mapTemplate[i][j] = 1;
 			}
 		}
 	}
 }
 
 function clearMap() {
-	for (let i=0; i<map.length; i++) {
-		for (let j=0; j<map[0].length; j++) {
-			map[i][j] = 0;
+	for (let i=0; i<mapTemplate.length; i++) {
+		for (let j=0; j<mapTemplate[0].length; j++) {
+			mapTemplate[i][j] = 0;
 		}
 	}
-}
-
-function writeMapToConsole() {
-	let str = "[\n";
-	for (let i=0; i<map.length; i++) {
-		str += `\t[${map[i].join(', ')}],\n`;
-	}
-	str += "]\n";
-	console.log(str);
 }

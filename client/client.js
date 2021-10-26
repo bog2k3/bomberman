@@ -56,7 +56,7 @@ export function update(dt) {
 /** @param {Player} player */
 export function setPlayer(player) {
 	clientState.player = player;
-	player.setInputSource(input.localInputSource);
+	player.setInputController(clientState.playerInputController);
 	socket.sendPlayerSpanwed(player.skinNumber); // because skin number is equivalent with spawn slot or player id
 }
 

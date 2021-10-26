@@ -1,4 +1,5 @@
-import { InputSource } from "../common/input-source.js";
+import * as input from "./input.js";
+import { InputController } from "../common/input-controller.js";
 import { Player } from "../common/player.js";
 
 export const clientState = {
@@ -6,11 +7,12 @@ export const clientState = {
 
 	/** @type {Player} */
 	player: null,
+	playerInputController: new InputController(input.localInputSource),
 	playerHasDied: false,
 
 	scrollX: 0,
 	scrollY: 0,
 
-	/** @type {{[slotId: number]: InputSource}} */
+	/** @type {{[slotId: number]: input.InputSource}} */
 	networkInputSources: {}
 }

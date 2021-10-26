@@ -1,10 +1,8 @@
-import { dosemu } from "./node_modules/dosemu/index.js";
 import { Character } from "./character.js";
 import * as world from "./world.js";
 import * as constants from "./constants.js";
 import { Bomb } from "./bomb.js";
 import { CollisionResult } from "./collision.js";
-import { InputSource } from "./input-source.js";
 
 export class Player extends Character {
 
@@ -12,9 +10,8 @@ export class Player extends Character {
 	maxBombCount = 1;
 	bombCount = 0;
 	skinNumber = 0;
-	/** @type {InputSource} */
-	inputSource;
-	wasSpacePressed = false;
+
+	inputController = null;
 
 	/** @param {Character & {skinNumber: number}} data */
 	constructor(data) {
@@ -26,9 +23,9 @@ export class Player extends Character {
 		this.skinNumber = data.skinNumber || 0;
 	}
 
-	/** @type {InputSource} source */
-	setInputSource(source) {
-		this.inputSource = source;
+	/** @type {InputController} controller */
+	setInputController(controller) {
+		this.inputController = controller;
 	}
 
 	/** @override @returns {string} the type of entity */
@@ -36,22 +33,7 @@ export class Player extends Character {
 
 	update(dt) {
 		super.update(dt);
-		if (this.inputSource.isKeyPressed("ArrowDown")) {
-			this.move("down");
-		} else if (this.inputSource.isKeyPressed("ArrowUp")) {
-			this.move("up");
-		} else if (this.inputSource.isKeyPressed("ArrowLeft")) {
-			this.move("left");
-		} else if (this.inputSource.isKeyPressed("ArrowRight")) {
-			this.move("right");
-		}
-		if (this.inputSource.isKeyPressed(" ") && !this.wasSpacePressed) {
-			this.spawnBomb();
-			this.wasSpacePressed = true;
-		}
-		if (!this.inputSource.isKeyPressed(" ")) {
-			this.wasSpacePressed = false;
-		}
+		this.inputController.update(this);
 	}
 
 	/** @returns {Player} the new player instance */
@@ -71,17 +53,16 @@ export class Player extends Character {
 		return player;
 	}
 
-	spawnBomb() {
+	canSpawnBomb() {
 		if (this.bombCount >= this.maxBombCount) {
-			return;
+			return false;
 		}
 		const spawnRow = this.getRow();
 		const spawnColumn = this.getColumn();
-		if (!world.isBombAt(spawnRow, spawnColumn)) {
-			this.bombCount++;
-			(new Bomb(this.bombPower, spawnRow, spawnColumn))
-				.onDestroy = () => this.bombCount--;
+		if (world.isBombAt(spawnRow, spawnColumn)) {
+			return false;
 		}
+		return true;
 	}
 
 	/** @param {Entity} entity */

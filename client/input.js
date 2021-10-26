@@ -3,6 +3,7 @@ import { clientState } from "./client-state.js";
 import * as raycast  from "./raycast.js";
 import * as editMode from "./edit-mode.js";
 import * as socket from "./socket.js";
+import * as bomberman from "../common/bomberman.js";
 import { InputSource } from "../common/input-source.js";
 
 // --------------------------------------------------------------------------------------------------
@@ -10,13 +11,6 @@ import { InputSource } from "../common/input-source.js";
 export const localInputSource = new InputSource();
 
 // --------------------------------------------------------------------------------------------------
-
-export function getMouseRowCol() {
-	const [mouseX, mouseY] = dosemu.getMousePosition();
-	const mouseCol = Math.floor((mouseX + scrollX) / constants.TILE_SIZE);
-	const mouseRow = Math.floor((mouseY + scrollY) / constants.TILE_SIZE);
-	return [mouseRow, mouseCol];
-}
 
 /** @param {() => void} callback */
 export function onPlayerRespawnKeyPressed(callback) {
@@ -50,6 +44,9 @@ function registerKeyboardEventHandlers() {
 			case "Enter":
 				if (clientState.playerHasDied && playerRespawnKeyPressedCallback) {
 					playerRespawnKeyPressedCallback();
+					if (clientState.enable3DMode) {
+						raycast.updatePlayerAngle(clientState.player);
+					}
 				}
 			default:
 				if (editMode.ENABLED) {
@@ -91,16 +88,16 @@ function notifyServer(event) {
 function toggle3dMode() {
 	clientState.enable3DMode = !clientState.enable3DMode;
 	if (clientState.enable3DMode) {
-		raycast.updatePlayerAngle(player);
+		raycast.updatePlayerAngle(clientState.player);
 	}
 }
 
 function toggleEditMode() {
-	editMode.ENABLED = !editMode.ENABLED;
+	editMode.setEnabled(!editMode.ENABLED);
 	clientState.enable3DMode = false;
 	if (editMode.ENABLED) {
 		dosemu.showMouse();
-		map = mapTemplate; // operate on the template directly while editing
+		editMode.setMap(bomberman.mapTemplate);
 	} else {
 		dosemu.hideMouse();
 		editMode.writeMapToConsole();

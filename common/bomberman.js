@@ -10,7 +10,7 @@ import { PowerupSpeed } from "./powerup-speed.js";
 // --------------------------------------------------------------------------------------------------
 
 /** @type {number[][]} */
-let mapTemplate = []; // the map template
+export let mapTemplate = []; // the map template
 /** @type {number[][]} */
 let map = []; // the map instance
 /** @type {{row: number, col: number}[]} */
@@ -129,7 +129,7 @@ function selectMap(template) {
 	mapTemplate = template;
 	// make a deep copy, so we don't ever alter the map template while playing
 	map = mapTemplate.map(
-		row => row.map(x => x)
+		row => [...row]
 	);
 
 	world.setMap(map);
