@@ -2,6 +2,8 @@ import { dosemuBBox } from "./node_modules/dosemu/index.js";
 import * as collision from "./collision.js";
 import { Entity } from "./entity.js";
 import * as constants from "./constants.js";
+import { Player } from "./player.js";
+import { Enemy } from "./enemy.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -12,23 +14,12 @@ const data = {
 	entities: [],
 	/** @type {(row: number, col: number) => void} */
 	onBrickDestroyed: null,
-	/** @type {boolean} */
-	headlessMode: true,
 
 	/** @type {dynamically imported client module (or null in headless mode)} */
 	client: null
 };
 
 // --------------------------------------------------------------------------------------------------
-
-export function setHeadlessMode(value) {
-	data.headlessMode = value;
-}
-
-/** @returns {boolean} true if the game is running in headless mode (no graphics) */
-export function headlessMode() {
-	return data.headlessMode;
-}
 
 /** @param {number[][]} map */
 export function setMap(map) {
@@ -145,9 +136,16 @@ export function getClient() {
 	return data.client;
 }
 
-/** @param {"player-n" | "enemy-n"} type the type of animation to create, where "n" is the skin number */
-export function requestClientCreateCharacterExplodeAnimation(type, x, y) {
-	if (!data.headlessMode && data.client) {
-		data.client.createCharacterExplodeAnimation(type, x, y);
+/** @param {Player} player */
+export function handlePlayerSpawned(player) {
+	if (data.client) {
+		data.client.handlePlayerSpawned(player);
+	}
+}
+
+/** @param {Enemy} enemy */
+export function handleEnemySpawned(enemy) {
+	if (data.client) {
+		data.client.handleEnemySpawned(enemy);
 	}
 }

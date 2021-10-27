@@ -1,8 +1,8 @@
 import { Character } from "./character.js";
 import * as world from "./world.js";
 import * as constants from "./constants.js";
-import { Bomb } from "./bomb.js";
 import { CollisionResult } from "./collision.js";
+import { Entity } from "./entity.js";
 
 export class Player extends Character {
 
@@ -67,6 +67,11 @@ export class Player extends Character {
 
 	/** @param {Entity} entity */
 	reactToCollisionWithEntity(entity) {
+		if (entity.getType().startsWith("enemy")) {
+			// the enemy ate us
+			this.die();
+			return;
+		}
 		switch (entity.getType()) {
 			case "powerup-bomb":
 				this.maxBombCount++;

@@ -42,6 +42,6 @@ export class InputController {
 		const spawnColumn = player.getColumn();
 		player.bombCount++;
 		(new Bomb(player.bombPower, spawnRow, spawnColumn))
-			.onDestroy = () => player.bombCount--;
+			.onDestroy.subscribe(() => player.bombCount--);
 	}
 }

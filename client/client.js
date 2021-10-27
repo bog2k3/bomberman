@@ -9,6 +9,7 @@ import { Player } from "../common/player.js";
 import { CharacterExplodeAnimation } from "./character-explode-animation.js";
 import { Entity } from "../common/entity.js";
 import { InputSource } from "../common/input-source.js";
+import { Enemy } from "../common/enemy.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -54,20 +55,25 @@ export function update(dt) {
 }
 
 /** @param {Player} player */
-export function setPlayer(player) {
+export function handlePlayerSpawned(player) {
 	clientState.player = player;
 	player.setInputController(clientState.playerInputController);
+	player.onDestroy.subscribe(
+		() => createCharacterExplodeAnimation(player.getType(), player.x, player.y)
+	);
 	socket.sendPlayerSpanwed(player.skinNumber); // because skin number is equivalent with spawn slot or player id
+}
+
+/** @param {Enemy} enemy */
+export function handleEnemySpawned(enemy) {
+	enemy.onDestroy.subscribe(
+		() => createCharacterExplodeAnimation(enemy.getType(), enemy.x, enemy.y)
+	);
 }
 
 /** @returns {Player} */
 export function getPlayer() {
 	return clientState.player;
-}
-
-/** @param {"player-n" | "enemy-n"} type the type of animation to create, where "n" is the skin number */
-export function createCharacterExplodeAnimation(type, x, y) {
-	new CharacterExplodeAnimation(x, y, type)
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -98,6 +104,11 @@ function createNetworkInputSource(slotId) {
 
 function respawnPlayer() {
 	const [x, y] = bomberman.getPlayerSpawnPosition(clientState.player.skinNumber);
-	setPlayer(clientState.player.respawn(x, y));
+	handlePlayerSpawned(clientState.player.respawn(x, y));
 	clientState.playerHasDied = false;
+}
+
+/** @param {"player-n" | "enemy-n"} type the type of animation to create, where "n" is the skin number */
+function createCharacterExplodeAnimation(type, x, y) {
+	new CharacterExplodeAnimation(x, y, type)
 }

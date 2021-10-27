@@ -3,7 +3,6 @@ import { checkCollision, CollisionResult } from "./collision.js";
 import { Entity } from "./entity.js";
 import { layers } from "./layers.js";
 import * as constants from "./constants.js";
-import * as world from "./world.js";
 
 export class Character extends Entity {
 	x = 0;
@@ -118,9 +117,6 @@ export class Character extends Entity {
 	}
 
 	die() {
-		if (!world.headlessMode()) {
-			world.requestClientCreateCharacterExplodeAnimation(this.getType(), this.x, this.y);
-		}
 		this.destroy();
 	}
 }

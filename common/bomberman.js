@@ -15,12 +15,13 @@ export let mapTemplate = []; // the map template
 let map = []; // the map instance
 /** @type {{row: number, col: number}[]} */
 let playerSpawnPositions = [];
+let headlessMode = true;
 
 // --------------------------------------------------------------------------------------------------
 
 export function reset() {
 	world.clearData();
-	if (!world.headlessMode()) {
+	if (!headlessMode) {
 		world.getClient().reset();
 	}
 }
@@ -32,7 +33,7 @@ export function init(client) {
 	Entity.onEntityCreated.subscribe(handleEntityCreated);
 	Entity.onEntityDestroyed.subscribe(handleEntityDestroyed);
 	world.setOnBrickDestroyedCallback(handleBrickDestroyed);
-	world.setHeadlessMode(!client);
+	headlessMode = !client;
 
 	if (client) {
 		world.setClient(client);
@@ -53,13 +54,13 @@ export function startGame(mapTemplate, playerSpawnSlot) {
 
 export function update(dt) {
 	world.update(dt);
-	if (!world.headlessMode()) {
+	if (!headlessMode) {
 		world.getClient().update(dt);
 	}
 }
 
 export function draw() {
-	if (!world.headlessMode()) {
+	if (!headlessMode) {
 		world.getClient().draw();
 	}
 }
@@ -93,14 +94,13 @@ function spawnEntities(playerSpawnSlot) {
 					if (playerSpawnSlot == crtPlayerSlot) {
 						const playerX = j * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
 						const playerY = i * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
-						const player = new Player({
-							x: playerX,
-							y: playerY,
-							skinNumber: playerSpawnSlot
-						});
-						if (!world.headlessMode()) {
-							world.getClient().setPlayer(player);
-						}
+						world.handlePlayerSpawned(
+							new Player({
+								x: playerX,
+								y: playerY,
+								skinNumber: playerSpawnSlot
+							})
+						);
 					}
 					crtPlayerSlot++;
 					break;
@@ -109,17 +109,19 @@ function spawnEntities(playerSpawnSlot) {
 					const enemyY = i * constants.TILE_SIZE + constants.ENEMY_INITIAL_Y_OFFS;
 					let enemyType = map[i][j] - 3;
 					enemyType = 0; // TODO remove hardcoding after adding all the sprites
-					new Enemy({
-						x: enemyX,
-						y: enemyY,
-						type: enemyType
-					});
+					world.handleEnemySpawned(
+						new Enemy({
+							x: enemyX,
+							y: enemyY,
+							type: enemyType
+						})
+					);
 					break;
 			}
 			map[i][j] = 0; // leave an empty space below entity
 		}
 	}
-	if (!world.headlessMode() && !world.getClient().getPlayer()) {
+	if (!headlessMode && !world.getClient().getPlayer()) {
 		console.error(`Player spawn position #${playerSpawnSlot} not found in map!`);
 	}
 }
@@ -138,7 +140,7 @@ function selectMap(template) {
 /** @param {Entity} entity */
 function handleEntityCreated(entity) {
 	world.addEntity(entity);
-	if (!world.headlessMode()) {
+	if (!headlessMode) {
 		world.getEntities().sort((a, b) => a.layer - b.layer);
 	}
 }

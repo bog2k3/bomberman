@@ -10,10 +10,10 @@ export class Entity {
 	isDestroyed = false;
 	animationController = new AnimationController();
 
-	/** @type {(this: Entity) => void} callback to be invoked when the entity is destroyed. */
-	onDestroy = null;
+	/** Event is triggered when the entity is destroyed. */
+	onDestroy = new Event();
 
-	/** @type {Event} This event receives the animation name and is triggered every time a new animation is started. */
+	/** This event receives the animation name and is triggered every time a new animation is started. */
 	onAnimationStart = new Event();
 
 	constructor() {
@@ -23,9 +23,7 @@ export class Entity {
 	destroy() {
 		if (!this.isDestroyed) {
 			this.isDestroyed = true;
-			if (this.onDestroy) {
-				this.onDestroy(this);
-			}
+			this.onDestroy.trigger();
 			Entity.onEntityDestroyed.trigger(this);
 		}
 	}
