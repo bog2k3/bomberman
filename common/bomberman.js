@@ -105,18 +105,20 @@ function spawnEntities(playerSpawnSlot) {
 					crtPlayerSlot++;
 					break;
 				default: // enemy
-					const enemyX = j * constants.TILE_SIZE + constants.ENEMY_INITIAL_X_OFFS;
-					const enemyY = i * constants.TILE_SIZE + constants.ENEMY_INITIAL_Y_OFFS;
-					let enemyType = map[i][j] - 3;
-					enemyType = 0; // TODO remove hardcoding after adding all the sprites
-					world.handleEnemySpawned(
-						new Enemy({
-							x: enemyX,
-							y: enemyY,
-							type: enemyType
-						})
-					);
-					break;
+					if (headlessMode) { // we equate headless mode with being a server -> perhaps this should change in the future.
+						const enemyX = j * constants.TILE_SIZE + constants.ENEMY_INITIAL_X_OFFS;
+						const enemyY = i * constants.TILE_SIZE + constants.ENEMY_INITIAL_Y_OFFS;
+						let enemyType = map[i][j] - 3;
+						enemyType = 0; // TODO remove hardcoding after adding all the sprites
+						world.handleEnemySpawned(
+							new Enemy({
+								x: enemyX,
+								y: enemyY,
+								type: enemyType
+							})
+						);
+						break;
+					}
 			}
 			map[i][j] = 0; // leave an empty space below entity
 		}
