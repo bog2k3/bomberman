@@ -23,6 +23,8 @@ let lastTime = new Date().getTime();
 let gameScreenDOMElement;
 /** @type string */
 let userIdentityId = undefined;
+/** @type {number} */
+let userSpawnSlot = null;
 
 /**
  * @type {{
@@ -50,7 +52,7 @@ function initGame() {
 
 	receiveGameDetails().then(
 		/** @param {GameDetails} gameDetails */
-		(gameDetails) => startRound(gameDetails.map, gameDetails.playerSlot)
+		(gameDetails) => startRound(gameDetails.map, userSpawnSlot)
 	);
 }
 
@@ -92,6 +94,7 @@ function draw() {
 	bomberman.draw();
 }
 
+/** @returns {Promise<number>} the resolved value is the slot id */
 function joinedLobby() {
 	let resolveFn;
 	const joinPromise = new Promise((resolve, reject) => {
@@ -103,7 +106,7 @@ function joinedLobby() {
 		if (!nickname) {
 			return;
 		}
-		socket.joinLobby(nickname).then(() => resolveFn());
+		socket.joinLobby(nickname).then(resolveFn);
 	});
 
 	return joinPromise;
@@ -145,7 +148,10 @@ function resetGameScreen() {
 
 function subscribeToSocketEvents() {
 	socket.socketConnected().subscribe(() => {
-		joinedLobby().then(() => showLobbyScreen());
+		joinedLobby().then((slotId) => {
+			showLobbyScreen();
+			userSpawnSlot = slotId;
+		});
 	});
 	socket.requestUserIdentity().subscribe((newUserIdentityId) => {
 		userIdentityId = newUserIdentityId;

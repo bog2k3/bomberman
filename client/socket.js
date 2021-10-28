@@ -32,10 +32,11 @@ export function joinGame(nickname) {
 	});
 }
 
+/** @returns {Promise<number>} the resolved value is the spawn slot id */
 export function joinLobby(nickname) {
 	return new Promise((resolve, reject) => {
-		socket.emit(ClientEvents.JOIN_LOBBY, nickname, () => {
-			resolve();
+		socket.emit(ClientEvents.JOIN_LOBBY, nickname, (slotId) => {
+			resolve(slotId);
 		});
 	});
 }
