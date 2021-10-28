@@ -24,11 +24,9 @@ export function requestUserIdentity() {
 	});
 }
 
-export function joinGame(nickname) {
+export function joinGame() {
 	return new Promise((resolve, reject) => {
-		socket.emit(ClientEvents.JOIN_GAME, nickname, () => {
-			resolve();
-		});
+		socket.emit(ClientEvents.JOIN_GAME, resolve);
 	});
 }
 
@@ -41,13 +39,13 @@ export function joinLobby(nickname) {
 	});
 }
 
-export function onUserJoindGame() {
-	return new rxjs.Observable(observer => {
-		socket.on(ServerEvents.USER_JOINED, (player) => {
-			observer.next(player);
-		})
-	})
-}
+// export function onUserJoindGame() {
+// 	return new rxjs.Observable(observer => {
+// 		socket.on(ServerEvents.USER_JOINED, (player) => {
+// 			observer.next(player);
+// 		})
+// 	})
+// }
 
 export function onUserJoindLobby() {
 	return new rxjs.Observable(observer => {
@@ -122,28 +120,34 @@ export function onPlayerReady() {
 	});
 }
 
+/** @param {(map: number[][]) => void} callback */
+export function onStartRound(callback) {
+	socket.on(ServerEvents.START_ROUND, callback);
+}
+
+/** @param {() => void} callback */
+export function onStartGame(callback) {
+	socket.on(ServerEvents.START_GAME, callback);
+}
+
+/** @param {(slot: number, nickname: string) => void} callback */
+export function onNetworkPlayerSpawned(callback) {
+	socket.on(ServerEvents.PLAYER_SPAWNED, ({slot, nickname}) => callback(slot, nickname));
+}
+
 /** @param {{event: "key-pressed" | "key-released", key: string}} event */
 export function sendPlayerKeyEvent(event) {
 	// TODO send the event to the server which will broadcast back to all other players in order for them to move their representation of our player
 	console.log("TODO implement this")
 }
 
+/** @returns {Promise<void>} a promise that is resolved when the server accepts and validates the event */
 export function sendPlayerSpanwed(playerSlot) {
-	// TODO send an event to the server which will broadcast to all other players, letting them instantiate dummy player objects representing our player
-	// the other players will receive the onNetworkPlayerSpawned(slotId) event
-	console.log("TODO implement this too");
-}
-
-/**
- * emits the slot id when another player is spawned
- * @returns {rxjs.Observable}
- **/
-export function onNetworkPlayerSpawned() {
-	return new rxjs.Observable(observer => {
-		// TODO listen to server....
-		const networkPlayerSlot = 1; // this will be received from the server
-		observer.next(networkPlayerSlot);
-	});
+	return new Promise(resolve =>
+		socket.emit(ClientEvents.PLAYER_SPAWNED, {
+			slot: playerSlot
+		}, resolve)
+	);
 }
 
 /**

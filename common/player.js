@@ -10,10 +10,11 @@ export class Player extends Character {
 	maxBombCount = 1;
 	bombCount = 0;
 	skinNumber = 0;
+	name = "";
 
 	inputController = null;
 
-	/** @param {Character & {skinNumber: number}} data */
+	/** @param {Character & {skinNumber: number, name: string}} data */
 	constructor(data) {
 		super({
 			...data,

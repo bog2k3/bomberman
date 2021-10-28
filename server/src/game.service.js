@@ -18,11 +18,16 @@ export class GameService {
 		bomberman.init(null);
 	}
 
-	startGame() {
+	startRound() {
 		const map = generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS);
 		bomberman.startGame(map, null);
+		this.socketService.broadcastStartRound(map);
+	}
+
+	startGame() {
 		this.lastTime = new Date();
 		setInterval(() => this.update(), 1000 / this.UPDATE_FREQ_HZ);
+		this.socketService.broadcastStartGame();
 	}
 
 	update() {

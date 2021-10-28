@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { LobbyUserStatus } from "./lobby-user.status.js";
+import { UserStatus as UserStatus } from "./lobby-user.status.js";
 import { Socket } from "socket.io";
 import { Event } from "../../common/event.js";
 import { ClientModel } from "./client-model.js";
@@ -13,6 +13,7 @@ export class UserService {
 	clientsBySocketId = {};
 
 	onAllUsersReady = new Event();
+	onAllUsersInGame = new Event();
 
 	constructor() { }
 
@@ -35,7 +36,7 @@ export class UserService {
 			socket,
 			nickname: "Anonymous",
 			userIdentityId: this.generateNewUserIdentity(),
-			status: LobbyUserStatus.WAITING,
+			status: UserStatus.WAITING,
 			spawnSlotId: this.getRandomAvailableSlotId()
 		}));
 		this.clientsBySocketId[socket.id] = this.clients[this.clients.length-1];
@@ -60,20 +61,31 @@ export class UserService {
 		return this.clientsBySocketId[socket.id];
 	}
 
-	/** @param {Socket} socket */
-	updateUserStatusToReady(socket) {
+	/**
+	 * @param {Socket} socket
+	 * @param {UserStatus} status
+	 * */
+	updateUserStatus(socket, status) {
 		const client = this.getClientBySocket(socket);
 		if (client) {
-			client.status = LobbyUserStatus.READY;
-			if (this.areAllUsersReady()) {
+			client.status = status;
+			if (status === UserStatus.READY && this.areAllUsersReady()) {
 				this.onAllUsersReady.trigger();
+			}
+			if (status === UserStatus.INGAME && this.areAllUsersInGame()) {
+				this.onAllUsersInGame.trigger();
 			}
 		}
 	}
 
 	/** @returns {boolean} */
 	areAllUsersReady() {
-		return this.clients.every(client => client.status == "ready");
+		return this.clients.every(client => client.status == UserStatus.READY);
+	}
+
+	/** @returns {boolean} */
+	areAllUsersInGame() {
+		return this.clients.every(client => client.status == UserStatus.INGAME);
 	}
 
 	/** @private @returns {number} a randomly selected spawn slot id that is not yet used. */

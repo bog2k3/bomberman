@@ -43,12 +43,8 @@ export function init(client) {
 	reset();
 }
 
-/**
- * @param {number[][]} mapTemplate,
- * @param {number | null} playerSpawnSlot
- */
-export function startGame(mapTemplate, playerSpawnSlot) {
-	selectMap(mapTemplate);
+/**@param {number | null} playerSpawnSlot */
+export function startGame(playerSpawnSlot) {
 	spawnEntities(playerSpawnSlot);
 }
 
@@ -129,7 +125,7 @@ function spawnEntities(playerSpawnSlot) {
 }
 
 /** @param {number[][]} mapTemplate (Optional) the template to instantiate the map from; if missing, a random map will be generated */
-function selectMap(template) {
+export function selectMap(template) {
 	mapTemplate = template;
 	// make a deep copy, so we don't ever alter the map template while playing
 	map = mapTemplate.map(

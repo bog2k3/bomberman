@@ -1,4 +1,5 @@
-export const LobbyUserStatus = {
-	"WAITING" : "waiting",
-	"READY" : "ready",
+export const UserStatus = {
+	WAITING : "waiting",
+	READY : "ready",
+	INGAME: "ingame",
 };

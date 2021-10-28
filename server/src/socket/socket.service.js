@@ -4,6 +4,7 @@ import { ClientEvents } from "../../../common/socket/client-events.js";
 import { ClientModel } from "../client-model.js";
 import { UserService } from "../user.service.js";
 import { SocketRoom } from "./socket-room.js";
+import { UserStatus } from "../lobby-user.status.js";
 
 const WEBSOCKET_CONSTANTS = {
 	PORT : 7042,
@@ -47,11 +48,13 @@ export class SocketService {
 	subscribeToEvents(server) {
 		server.on("connection", (socket) => {
 			this.onUserJoindLobby(socket);
+			this.onUserJoindGame(socket);
 			this.sendUserIdentity(socket);
 			this.onPlayerUpdate(socket);
 			this.onGetPlayersFromLobby(socket);
 			this.onSocketDisconnect(socket);
 			this.onPlayerReady(socket);
+			this.onPlayerSpawned(socket);
 		});
 	}
 
@@ -82,7 +85,10 @@ export class SocketService {
 	}
 
 	onUserJoindGame(socket) {
-		socket.join(SocketRoom.GAME_ROOM);
+		socket.on(ClientEvents.JOIN_GAME, () => {
+			this.userService.updateUserStatus(socket, UserStatus.INGAME);
+			socket.join(SocketRoom.GAME_ROOM);
+		});
 	}
 
 	/** @param {ClientModel} client */
@@ -118,9 +124,22 @@ export class SocketService {
 
 	onPlayerReady(socket) {
 		socket.on(ClientEvents.PLAYER_READY, (prop, ackFn) => {
-			this.userService.updateUserStatusToReady(socket);
+			this.userService.updateUserStatus(socket, UserStatus.READY);
 			this.sendPlayerReady(socket);
 			ackFn();
+		});
+	}
+
+	onPlayerSpawned(socket) {
+		socket.on(ClientEvents.PLAYER_SPAWNED, ({slot}, ackFn) => {
+			const client = this.userService.getClientBySocket(socket);
+			if (client.spawnSlotId == slot) {
+				socket.broadcast.to(SocketRoom.GAME_ROOM).emit(ServerEvents.PLAYER_SPAWNED, {
+					slot,
+					nickname: client.nickname
+				});
+				ackFn();
+			}
 		});
 	}
 
@@ -128,7 +147,11 @@ export class SocketService {
 		socket.broadcast.to(SocketRoom.LOBBY_ROOM).emit(ServerEvents.PLAYER_READY, this.userService.getClientBySocket(socket).userIdentityId);
 	}
 
-	broadcastStartGame(map) {
+	broadcastStartRound(map) {
+		this.server.emit(ServerEvents.START_ROUND, map);
+	}
 
+	broadcastStartGame() {
+		this.server.emit(ServerEvents.START_GAME);
 	}
 }

@@ -4,5 +4,8 @@ export const ServerEvents = {
 	USER_JOINED_LOBBY: "user_joined_lobby",
 	PLAYER_UPDATED : "player_updated",
 	PLAYER_DISCONNECTED : "player_disconnected",
-	PLAYER_READY : "player_ready"
+	PLAYER_READY : "player_ready",
+	START_ROUND: "start_round",
+	START_GAME: "start_game",
+	PLAYER_SPAWNED: "player_spawned"
 };

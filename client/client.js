@@ -18,9 +18,10 @@ export function init() {
 	Entity.onEntityDestroyed.subscribe(handleEntityDestroyed);
 	input.onPlayerRespawnKeyPressed(respawnPlayer);
 
-	socket.onNetworkPlayerSpawned().subscribe((slotId) => {
-		// spawnNetworkPlayer(slotId);
-		// TODO this arrives too early, must wait until map is processed and entities are spawned
+	socket.onNetworkPlayerSpawned((slot, nickname) => {
+		if (slot !== clientState.player.skinNumber) {
+			spawnNetworkPlayer(slot, nickname);
+		}
 	});
 
 	socket.onNetworkPlayerInput().subscribe(
@@ -55,13 +56,15 @@ export function update(dt) {
 }
 
 /** @param {Player} player */
-export function handlePlayerSpawned(player) {
-	clientState.player = player;
-	player.setInputController(clientState.playerInputController);
-	player.onDestroy.subscribe(
-		() => createCharacterExplodeAnimation(player.getType(), player.x, player.y)
-	);
-	socket.sendPlayerSpanwed(player.skinNumber); // because skin number is equivalent with spawn slot or player id
+export async function handlePlayerSpawned(player) {
+	socket.sendPlayerSpanwed(player.skinNumber) // because skin number is equivalent with spawn slot or player id
+		.then(() => {
+			clientState.player = player;
+			player.setInputController(clientState.playerInputController);
+			player.onDestroy.subscribe(
+				() => createCharacterExplodeAnimation(player.getType(), player.x, player.y)
+			);
+		});
 }
 
 /** @param {Enemy} enemy */
@@ -88,11 +91,16 @@ function handleEntityDestroyed(entity) {
 	}
 }
 
-function spawnNetworkPlayer(slotId) {
-	const [x, y] = bomberman.getPlayerSpawnPosition(slotId);
+/**
+ * @param {number} slot
+ * @param {string} nickname
+ */
+function spawnNetworkPlayer(slot, nickname) {
+	const [x, y] = bomberman.getPlayerSpawnPosition(slot);
 	const networkPlayer = new Player({
 		x, y,
-		skinNumber: slotId
+		skinNumber: slot,
+		name: nickname
 	});
 	networkPlayer.setInputSource(createNetworkInputSource(slotId));
 }

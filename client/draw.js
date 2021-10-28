@@ -3,6 +3,7 @@ import { Entity } from "../common/entity.js";
 import { GridEntity } from "../common/grid-entity.js";
 import { bombSprites } from "./bomb-sprites.js";
 import { Character } from "../common/character.js";
+import { Player } from "../common/player.js";
 import { enemySprites } from "./enemy-sprites.js";
 import { fireSprites } from "./fire-sprites.js";
 import { playerSprites } from "./player-sprites.js";
@@ -20,6 +21,8 @@ import * as raycast from "./raycast.js";
 
 const themes = buildThemes();
 let selectedTheme = 0;
+
+const playerNameColors = [14, 18, 128, 198, 160, 220, 154, 48];
 
 // --------------------------------------------------------------------------------------------------
 
@@ -171,6 +174,9 @@ function get3DSprite(entity, animationName) {
 
 /** @returns {[ofsX: number, ofsY: number]} */
 function getScrollOffsets() {
+	if (!clientState.player) {
+		return [0, 0];
+	}
 	// start from the last scroll position
 	let viewportX = clientState.scrollX;
 	let viewportY = clientState.scrollY;
@@ -242,6 +248,19 @@ function drawCharacter(character, offsX, offsY) {
 		return
 	}
 	dosemu.drawSprite(character.x + offsX, character.y + offsY, spriteSeq.frames[currentFrame]);
+	if (character instanceof Player) {
+		drawPlayerName(character, offsX, offsY);
+	}
+}
+
+/** @param {Player} player */
+function drawPlayerName(player, offsX, offsY) {
+	if (player.name) {
+		const x = player.x + offsX;
+		const y = player.y + offsY - 25;
+		dosemu.drawText(x+1, y+1, player.name, black, "center");
+		dosemu.drawText(x, y, player.name, playerNameColors[player.skinNumber], "center");
+	}
 }
 
 /**

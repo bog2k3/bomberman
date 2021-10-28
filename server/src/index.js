@@ -14,6 +14,9 @@ const userService = new UserService();
 const socketService = new SocketService(httpServer, userService);
 const gameService = new GameService(socketService);
 userService.onAllUsersReady.subscribe(
+	() => gameService.startRound()
+);
+userService.onAllUsersInGame.subscribe(
 	() => gameService.startGame()
 );
 

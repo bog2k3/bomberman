@@ -1,7 +1,5 @@
 import { dosemu, dosemuSound } from "../common/node_modules/dosemu/index.js";
 import * as bomberman from "../common/bomberman.js";
-import { generateRandomMap } from "../common/random-map.js";
-import * as constants from "../common/constants.js";
 import * as client from "./client.js";
 
 import * as socket from "./socket.js";
@@ -9,13 +7,6 @@ import { addPlayerToLobby, attachCallbackToJoinButtonClick, attachCallbackToUser
 import { LobbyUserStatus } from "./lobby-user.status.js";
 
 //---------------------------------------------------------------------------------
-
-class GameDetails {
-	/** @type {number[][]} */
-	map;
-	/** @type {number} */
-	playerSlot;
-}
 
 let lastTime = new Date().getTime();
 
@@ -44,36 +35,22 @@ function initJoinGame() {
 function initGame() {
 	// init dosemu:
 	dosemu.init(document.querySelector("#emuscreen"), null);
-	// dosemu.setNoiseStrength(0);
 	dosemu.hideMouse();
-
-	// init game:
 	bomberman.init(client);
-
-	receiveGameDetails().then(
-		/** @param {GameDetails} gameDetails */
-		(gameDetails) => startRound(gameDetails.map, userSpawnSlot)
-	);
-}
-
-/** @returns {Promise<GameDetails>} */
-function receiveGameDetails() {
-	// TODO request this from the server
-	// TODO for now we'll hardcode them
-	const map = generateRandomMap(constants.DEFAULT_MAP_ROWS, constants.DEFAULT_MAP_COLS);
-	return Promise.resolve({
-		map,
-		playerSlot: 0
-	});
 }
 
 /** @param {number[][]} map */
-function startRound(map, playerSlot) {
+function startRound(map) {
 	bomberman.reset();
-	bomberman.startGame(map, playerSlot);
+	bomberman.selectMap(map);
+	socket.joinGame();
 
 	// start game loop:
 	requestAnimationFrame(step);
+}
+
+function startGame() {
+	bomberman.startGame(userSpawnSlot);
 }
 
 function step() {
@@ -124,12 +101,6 @@ function showLobbyScreen() {
 				element.disabled  = true;
 			}
 			socket.sendPlayerReady();
-			{
-				// TODO remove this when the proper flow is in place !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-				console.log("TODO remove this when the proper flow is in place !!!!!!!!!!!!!!!!!!!!!");
-				gameScreenDOMElement.remove();
-				initGame();
-			}
 		});
 	});
 }
@@ -167,6 +138,14 @@ function subscribeToSocketEvents() {
 	socket.onPlayerReady().subscribe((userIdentityId) => {
 		changePlayerStatus(userIdentityId, LobbyUserStatus.READY);
 	});
+
+	socket.onStartRound(/** @param {number[][]} map */(map) => {
+		gameScreenDOMElement.remove();
+		initGame();
+		startRound(map);
+	});
+
+	socket.onStartGame(startGame);
 }
 
 function addUsersToLobby(users, userIdentityId) {
