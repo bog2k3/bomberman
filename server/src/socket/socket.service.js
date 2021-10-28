@@ -1,6 +1,8 @@
 import { Server, Socket } from "socket.io";
-import { ClientEvent } from "./client-event.js";
-import { ServerEvents } from "./server-events.js";
+import { ServerEvents } from "../../../common/socket/server-events.js";
+import { ClientEvents } from "../../../common/socket/client-events.js";
+import { ClientModel } from "../client-model.js";
+import { UserService } from "../user.service.js";
 import { SocketRoom } from "./socket-room.js";
 
 const WEBSOCKET_CONSTANTS = {
@@ -12,14 +14,20 @@ const WEBSOCKET_CONSTANTS = {
 
 export class SocketService {
 
+	/** @type {Server} */
+	server = null;
+	/** @type {UserService} */
+	userService = null;
+
+	/**
+	 * @param {http.Server} httpServer
+	 * @param {UserService} userService
+	 */
 	constructor(
 		httpServer,
 		userService
 	) {
 		this.server = this.createSocketServer(httpServer);
-		/**
-		 * @type UserService
-		 */
 		this.userService = userService;
 		this.subscribeToEvents(this.server);
 	}
@@ -38,8 +46,8 @@ export class SocketService {
 
 	subscribeToEvents(server) {
 		server.on("connection", (socket) => {
-			this.sendUserIdentity(socket);
 			this.onUserJoindLobby(socket);
+			this.sendUserIdentity(socket);
 			this.onPlayerUpdate(socket);
 			this.onGetPlayersFromLobby(socket);
 			this.onSocketDisconnect(socket);
@@ -48,7 +56,7 @@ export class SocketService {
 	}
 
 	onPlayerUpdate(socket) {
-		socket.on(ClientEvent.PLAYER_UPDATE, (updatePlayerData, ackFn) => {
+		socket.on(ClientEvents.PLAYER_UPDATE, (updatePlayerData, ackFn) => {
 			this.sendPlayerUpdate(updatePlayerData, socket);
 			ackFn();
 		});
@@ -65,10 +73,11 @@ export class SocketService {
 	}
 
 	onUserJoindLobby(socket) {
-		socket.on(ClientEvent.JOIN_LOBBY, (userNickname , ackFn) => {
-			this.userService.addUserToLobby(socket, userNickname);
-			this.sendUserJoinedLobby(socket);
-			ackFn();
+		this.userService.addClient(socket);
+		socket.on(ClientEvents.JOIN_LOBBY, (userNickname , ackFn) => {
+			this.userService.setClientNickname(socket, userNickname);
+			this.broadcastUserJoinedLobby(this.userService.getClientBySocket(socket));
+			ackFn(this.userService.getClientBySocket(socket).spawnSlotId);
 		});
 	}
 
@@ -76,26 +85,26 @@ export class SocketService {
 		socket.join(SocketRoom.GAME_ROOM);
 	}
 
-	sendUserJoinedLobby(socket) {
-		socket.join(SocketRoom.LOBBY_ROOM);
-		const player = this.userService.getUserFromLobby(socket);
-		socket.broadcast.to(SocketRoom.LOBBY_ROOM).emit(ServerEvents.USER_JOINED_LOBBY, player);
+	/** @param {ClientModel} client */
+	broadcastUserJoinedLobby(client) {
+		client.socket.join(SocketRoom.LOBBY_ROOM);
+		client.socket.broadcast.to(SocketRoom.LOBBY_ROOM).emit(ServerEvents.USER_JOINED_LOBBY, client.toDTO());
 	}
 
 	sendUserIdentity(socket) {
-		const userIdentityId = this.userService.generateNewUserIdentity(socket);
-		socket.emit(ServerEvents.SEND_USER_IDENTITY, userIdentityId);
+		socket.emit(ServerEvents.SEND_USER_IDENTITY,
+			this.userService.getClientBySocket(socket).userIdentityId);
 	}
 
 	onGetPlayersFromLobby(socket) {
-		socket.on(ClientEvent.GET_USERS_FROM_LOBBY, (param, ackFn) => {
-			ackFn(this.userService.getUsersFromLobby());
+		socket.on(ClientEvents.GET_USERS_FROM_LOBBY, (param, ackFn) => {
+			ackFn(this.userService.getAllClients());
 		});
 	}
 
 	onSocketDisconnect(socket) {
 		socket.on("disconnect", () => {
-			const userIdentityId = this.userService.getUserIdentityIdBySocket(socket);
+			const userIdentityId = this.userService.getClientBySocket(socket).userIdentityId;
 			this.userService.deleteUser(socket);
 			this.sendUserDisconnected(socket, userIdentityId);
 			socket.leave(SocketRoom.LOBBY_ROOM);
@@ -108,7 +117,7 @@ export class SocketService {
 	}
 
 	onPlayerReady(socket) {
-		socket.on(ClientEvent.PLAYER_READY, (prop, ackFn) => {
+		socket.on(ClientEvents.PLAYER_READY, (prop, ackFn) => {
 			this.userService.updateUserStatusToReady(socket);
 			this.sendPlayerReady(socket);
 			ackFn();
@@ -116,6 +125,10 @@ export class SocketService {
 	}
 
 	sendPlayerReady(socket) {
-		socket.broadcast.to(SocketRoom.LOBBY_ROOM).emit(ServerEvents.PLAYER_READY, this.userService.getUserIdentityIdBySocket(socket));
+		socket.broadcast.to(SocketRoom.LOBBY_ROOM).emit(ServerEvents.PLAYER_READY, this.userService.getClientBySocket(socket).userIdentityId);
+	}
+
+	broadcastStartGame(map) {
+
 	}
 }

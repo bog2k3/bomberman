@@ -1,23 +1,9 @@
+import { ClientEvents } from "../common/socket/client-events.js";
+import { ServerEvents } from "../common/socket/server-events.js";
+
 const socket = new io("http://localhost:7042", {
 	path: "/bomberman.io"
 });
-
-const SERVER_EVENTS = {
-	SEND_USER_IDENTITY: "send_user_identity",
-	USER_JOINED: "user_joined",
-	USER_JOINED_LOBBY: "user_joined_lobby",
-	PLAYER_UPDATED: "player_updated",
-	PLAYER_DISCONNECTED : "player_disconnected",
-	PLAYER_READY: "player_ready"
-}
-
-const CLIENT_EVENTS = {
-	JOIN_GAME: "join_game",
-	JOIN_LOBBY: "join_lobby",
-	PLAYER_UPDATE: "player_update",
-	GET_USERS_FROM_LOBBY: "get_users_from_lobby",
-	PLAYER_READY: "player_ready"
-}
 
 export function socketConnected() {
 	return new rxjs.Observable(observer => {
@@ -34,13 +20,13 @@ export function socketConnected() {
  */
 export function requestUserIdentity() {
 	return new rxjs.Observable(observer => {
-		socket.on(SERVER_EVENTS.SEND_USER_IDENTITY, (userIdentityId) => observer.next(userIdentityId));
+		socket.on(ServerEvents.SEND_USER_IDENTITY, (userIdentityId) => observer.next(userIdentityId));
 	});
 }
 
 export function joinGame(nickname) {
 	return new Promise((resolve, reject) => {
-		socket.emit(CLIENT_EVENTS.JOIN_GAME, nickname, () => {
+		socket.emit(ClientEvents.JOIN_GAME, nickname, () => {
 			resolve();
 		});
 	});
@@ -48,7 +34,7 @@ export function joinGame(nickname) {
 
 export function joinLobby(nickname) {
 	return new Promise((resolve, reject) => {
-		socket.emit(CLIENT_EVENTS.JOIN_LOBBY, nickname, () => {
+		socket.emit(ClientEvents.JOIN_LOBBY, nickname, () => {
 			resolve();
 		});
 	});
@@ -56,7 +42,7 @@ export function joinLobby(nickname) {
 
 export function onUserJoindGame() {
 	return new rxjs.Observable(observer => {
-		socket.on(SERVER_EVENTS.USER_JOINED, (player) => {
+		socket.on(ServerEvents.USER_JOINED, (player) => {
 			observer.next(player);
 		})
 	})
@@ -64,7 +50,7 @@ export function onUserJoindGame() {
 
 export function onUserJoindLobby() {
 	return new rxjs.Observable(observer => {
-		socket.on(SERVER_EVENTS.USER_JOINED_LOBBY, (player) => {
+		socket.on(ServerEvents.USER_JOINED_LOBBY, (player) => {
 			observer.next(player);
 		})
 	})
@@ -72,7 +58,7 @@ export function onUserJoindLobby() {
 
 export function sendPlayerUpdate(dx, dy, fire, reload) {
 	return new Promise((resolve, reject) => {
-		socket.emit(CLIENT_EVENTS.PLAYER_UPDATE, { dx, dy, fire, reload }, () => {
+		socket.emit(ClientEvents.PLAYER_UPDATE, { dx, dy, fire, reload }, () => {
 			resolve();
 		});
 	});
@@ -80,7 +66,7 @@ export function sendPlayerUpdate(dx, dy, fire, reload) {
 
 export function onPlayerUpdated() {
 	return new rxjs.Observable(observer => {
-		socket.on(SERVER_EVENTS.PLAYER_UPDATED, (updateInfo) => {
+		socket.on(ServerEvents.PLAYER_UPDATED, (updateInfo) => {
 			observer.next(updateInfo);
 		})
 	})
@@ -105,7 +91,7 @@ export function goPlayer() {
 
 export function getUsersFromLobby() {
 	return new Promise((resolve, reject) => {
-		socket.emit(CLIENT_EVENTS.GET_USERS_FROM_LOBBY, "", (players) => {
+		socket.emit(ClientEvents.GET_USERS_FROM_LOBBY, "", (players) => {
 			resolve(players);
 		});
 	});
@@ -113,7 +99,7 @@ export function getUsersFromLobby() {
 
 export function onUserDisconnected() {
 	return new rxjs.Observable(observer => {
-		socket.on(SERVER_EVENTS.PLAYER_DISCONNECTED, (userIdentityId) => {
+		socket.on(ServerEvents.PLAYER_DISCONNECTED, (userIdentityId) => {
 			observer.next(userIdentityId);
 		});
 	});
@@ -121,7 +107,7 @@ export function onUserDisconnected() {
 
 export function sendPlayerReady() {
 	return new Promise((resolve, reject) => {
-		socket.emit(CLIENT_EVENTS.PLAYER_READY, "", () => {
+		socket.emit(ClientEvents.PLAYER_READY, "", () => {
 			resolve();
 		});
 	});
@@ -129,7 +115,7 @@ export function sendPlayerReady() {
 
 export function onPlayerReady() {
 	return new rxjs.Observable(observer => {
-		socket.on(SERVER_EVENTS.PLAYER_READY, (userIdentityId) => {
+		socket.on(ServerEvents.PLAYER_READY, (userIdentityId) => {
 			observer.next(userIdentityId);
 		});
 	});

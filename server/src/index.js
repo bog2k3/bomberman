@@ -12,7 +12,12 @@ const httpServer = http.createServer(app);
 
 const userService = new UserService();
 const socketService = new SocketService(httpServer, userService);
-const gameService = new GameService();
+const gameService = new GameService(socketService);
+userService.onAllUsersReady.subscribe(
+	() => gameService.startGame()
+);
+
+gameService.initialize();
 
 app.get('/', (req, res) => {
 	res.send('<h1>Hello world</h1>');

@@ -45,7 +45,7 @@ export function init(client) {
 
 /**
  * @param {number[][]} mapTemplate,
- * @param {number} playerSpawnSlot
+ * @param {number | null} playerSpawnSlot
  */
 export function startGame(mapTemplate, playerSpawnSlot) {
 	selectMap(mapTemplate);
@@ -78,7 +78,7 @@ export function getPlayerSpawnPosition(slotId) {
 
 // --------------------------------------------------------------------------------------------------
 
-/** @param {number} playerSpawnSlot */
+/** @param {number | null} playerSpawnSlot */
 function spawnEntities(playerSpawnSlot) {
 	playerSpawnPositions = [];
 	let crtPlayerSlot = 0;
@@ -91,7 +91,7 @@ function spawnEntities(playerSpawnSlot) {
 			switch (map[i][j]) {
 				case 9: // player
 					playerSpawnPositions.push({ row: i, col: j });
-					if (playerSpawnSlot == crtPlayerSlot) {
+					if (!headlessMode && playerSpawnSlot == crtPlayerSlot) {
 						const playerX = j * constants.TILE_SIZE + constants.PLAYER_INITIAL_X_OFFS;
 						const playerY = i * constants.TILE_SIZE + constants.PLAYER_INITIAL_Y_OFFS;
 						world.handlePlayerSpawned(
