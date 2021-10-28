@@ -5,6 +5,7 @@ import { ClientModel } from "../client-model.js";
 import { UserService } from "../user.service.js";
 import { SocketRoom } from "./socket-room.js";
 import { UserStatus } from "../lobby-user.status.js";
+import { EntityState } from "../../../common/entity-state.js";
 
 const WEBSOCKET_CONSTANTS = {
 	PORT : 7042,
@@ -19,6 +20,11 @@ export class SocketService {
 	server = null;
 	/** @type {UserService} */
 	userService = null;
+
+	/** @type {(slotId: number, uuid: string) => void} */
+	onPlayerSpawned = null;
+	/** @type {({event: "key-pressed" | "key-released", key: string, playerSlot: number}) => void} */
+	onPlayerInput = null;
 
 	/**
 	 * @param {http.Server} httpServer
@@ -64,7 +70,7 @@ export class SocketService {
 		socket.on(ClientEvents.PLAYER_INPUT,
 			/** @param {{event: "key-pressed" | "key-released", key: string}} event */
 			(event) => {
-				// TODO send input to local instances
+				this.onPlayerInput(event.event, event.key, this.userService.getClientBySocket(socket).spawnSlotId);
 				this.broadcastPlayerInput(event, socket);
 			}
 		);
@@ -136,11 +142,13 @@ export class SocketService {
 	}
 
 	handlePlayerSpawned(socket) {
-		socket.on(ClientEvents.PLAYER_SPAWNED, ({slot}, ackFn) => {
+		socket.on(ClientEvents.PLAYER_SPAWNED, ({slot, uuid}, ackFn) => {
 			const client = this.userService.getClientBySocket(socket);
 			if (client.spawnSlotId == slot) {
+				this.onPlayerSpawned(slot, uuid);
 				socket.broadcast.to(SocketRoom.GAME_ROOM).emit(ServerEvents.PLAYER_SPAWNED, {
 					slot,
+					uuid,
 					nickname: client.nickname
 				});
 				ackFn();
@@ -158,5 +166,10 @@ export class SocketService {
 
 	broadcastStartGame() {
 		this.server.emit(ServerEvents.START_GAME);
+	}
+
+	/** @param {{[entityId: string]: EntityState}} stateData */
+	broadcastStateUpdate(stateData) {
+		this.server.emit(ServerEvents.STATE_UPDATE, stateData);
 	}
 }

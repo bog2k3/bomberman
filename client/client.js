@@ -4,6 +4,7 @@ import * as editMode from "./edit-mode.js";
 import * as input from "./input.js";
 import * as socket from "./socket.js";
 import * as bomberman from "../common/bomberman.js";
+import * as world from "../common/world.js";
 import { clientState } from "./client-state.js";
 import { Player } from "../common/player.js";
 import { CharacterExplodeAnimation } from "./character-explode-animation.js";
@@ -19,9 +20,9 @@ export function init() {
 	Entity.onEntityDestroyed.subscribe(handleEntityDestroyed);
 	input.onPlayerRespawnKeyPressed(respawnPlayer);
 
-	socket.onNetworkPlayerSpawned((slot, nickname) => {
+	socket.onNetworkPlayerSpawned(({slot, uuid, nickname}) => {
 		if (slot !== clientState.player.skinNumber) {
-			spawnNetworkPlayer(slot, nickname);
+			spawnNetworkPlayer(slot, uuid, nickname);
 		}
 	});
 
@@ -35,6 +36,8 @@ export function init() {
 			}
 		}
 	);
+
+	socket.onStateUpdate(handleStateUpdate);
 }
 
 export function reset() {
@@ -64,7 +67,7 @@ export async function handlePlayerSpawned(player) {
 	player.onDestroy.subscribe(
 		() => createCharacterExplodeAnimation(player.getType(), player.x, player.y)
 	);
-	socket.sendPlayerSpanwed(player.skinNumber) // because skin number is equivalent with spawn slot or player id
+	socket.sendPlayerSpanwed(player.skinNumber, player.uuid) // because skin number is equivalent with spawn slot or player id
 		.then(() => {
 			player.setInputController(clientState.playerInputController);
 		});
@@ -96,14 +99,16 @@ function handleEntityDestroyed(entity) {
 
 /**
  * @param {number} slot
+ * @param {string} uuid
  * @param {string} nickname
  */
-function spawnNetworkPlayer(slot, nickname) {
+function spawnNetworkPlayer(slot, uuid, nickname) {
 	const [x, y] = bomberman.getPlayerSpawnPosition(slot);
 	const networkPlayer = new Player({
 		x, y,
 		skinNumber: slot,
-		name: nickname
+		name: nickname,
+		uuid
 	});
 	networkPlayer.setInputController(createNetworkInputController(slot));
 }
@@ -122,4 +127,13 @@ function respawnPlayer() {
 /** @param {"player-n" | "enemy-n"} type the type of animation to create, where "n" is the skin number */
 function createCharacterExplodeAnimation(type, x, y) {
 	new CharacterExplodeAnimation(x, y, type)
+}
+
+/** @type {{[entityId: string]: EntityState}} stateData */
+function handleStateUpdate(stateData) {
+	for (let e of world.getEntities()) {
+		if (stateData[e.uuid]) {
+			e.updateFromStateData(stateData[e.uuid]);
+		}
+	}
 }

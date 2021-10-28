@@ -1,10 +1,14 @@
 import { dosemuBBox } from "./node_modules/dosemu/index.js";
 import { AnimationController } from "./animation-controller.js";
 import { Event } from "./event.js";
+import { generateUuid } from "./uuid.js";
+import { EntityState } from "./entity-state.js";
 
 /** @abstract */
 export class Entity {
 
+	/** @type {string} */
+	uuid = generateUuid();
 	layer = 0;
 	isSolid = true;
 	isDestroyed = false;
@@ -37,6 +41,20 @@ export class Entity {
 	/** @virtual override this to implement update; you must call super.update(dt) */
 	update(dt) {
 		this.animationController.update(dt);
+	}
+
+	/** @returns {EntityState} */
+	buildStateData() {
+		return {
+			isDestroyed: this.isDestroyed
+		};
+	}
+
+	/** @param {EntityState} data */
+	updateFromStateData(data) {
+		if (data.isDestroyed) {
+			this.destroy();
+		}
 	}
 
 	/**

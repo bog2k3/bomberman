@@ -2,8 +2,6 @@ import { dosemuBBox } from "./node_modules/dosemu/index.js";
 import * as collision from "./collision.js";
 import { Entity } from "./entity.js";
 import * as constants from "./constants.js";
-import { Player } from "./player.js";
-import { Enemy } from "./enemy.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -136,14 +134,14 @@ export function getClient() {
 	return data.client;
 }
 
-/** @param {Player} player */
+/** @param {Entity} player */
 export function handlePlayerSpawned(player) {
 	if (data.client) {
 		data.client.handlePlayerSpawned(player);
 	}
 }
 
-/** @param {Enemy} enemy */
+/** @param {Entity} enemy */
 export function handleEnemySpawned(enemy) {
 	if (data.client) {
 		data.client.handleEnemySpawned(enemy);

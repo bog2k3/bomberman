@@ -127,9 +127,9 @@ export function onStartGame(callback) {
 	socket.on(ServerEvents.START_GAME, callback);
 }
 
-/** @param {(slot: number, nickname: string) => void} callback */
+/** @param {({slot: number, uuid: string, nickname: string}) => void} callback */
 export function onNetworkPlayerSpawned(callback) {
-	socket.on(ServerEvents.PLAYER_SPAWNED, ({slot, nickname}) => callback(slot, nickname));
+	socket.on(ServerEvents.PLAYER_SPAWNED, callback);
 }
 
 /** @param {{event: "key-pressed" | "key-released", key: string}} event */
@@ -139,17 +139,21 @@ export function sendPlayerKeyEvent(event) {
 }
 
 /** @returns {Promise<void>} a promise that is resolved when the server accepts and validates the event */
-export function sendPlayerSpanwed(playerSlot) {
+export function sendPlayerSpanwed(playerSlot, playerUUID) {
 	return new Promise(resolve =>
 		socket.emit(ClientEvents.PLAYER_SPAWNED, {
-			slot: playerSlot
+			slot: playerSlot,
+			uuid: playerUUID
 		}, resolve)
 	);
 }
 
-/**
- * @param {({event: "key-pressed" | "key-released", key: string, playerSlot: number}) => void} callback
- */
+/** @param {({event: "key-pressed" | "key-released", key: string, playerSlot: number}) => void} callback */
 export function onNetworkPlayerInput(callback) {
 	socket.on(ServerEvents.PLAYER_INPUT, callback);
+}
+
+/** @param {({[entityId: string]: EntityState}) => void} callback */
+export function onStateUpdate(callback) {
+	socket.on(ServerEvents.STATE_UPDATE, callback);
 }

@@ -3,6 +3,9 @@ import { checkCollision, CollisionResult } from "./collision.js";
 import { Entity } from "./entity.js";
 import { layers } from "./layers.js";
 import * as constants from "./constants.js";
+import * as world from "./world.js";
+import { EntityState } from "./entity-state.js";
+import { Bomb } from "./bomb.js";
 
 export class Character extends Entity {
 	x = 0;
@@ -29,6 +32,30 @@ export class Character extends Entity {
 		}
 		this.setLayer(layers.Character);
 		this.speed = this.baseSpeed;
+	}
+
+	/** @override @returns {CharacterState} */
+	buildStateData() {
+		return {
+			...super.buildStateData(),
+			x: this.x,
+			y: this.y,
+			speed: this.speed,
+			orientation: this.orientation,
+			overlapingBombIds: this.overlapingBombs.map(bomb => bomb.uuid)
+		};
+	}
+
+	/** @override @param {CharacterState} data */
+	updateFromStateData(data) {
+		this.x = data.x;
+		this.y = data.y;
+		this.speed = data.speed;
+		this.orientation = data.orientation;
+		this.overlapingBombs = world.getEntities().filter(
+			e => data.overlapingBombIds.includes(e.uuid)
+		);
+		super.updateFromStateData(data);
 	}
 
 	/** @returns {dosemuBBox.BoundingBox} the bounding box of this entity, in world space*/
@@ -119,4 +146,17 @@ export class Character extends Entity {
 	die() {
 		this.destroy();
 	}
+}
+
+class CharacterState extends EntityState {
+	/** @type {number} */
+	x;
+	/** @type {number} */
+	y;
+	/** @type {number} */
+	speed;
+	/** @type {"up"|"down"|"left"|"right"} */
+	orientation;
+	/** @type {string[]} */
+	overlapingBombIds;
 }
