@@ -10,6 +10,7 @@ import { CharacterExplodeAnimation } from "./character-explode-animation.js";
 import { Entity } from "../common/entity.js";
 import { InputSource } from "../common/input-source.js";
 import { Enemy } from "../common/enemy.js";
+import { InputController } from "../common/input-controller.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -57,13 +58,13 @@ export function update(dt) {
 
 /** @param {Player} player */
 export async function handlePlayerSpawned(player) {
+	clientState.player = player;
+	player.onDestroy.subscribe(
+		() => createCharacterExplodeAnimation(player.getType(), player.x, player.y)
+	);
 	socket.sendPlayerSpanwed(player.skinNumber) // because skin number is equivalent with spawn slot or player id
 		.then(() => {
-			clientState.player = player;
 			player.setInputController(clientState.playerInputController);
-			player.onDestroy.subscribe(
-				() => createCharacterExplodeAnimation(player.getType(), player.x, player.y)
-			);
 		});
 }
 
@@ -102,12 +103,12 @@ function spawnNetworkPlayer(slot, nickname) {
 		skinNumber: slot,
 		name: nickname
 	});
-	networkPlayer.setInputSource(createNetworkInputSource(slotId));
+	networkPlayer.setInputController(createNetworkInputController(slot));
 }
 
-function createNetworkInputSource(slotId) {
-	clientState.networkInputSources[slotId] =  new InputSource();
-	return clientState.networkInputSources[slotId];
+function createNetworkInputController(slotId) {
+	clientState.networkInputControllers[slotId] = new InputController(new InputSource());
+	return clientState.networkInputControllers[slotId];
 }
 
 function respawnPlayer() {

@@ -119,7 +119,7 @@ function spawnEntities(playerSpawnSlot) {
 			map[i][j] = 0; // leave an empty space below entity
 		}
 	}
-	if (!headlessMode && !world.getClient().getPlayer()) {
+	if (!headlessMode && !playerSpawnSlot > crtPlayerSlot) {
 		console.error(`Player spawn position #${playerSpawnSlot} not found in map!`);
 	}
 }

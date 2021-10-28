@@ -34,7 +34,9 @@ export class Player extends Character {
 
 	update(dt) {
 		super.update(dt);
-		this.inputController.update(this);
+		if (this.inputController) {
+			this.inputController.update(this);
+		}
 	}
 
 	/** @returns {Player} the new player instance */

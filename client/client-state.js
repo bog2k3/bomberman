@@ -13,6 +13,6 @@ export const clientState = {
 	scrollX: 0,
 	scrollY: 0,
 
-	/** @type {{[slotId: number]: input.InputSource}} */
-	networkInputSources: {}
+	/** @type {{[slotId: number]: InputController}} */
+	networkInputControllers: {}
 }
