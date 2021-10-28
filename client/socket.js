@@ -65,7 +65,7 @@ export function sendPlayerUpdate(dx, dy, fire, reload) {
 
 export function onPlayerUpdated() {
 	return new rxjs.Observable(observer => {
-		socket.on(ServerEvents.PLAYER_UPDATED, (updateInfo) => {
+		socket.on(ServerEvents.PLAYER_INPUT, (updateInfo) => {
 			observer.next(updateInfo);
 		})
 	})
@@ -112,12 +112,9 @@ export function sendPlayerReady() {
 	});
 }
 
-export function onPlayerReady() {
-	return new rxjs.Observable(observer => {
-		socket.on(ServerEvents.PLAYER_READY, (userIdentityId) => {
-			observer.next(userIdentityId);
-		});
-	});
+/** @param {(userIdentityId: number) => void } callback */
+export function onPlayerReady(callback) {
+	socket.on(ServerEvents.PLAYER_READY, callback);
 }
 
 /** @param {(map: number[][]) => void} callback */
@@ -138,7 +135,7 @@ export function onNetworkPlayerSpawned(callback) {
 /** @param {{event: "key-pressed" | "key-released", key: string}} event */
 export function sendPlayerKeyEvent(event) {
 	// TODO send the event to the server which will broadcast back to all other players in order for them to move their representation of our player
-	console.log("TODO implement this")
+	socket.emit(ClientEvents.PLAYER_INPUT, event);
 }
 
 /** @returns {Promise<void>} a promise that is resolved when the server accepts and validates the event */
@@ -151,13 +148,8 @@ export function sendPlayerSpanwed(playerSlot) {
 }
 
 /**
- * emits the input event {playerId: number, key: string, status: boolean} when another player presses/releases a key
- * @returns {rxjs.Observable}
- **/
-export function onNetworkPlayerInput() {
-	return new rxjs.Observable(observer => {
-		// TODO listen to server...
-		const event = {playerId: 1, key: "ArrowLeft", status: true}; // this will be received from the server
-		observer.next(event);
-	});
+ * @param {({event: "key-pressed" | "key-released", key: string, playerSlot: number}) => void} callback
+ */
+export function onNetworkPlayerInput(callback) {
+	socket.on(ServerEvents.PLAYER_INPUT, callback);
 }

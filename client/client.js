@@ -25,14 +25,16 @@ export function init() {
 		}
 	});
 
-	socket.onNetworkPlayerInput().subscribe(
-		/** @param {{playerId: number, key: string, status: boolean}} event */
+	socket.onNetworkPlayerInput(
+		/** @param {{event: "key-pressed" | "key-released", key: string, playerSlot: number}} event */
 		(event) => {
-			clientState.networkInputSources[event.playerId].setKeyStatus(
-				event.key, event.status
-			);
+			if (event.playerSlot !== clientState.player.skinNumber) {
+				clientState.networkInputControllers[event.playerSlot].inputSource.setKeyStatus(
+					event.key, event.event == "key-pressed"
+				);
+			}
 		}
-	)
+	);
 }
 
 export function reset() {

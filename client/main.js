@@ -135,7 +135,7 @@ function subscribeToSocketEvents() {
 		deleteUserDomElement(userIdentityId);
 	});
 
-	socket.onPlayerReady().subscribe((userIdentityId) => {
+	socket.onPlayerReady((userIdentityId) => {
 		changePlayerStatus(userIdentityId, LobbyUserStatus.READY);
 	});
 
