@@ -3,6 +3,8 @@ import { layers } from "./layers.js";
 
 export class PowerupBomb extends GridEntity {
 
+	static ENTITY_TYPE = "powerup-bomb";
+
 	constructor(row, col) {
 		super(row, col);
 		this.setLayer(layers.Powerup);
@@ -10,7 +12,7 @@ export class PowerupBomb extends GridEntity {
 	}
 
 	/** @override @returns {string} the type of entity */
-	getType() { return "powerup-bomb"; }
+	getType() { return PowerupBomb.ENTITY_TYPE; }
 
 	/** @override */
 	fry() {

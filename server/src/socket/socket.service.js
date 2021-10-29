@@ -172,4 +172,17 @@ export class SocketService {
 	broadcastStateUpdate(stateData) {
 		this.server.emit(ServerEvents.STATE_UPDATE, stateData);
 	}
+
+	broadcastEntityCreated(serializedEntityData) {
+		this.server.emit(ServerEvents.ENTITY_CREATED, serializedEntityData);
+	}
+
+	/** @param {string} uuid */
+	broadcastEntityRemoved(uuid) {
+		this.server.emit(ServerEvents.ENTITY_REMOVED, uuid);
+	}
+
+	broadcastBrickDestroyed(data) {
+		this.server.emit(ServerEvents.BRICK_DESTROYED, data);
+	}
 }

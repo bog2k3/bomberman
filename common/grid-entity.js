@@ -21,4 +21,20 @@ export class GridEntity extends Entity {
 			this.row * constants.TILE_SIZE
 		);
 	}
+
+	/** @override @returns full data required to rebuild this object */
+	serialize() {
+		return {
+			...super.serialize(),
+			row: this.row,
+			column: this.column
+		};
+	}
+
+	/** @override */
+	deserialize(data) {
+		super.deserialize(data);
+		this.row = data.row;
+		this.column = data.column;
+	}
 }

@@ -4,6 +4,8 @@ import { layers } from "../common/layers.js";
 
 export class CharacterExplodeAnimation extends Entity {
 
+	static ENTITY_TYPE = "character-explode-animation";
+
 	type = "";
 	/** @type {dosemuBBox.BoundingBox} */
 	boundingBox = {up: 5, down: 17, left: 5, right: 17};
@@ -21,7 +23,7 @@ export class CharacterExplodeAnimation extends Entity {
 	}
 
 	getType() {
-		return "character-explode-animation";
+		return CharacterExplodeAnimation.ENTITY_TYPE;
 	}
 
 	getBoundingBox() {

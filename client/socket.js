@@ -157,3 +157,18 @@ export function onNetworkPlayerInput(callback) {
 export function onStateUpdate(callback) {
 	socket.on(ServerEvents.STATE_UPDATE, callback);
 }
+
+/** @param {(serializedData: any) => void} callback */
+export function onEntityCreated(callback) {
+	socket.on(ServerEvents.ENTITY_CREATED, callback);
+}
+
+/** @param {(uuid: string) => void} callback */
+export function onEntityRemoved(callback) {
+	socket.on(ServerEvents.ENTITY_REMOVED, callback);
+}
+
+/** @param {({row:number, column: number}) => void} callback */
+export function onBrickDestroyed(callback) {
+	socket.on(ServerEvents.BRICK_DESTROYED, callback);
+}

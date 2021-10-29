@@ -12,6 +12,7 @@ export class Entity {
 	layer = 0;
 	isSolid = true;
 	isDestroyed = false;
+	lifetime = 0;
 	animationController = new AnimationController();
 
 	/** Event is triggered when the entity is destroyed. */
@@ -21,7 +22,7 @@ export class Entity {
 	onAnimationStart = new Event();
 
 	constructor() {
-		Entity.onEntityCreated.trigger(this);
+		setTimeout(() => Entity.onEntityCreated.trigger(this), 0); // first allow the entity to be fully constructed
 	}
 
 	destroy() {
@@ -41,13 +42,33 @@ export class Entity {
 	/** @virtual override this to implement update; you must call super.update(dt) */
 	update(dt) {
 		this.animationController.update(dt);
+		this.lifetime += dt;
 	}
 
 	/** @returns {EntityState} */
 	buildStateData() {
 		return {
-			isDestroyed: this.isDestroyed
+			isDestroyed: this.isDestroyed,
+			lifetime: this.lifetime
 		};
+	}
+
+	/** @returns full data required to rebuild this object */
+	serialize() {
+		return {
+			_entityType: this.getType(),
+			uuid: this.uuid,
+			isSolid: this.isSolid,
+			isDestroyed: this.isDestroyed,
+			lifetime: this.lifetime
+		};
+	}
+
+	deserialize(data) {
+		this.uuid = data.uuid;
+		this.isSolid = data.isSolid;
+		this.isDestroyed = data.isDestroyed;
+		this.lifetime = data.lifetime;
 	}
 
 	/** @param {EntityState} data */
@@ -55,6 +76,7 @@ export class Entity {
 		if (data.isDestroyed) {
 			this.destroy();
 		}
+		this.lifetime = data.lifetime;
 	}
 
 	/**

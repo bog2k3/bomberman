@@ -12,6 +12,11 @@ import { Entity } from "../common/entity.js";
 import { InputSource } from "../common/input-source.js";
 import { Enemy } from "../common/enemy.js";
 import { InputController } from "../common/input-controller.js";
+import { Bomb } from "../common/bomb.js";
+import { Fire } from "../common/fire.js";
+import { PowerupBomb } from "../common/powerup-bomb.js";
+import { PowerupRadius } from "../common/powerup-radius.js";
+import { PowerupSpeed } from "../common/powerup-speed.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -20,24 +25,12 @@ export function init() {
 	Entity.onEntityDestroyed.subscribe(handleEntityDestroyed);
 	input.onPlayerRespawnKeyPressed(respawnPlayer);
 
-	socket.onNetworkPlayerSpawned(({slot, uuid, nickname}) => {
-		if (slot !== clientState.player.skinNumber) {
-			spawnNetworkPlayer(slot, uuid, nickname);
-		}
-	});
-
-	socket.onNetworkPlayerInput(
-		/** @param {{event: "key-pressed" | "key-released", key: string, playerSlot: number}} event */
-		(event) => {
-			if (event.playerSlot !== clientState.player.skinNumber) {
-				clientState.networkInputControllers[event.playerSlot].inputSource.setKeyStatus(
-					event.key, event.event == "key-pressed"
-				);
-			}
-		}
-	);
-
+	socket.onNetworkPlayerSpawned(handleNetworkPlayerSpawned);
+	socket.onNetworkPlayerInput(handleNetworkPlayerInput);
 	socket.onStateUpdate(handleStateUpdate);
+	socket.onEntityCreated(handleEntityCreated);
+	socket.onEntityRemoved(handleEntityRemoved);
+	socket.onBrickDestroyed(handleBrickDestroyed);
 }
 
 export function reset() {
@@ -129,6 +122,21 @@ function createCharacterExplodeAnimation(type, x, y) {
 	new CharacterExplodeAnimation(x, y, type)
 }
 
+function handleNetworkPlayerSpawned({slot, uuid, nickname}) {
+	if (slot !== clientState.player.skinNumber) {
+		spawnNetworkPlayer(slot, uuid, nickname);
+	}
+}
+
+/** @param {{event: "key-pressed" | "key-released", key: string, playerSlot: number}} event */
+function handleNetworkPlayerInput(event) {
+	if (event.playerSlot !== clientState.player.skinNumber) {
+		clientState.networkInputControllers[event.playerSlot].inputSource.setKeyStatus(
+			event.key, event.event == "key-pressed"
+		);
+	}
+}
+
 /** @type {{[entityId: string]: EntityState}} stateData */
 function handleStateUpdate(stateData) {
 	for (let e of world.getEntities()) {
@@ -136,4 +144,40 @@ function handleStateUpdate(stateData) {
 			e.updateFromStateData(stateData[e.uuid]);
 		}
 	}
+}
+
+function handleEntityCreated(data) {
+	switch (data._entityType) {
+		case Bomb.ENTITY_TYPE:
+			return (new Bomb(0, 0, 0)).deserialize(data);
+		case Fire.ENTITY_TYPE:
+			return (new Fire("", 0, 0)).deserialize(data);
+		case PowerupBomb.ENTITY_TYPE:
+			return (new PowerupBomb(0, 0)).deserialize(data);
+		case PowerupRadius.ENTITY_TYPE:
+			return (new PowerupRadius(0, 0)).deserialize(data);
+		case PowerupSpeed.ENTITY_TYPE:
+			return (new PowerupSpeed(0, 0)).deserialize(data);
+		default:
+			if (data._entityType.startsWith(Player.ENTITY_TYPE)) {
+				// this shouldn't happen since players are handled by a different mechanism
+				console.error(`received PLAYER from server on ENTITY_ADDED`);
+			} else if (data._entityType.startsWith(Enemy.ENTITY_TYPE)) {
+				return (new Enemy({}).deserialize(data));
+			} else {
+				console.error(`received unknown entity type from server on ENTITY_ADDED: "${data._entityType}".`);
+			}
+	}
+}
+
+function handleEntityRemoved(uuid) {
+	world.getEntities()
+		.filter(e => e.uuid === uuid)
+		.forEach(
+			e => e.destroy()
+		);
+}
+
+function handleBrickDestroyed({row, column}) {
+	world.destroyBrick(row, column);
 }

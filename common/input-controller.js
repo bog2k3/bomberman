@@ -1,11 +1,16 @@
 import { InputSource } from "./input-source.js";
 import { Player } from "./player.js";
-import { Bomb } from "./bomb.js";
+import { Event } from "./event.js";
 
 export class InputController {
 
+	/** @param {(row: number, column: number, player: Player) => void} */
+	onBombSpawnRequest = new Event();
+
 	/** @type {InputSource} */
 	inputSource = null;
+
+	/** @private */
 	wasSpacePressed = false;
 
 	/** @param {InputSource} inputSource */
@@ -40,8 +45,8 @@ export class InputController {
 		}
 		const spawnRow = player.getRow();
 		const spawnColumn = player.getColumn();
-		player.bombCount++;
-		(new Bomb(player.bombPower, spawnRow, spawnColumn))
-			.onDestroy.subscribe(() => player.bombCount--);
+		this.onBombSpawnRequest.trigger(
+			spawnRow, spawnColumn, player
+		);
 	}
 }

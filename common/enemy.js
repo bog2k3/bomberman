@@ -6,6 +6,9 @@ import * as world from "./world.js";
 import * as constants from "./constants.js";
 
 export class Enemy extends Character {
+
+	static ENTITY_TYPE = "enemy";
+
 	type = 0;
 	/** @param {Character & {type: number}} data */
 	constructor(data) {
@@ -18,12 +21,26 @@ export class Enemy extends Character {
 	}
 
 	/** @override @returns {string} the type of entity */
-	getType() { return `enemy-${this.type}`; }
+	getType() { return `${Enemy.ENTITY_TYPE}-${this.type}`; }
 
 	/** @override */
 	update(dt) {
 		super.update(dt);
 		this.move(this.orientation);
+	}
+
+	/** @override @returns full data required to rebuild this object */
+	serialize() {
+		return {
+			...super.serialize(),
+			type: this.type
+		};
+	}
+
+	/** @override */
+	deserialize(data) {
+		super.deserialize(data);
+		this.type = data.type;
 	}
 
 	/**

@@ -30,6 +30,8 @@ export function createPlayrtSatusElement(playerId, playerStatus) {
 		playerIconElement = createFaIcon("fa-spinner");
 	} else if (playerStatus === LobbyUserStatus.READY) {
 		playerIconElement = createFaIcon("fa-check");
+	} else if (playerStatus === LobbyUserStatus.INGAME) {
+		playerIconElement = createFaIcon("fa-male");
 	} else {
 		throw new Error(`Unknown player status ${playerStatus}`)
 	}
@@ -41,6 +43,9 @@ export function createPlayrtSatusElement(playerId, playerStatus) {
 
 export function changePlayerStatus(playerId, playerStatus) {
 	const statusElement = document.getElementById("status_" + playerId);
+	if (!statusElement) {
+		return;
+	}
 	statusElement.innerHTML = "";
 	statusElement.appendChild(
 		playerStatus === LobbyUserStatus.WAITING
@@ -81,18 +86,22 @@ export function createJoinElements() {
 
 export function attachCallbackToJoinButtonClick(callback) {
 	const joinButton = document.getElementById("join-button");
-	joinButton.addEventListener("click", callback);
+	if (joinButton) {
+		joinButton.addEventListener("click", callback);
+	}
 }
 
 export function getJoinInputValue() {
 	const inputText = document.getElementById("join-textbox");
-	return inputText.value;
+	return inputText?.value;
 }
 
 export function attachCallbackToUserReadyCheckbox(userIdentityId, callback) {
 	const playerElement = document.getElementById(userIdentityId);
-	const playerReadyCheckbox = playerElement.getElementsByTagName("input")[0];
-	playerReadyCheckbox.addEventListener("change", (event) => callback(event, playerReadyCheckbox));
+	if (playerElement) {
+		const playerReadyCheckbox = playerElement.getElementsByTagName("input")[0];
+		playerReadyCheckbox.addEventListener("change", (event) => callback(event, playerReadyCheckbox));
+	}
 }
 
 export function deleteUserDomElement(userIdentityId) {

@@ -16,6 +16,11 @@ import { powerupSprites } from "./powerup-sprites.js";
 import * as world from "../common/world.js";
 import * as constants from "../common/constants.js";
 import * as raycast from "./raycast.js";
+import { Bomb } from "../common/bomb.js";
+import { Fire } from "../common/fire.js";
+import { PowerupBomb } from "../common/powerup-bomb.js";
+import { PowerupRadius } from "../common/powerup-radius.js";
+import { PowerupSpeed } from "../common/powerup-speed.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -211,17 +216,15 @@ function drawEntity(entity, offsX, offsY) {
 		return drawCharacter(entity, offsX, offsY);
 	}
 	switch (entity.getType()) {
-		case "bomb":
+		case Bomb.ENTITY_TYPE:
 			return drawGridEntity(entity, "", offsX, offsY);
-		case "fire":
+		case Fire.ENTITY_TYPE:
 			return drawGridEntity(entity, entity.type, offsX, offsY);
-		case "character-explode-animation":
+		case CharacterExplodeAnimation.ENTITY_TYPE:
 			return drawCharacterExplodeAnimation(entity, offsX, offsY);
-		case "powerup-bomb":
-			return drawGridEntity(entity, "", offsX, offsY);
-		case "powerup-radius":
-			return drawGridEntity(entity, "", offsX, offsY);
-		case "powerup-speed":
+		case PowerupBomb.ENTITY_TYPE:
+		case PowerupRadius.ENTITY_TYPE:
+		case PowerupSpeed.ENTITY_TYPE:
 			return drawGridEntity(entity, "", offsX, offsY);
 		default:
 			throw `entity type not handled in draw: ${entity.getType()}`;
@@ -258,7 +261,7 @@ function drawPlayerName(player, offsX, offsY) {
 	if (player.name) {
 		const x = player.x + offsX;
 		const y = player.y + offsY - 25;
-		dosemu.drawText(x+1, y+1, player.name, black, "center");
+		dosemu.drawText(x+1, y+1, player.name, 0, "center");
 		dosemu.drawText(x, y, player.name, playerNameColors[player.skinNumber], "center");
 	}
 }

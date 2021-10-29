@@ -2,6 +2,7 @@ import { dosemuBBox } from "./node_modules/dosemu/index.js";
 import * as collision from "./collision.js";
 import { Entity } from "./entity.js";
 import * as constants from "./constants.js";
+import { Event } from "./event.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -10,12 +11,17 @@ const data = {
 	map: [],
 	/** @type {Entity[]} */
 	entities: [],
-	/** @type {(row: number, col: number) => void} */
-	onBrickDestroyed: null,
 
 	/** @type {dynamically imported client module (or null in headless mode)} */
 	client: null
 };
+
+/** @param {Entity} entity the newly added entity */
+export const onEntityAdded = new Event();
+/** @param {Entity} entity the newly added entity */
+export const onEntityRemoved = new Event();
+/** @param {(row: number, col: number) => void} */
+export const onBrickDestroyed = new Event();
 
 // --------------------------------------------------------------------------------------------------
 
@@ -34,12 +40,14 @@ export function getMap() {
 export function addEntity(entity) {
 	data.entities.push(entity);
 	collision.addEntity(entity);
+	onEntityAdded.trigger(entity);
 }
 
 /** @param {Entity} entity */
 export function removeEntity(entity) {
 	data.entities.splice(data.entities.indexOf(entity), 1);
 	collision.removeEntity(entity);
+	onEntityRemoved.trigger(entity);
 }
 
 /** @returns {Entity[]} */
@@ -115,15 +123,8 @@ export function getEntitiesInCell(row, col) {
 export function destroyBrick(row, col) {
 	if (getMapCell(row, col) === 1) {
 		setMapCell(row, col, 0);
-		if (data.onBrickDestroyed) {
-			data.onBrickDestroyed(row, col);
-		}
+		onBrickDestroyed.trigger(row, col);
 	}
-}
-
-/** @param {(row: number, col: number) => void} callback */
-export function setOnBrickDestroyedCallback(callback) {
-	data.onBrickDestroyed = callback;
 }
 
 export function setClient(client) {

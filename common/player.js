@@ -1,10 +1,15 @@
-import { Character } from "./character.js";
+import { Character, CharacterState } from "./character.js";
 import * as world from "./world.js";
 import * as constants from "./constants.js";
 import { CollisionResult } from "./collision.js";
 import { Entity } from "./entity.js";
+import { PowerupSpeed } from "./powerup-speed.js";
+import { PowerupRadius } from "./powerup-radius.js";
+import { PowerupBomb } from "./powerup-bomb.js";
 
 export class Player extends Character {
+
+	static ENTITY_TYPE = "player";
 
 	bombPower = 2;
 	maxBombCount = 1;
@@ -22,6 +27,7 @@ export class Player extends Character {
 		});
 		this.speed = this.baseSpeed;
 		this.skinNumber = data.skinNumber || 0;
+		this.name = data.name || "";
 	}
 
 	/** @type {InputController} controller */
@@ -30,7 +36,25 @@ export class Player extends Character {
 	}
 
 	/** @override @returns {string} the type of entity */
-	getType() { return `player-${this.skinNumber}`; } // TODO return "player-n" where n is the skin number
+	getType() { return `${Player.ENTITY_TYPE}-${this.skinNumber}`; } // TODO return "player-n" where n is the skin number
+
+	/** @override @returns {PlayerState} */
+	buildStateData() {
+		return {
+			...super.buildStateData(),
+			bombPower: this.bombPower,
+			maxBombCount: this.maxBombCount,
+			bombCount: this.bombCount,
+		};
+	}
+
+	/** @override @param {PlayerState} data */
+	updateFromStateData(data) {
+		super.updateFromStateData(data);
+		this.bombCount = data.bombCount;
+		this.maxBombCount = data.maxBombCount;
+		this.bombPower = data.bombPower;
+	}
 
 	update(dt) {
 		super.update(dt);
@@ -76,15 +100,15 @@ export class Player extends Character {
 			return;
 		}
 		switch (entity.getType()) {
-			case "powerup-bomb":
+			case PowerupBomb.ENTITY_TYPE:
 				this.maxBombCount++;
 				entity.destroy();
 				break;
-			case "powerup-radius":
+			case PowerupRadius.ENTITY_TYPE:
 				this.bombPower++;
 				entity.destroy();
 				break;
-			case "powerup-speed":
+			case PowerupSpeed.ENTITY_TYPE:
 				this.speed += constants.PLAYER_SPEED_INCREMENT;
 				entity.destroy();
 				break;
@@ -140,4 +164,13 @@ export class Player extends Character {
 			return this.reactToCollisionWithBrick(collision, dt);
 		}
 	}
+}
+
+export class PlayerState extends CharacterState {
+	/** @type {number} */
+	bombPower;
+	/** @type {number} */
+	maxBombCount;
+	/** @type {number} */
+	bombCount;
 }

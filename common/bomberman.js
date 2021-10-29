@@ -6,6 +6,8 @@ import { Enemy } from "./enemy.js";
 import { PowerupBomb } from "./powerup-bomb.js";
 import { PowerupRadius } from "./powerup-radius.js";
 import { PowerupSpeed } from "./powerup-speed.js";
+import { Bomb } from "./bomb.js";
+import { Fire } from "./fire.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -32,7 +34,7 @@ export function reset() {
 export function init(client) {
 	Entity.onEntityCreated.subscribe(handleEntityCreated);
 	Entity.onEntityDestroyed.subscribe(handleEntityDestroyed);
-	world.setOnBrickDestroyedCallback(handleBrickDestroyed);
+	world.onBrickDestroyed.subscribe(handleBrickDestroyed);
 	headlessMode = !client;
 
 	if (client) {
@@ -141,6 +143,9 @@ function handleEntityCreated(entity) {
 	if (!headlessMode) {
 		world.getEntities().sort((a, b) => a.layer - b.layer);
 	}
+	if (headlessMode && entity instanceof Bomb) {
+		entity.onExplode.subscribe(handleBombExplosion);
+	}
 }
 
 /** @param {Entity} entity */
@@ -149,6 +154,9 @@ function handleEntityDestroyed(entity) {
 }
 
 function handleBrickDestroyed(row, col) {
+	if (!headlessMode) {
+		return; // clients don't spawn powerups on their own
+	}
 	const diceFaces = [{
 		chance: constants.CHANCE_SPAWN_SPEED_POWERUP,
 		action: () => new PowerupSpeed(row, col)
@@ -168,6 +176,47 @@ function handleBrickDestroyed(row, col) {
 			break;
 		} else {
 			dice -= face.chance;
+		}
+	}
+}
+
+/** @param {Bomb} bomb */
+function handleBombExplosion(bomb) {
+	// create central fire
+	new Fire("center", bomb.row, bomb.column)
+	// go out from the center and create the flames
+	let directions = {
+		Up: { blocked: false, dx: 0, dy: -1 },
+		Down: { blocked: false, dx: 0, dy: 1 },
+		Left: { blocked: false, dx: -1, dy: 0 },
+		Right: { blocked: false, dx: 1, dy: 0 },
+	};
+	for (let i=0; i<bomb.power; i++) {
+		for (let dirKey in directions) {
+			const dir = directions[dirKey];
+			if (dir.blocked) {
+				continue;
+			}
+			const fRow = bomb.row + dir.dy * (i+1);
+			const fColumn = bomb.column + dir.dx * (i+1);
+			const cellType = world.getMapCell(fRow, fColumn);
+			if ([-1, 2].includes(cellType)) {
+				// we got outside of map or hit an indestructible brick
+				dir.blocked = true;
+				continue;
+			}
+			// if we hit a regular brick, we stop here and destroy the brick
+			if (cellType === 1) {
+				dir.blocked = true;
+				world.destroyBrick(fRow, fColumn);
+			} else {
+				// spawn the right type of fire
+				const isCap = i === bomb.power-1 || cellType === 1;
+				const fireType = isCap ? `cap${dirKey}` : (
+					["Up", "Down"].includes(dirKey) ? "middleV" : "middleH"
+				);
+				new Fire(fireType, fRow, fColumn);
+			}
 		}
 	}
 }

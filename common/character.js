@@ -46,6 +46,32 @@ export class Character extends Entity {
 		};
 	}
 
+	/** @override @returns full data required to rebuild this object */
+	serialize() {
+		return {
+			...super.serialize(),
+			x: this.x,
+			y: this.y,
+			baseSpeed: this.baseSpeed,
+			speed: this.speed,
+			orientation: this.orientation,
+			overlapingBombIds: this.overlapingBombs.map(bomb => bomb.uuid)
+		}
+	}
+
+	/** @override */
+	deserialize(data) {
+		super.deserialize(data);
+		this.x = data.x;
+		this.y = data.y;
+		this.speed = data.speed;
+		this.baseSpeed = data.baseSpeed;
+		this.orientation = data.orientation;
+		this.overlapingBombs = world.getEntities().filter(
+			e => data.overlapingBombIds.includes(e.uuid)
+		);
+	}
+
 	/** @override @param {CharacterState} data */
 	updateFromStateData(data) {
 		this.x = data.x;
@@ -148,7 +174,7 @@ export class Character extends Entity {
 	}
 }
 
-class CharacterState extends EntityState {
+export class CharacterState extends EntityState {
 	/** @type {number} */
 	x;
 	/** @type {number} */

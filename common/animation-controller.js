@@ -12,6 +12,10 @@ export class AnimationController {
 		this.update(0);
 	}
 
+	reset() {
+		this.animationProgress = 0;
+	}
+
 	/** @param {number} dt */
 	update(dt) {
 		if (this.animationDuration == 0) {

@@ -7,10 +7,12 @@ import { Player } from "../../common/player.js";
 import { generateRandomMap } from "../../common/random-map.js";
 import { SocketService } from "./socket/socket.service.js";
 import { EntityState } from "../../common/entity-state.js";
+import { Entity } from "../../common/entity.js";
+import { Bomb } from "../../common/bomb.js";
 export class GameService {
 
-	UPDATE_FREQ_HZ = 50; // 50 times per second
-	STATE_UPDATE_FREQ_HZ = 10; // 10 times per second
+	UPDATE_FREQ_HZ = 60; // times per second
+	STATE_UPDATE_FREQ_HZ = 5; // times per second
 	lastTime = new Date();
 	lastStateUpdateTime = new Date();
 	/** @type {SocketService} */
@@ -28,6 +30,9 @@ export class GameService {
 
 	initialize() {
 		bomberman.init(null);
+		world.onEntityAdded.subscribe(this.broadcastEntityCreated.bind(this));
+		world.onEntityRemoved.subscribe(this.broadcastEntityRemoved.bind(this));
+		world.onBrickDestroyed.subscribe(this.broadcastBrickDestroyed.bind(this));
 	}
 
 	startRound() {
@@ -51,11 +56,12 @@ export class GameService {
 	update() {
 		const now = new Date();
 		const dt = (now.getTime() - this.lastTime.getTime()) / 1000;
+		this.lastTime = now;
 		const maxDT = 0.1;
 		bomberman.update(Math.min(maxDT, dt));
 		if ((now.getTime() - this.lastStateUpdateTime.getTime()) >= 1000 / this.STATE_UPDATE_FREQ_HZ) {
 			this.lastStateUpdateTime = now;
-			this.sendEntityStateUpdate();
+			this.broadcastEntityStateUpdate();
 		}
 	}
 
@@ -75,6 +81,7 @@ export class GameService {
 
 	createInputController(slotId) {
 		this.inputControllers[slotId] = new InputController(new InputSource());
+		this.inputControllers[slotId].onBombSpawnRequest.subscribe(this.handleBombSpawnRequest.bind(this))
 		return this.inputControllers[slotId];
 	}
 
@@ -89,8 +96,14 @@ export class GameService {
 		}
 	}
 
+	handleBombSpawnRequest(row, col, player) {
+		player.bombCount++;
+		(new Bomb(player.bombPower, row, col))
+			.onDestroy.subscribe(() => player.bombCount--);
+	}
+
 	/** sends a full entity state update to all clients */
-	sendEntityStateUpdate() {
+	broadcastEntityStateUpdate() {
 		this.socketService.broadcastStateUpdate(this.buildEntityStateUpdatePayload());
 	}
 
@@ -104,5 +117,21 @@ export class GameService {
 			payload[entity.uuid] = entity.buildStateData();
 		}
 		return payload;
+	}
+
+	/** @param {Entity} e */
+	broadcastEntityCreated(e) {
+		if (!(e instanceof Player)) { // because players are handled by a different mechanism
+			this.socketService.broadcastEntityCreated(e.serialize());
+		}
+	}
+
+	/** @param {Entity} e */
+	broadcastEntityRemoved(e) {
+		this.socketService.broadcastEntityRemoved(e.uuid);
+	}
+
+	broadcastBrickDestroyed(row, column) {
+		this.socketService.broadcastBrickDestroyed({row, column});
 	}
 }
