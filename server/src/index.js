@@ -12,7 +12,7 @@ const httpServer = http.createServer(app);
 
 const userService = new UserService();
 const socketService = new SocketService(httpServer, userService);
-const gameService = new GameService(socketService);
+const gameService = new GameService(socketService, userService);
 userService.onAllUsersReady.subscribe(
 	() => gameService.startRound()
 );

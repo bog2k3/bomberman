@@ -60,6 +60,15 @@ export class Player extends Character {
 		this.bombPower = data.bombPower;
 	}
 
+	/** @override @returns full data required to rebuild this object */
+	serialize() {
+		return {
+			...super.serialize(),
+			name: this.name,
+			skinNumber: this.skinNumber
+		};
+	}
+
 	update(dt) {
 		super.update(dt);
 		if (this.inputController) {

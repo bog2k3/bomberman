@@ -168,7 +168,12 @@ export function onEntityRemoved(callback) {
 	socket.on(ServerEvents.ENTITY_REMOVED, callback);
 }
 
-/** @param {({row:number, column: number}) => void} callback */
+/** @param {(event: {row:number, column: number}) => void} callback */
 export function onBrickDestroyed(callback) {
 	socket.on(ServerEvents.BRICK_DESTROYED, callback);
+}
+
+/** @param {(data: any[]) => void} callback */
+export function onLiveEntityData(callback) {
+	socket.on(ServerEvents.LIVE_ENTITIES, callback);
 }

@@ -9,6 +9,9 @@ import { SocketService } from "./socket/socket.service.js";
 import { EntityState } from "../../common/entity-state.js";
 import { Entity } from "../../common/entity.js";
 import { Bomb } from "../../common/bomb.js";
+import { serverState } from "./server-state.js";
+import { UserService } from "./user.service.js";
+import { ClientModel } from "./client-model.js";
 export class GameService {
 
 	UPDATE_FREQ_HZ = 60; // times per second
@@ -17,17 +20,25 @@ export class GameService {
 	lastStateUpdateTime = new Date();
 	/** @type {SocketService} */
 	socketService = null;
+	/** @type {UserService} */
+	userService = null;
 	/** @type {{[slotId: number]: InputController}} */
 	inputControllers = {};
 	updateInterval = null;
 	/** @type {{[slotId: number]: {score: number, name: string}}} */
 	scores = {};
 
-	/** @param {SocketService} socketService */
-	constructor(socketService) {
+	/**
+	 * @param {SocketService} socketService
+	 * @param {UserService} userService
+	 **/
+	constructor(socketService, userService) {
 		this.socketService = socketService;
-		this.socketService.onPlayerSpawned = this.handlePlayerSpawned.bind(this);
-		this.socketService.onPlayerInput = this.handlePlayerInput.bind(this);
+		this.userService = userService;
+		this.socketService.onPlayerSpawned.subscribe(this.handlePlayerSpawned.bind(this));
+		this.socketService.onPlayerInput.subscribe(this.handlePlayerInput.bind(this));
+		this.socketService.onPlayerDisconnected.subscribe(this.handlePlayerDisconnected.bind(this));
+		this.userService.onLateClientJoin.subscribe(this.handleLateClientJoin.bind(this));
 	}
 
 	initialize() {
@@ -35,6 +46,18 @@ export class GameService {
 		world.onEntityAdded.subscribe(this.broadcastEntityCreated.bind(this));
 		world.onEntityRemoved.subscribe(this.broadcastEntityRemoved.bind(this));
 		world.onBrickDestroyed.subscribe(this.broadcastBrickDestroyed.bind(this));
+	}
+
+	stopGame() {
+		if (this.updateInterval) {
+			clearInterval(this.updateInterval);
+		}
+		bomberman.reset();
+		this.inputControllers = {};
+		this.scores = {};
+		serverState.status = "in-lobby";
+		this.socketService.broadcastStopGame();
+		console.log("Game stopped.");
 	}
 
 	startRound() {
@@ -46,13 +69,16 @@ export class GameService {
 		if (this.updateInterval) {
 			clearInterval(this.updateInterval);
 		}
+		console.log("Game created.");
 	}
 
 	startGame() {
+		serverState.status = "in-game";
 		this.lastTime = new Date();
 		this.lastStateUpdateTime = new Date();
 		this.updateInterval = setInterval(() => this.update(), 1000 / this.UPDATE_FREQ_HZ);
 		this.socketService.broadcastStartGame();
+		console.log("Game started.");
 	}
 
 	update() {
@@ -138,6 +164,13 @@ export class GameService {
 		}
 	}
 
+	sendLiveEntities(socket) {
+		this.socketService.sendLiveEntities(socket,
+			world.getEntities()
+				.map(e => e.serialize())
+		);
+	}
+
 	/** @param {Entity} e */
 	broadcastEntityRemoved(e) {
 		this.socketService.broadcastEntityRemoved(e.uuid);
@@ -162,11 +195,39 @@ export class GameService {
 	}
 
 	handleFragRegistered(victimSlot, killerSlot) {
+		if (!this.scores[killerSlot]) {
+			return; // killer probably got disconnected in the mean time
+		}
 		if (victimSlot == killerSlot) {
 			// poor bastard killed himself
 			this.scores[killerSlot].score--;
 		} else {
 			this.scores[killerSlot].score++;
 		}
+	}
+
+	handlePlayerDisconnected(slotId) {
+		console.log(`Player ${this.scores[slotId]?.name || "Unknown"} disconnected.`);
+		world.getEntities()
+			.filter(
+				e => e instanceof Player && e.skinNumber == slotId
+			).forEach(
+				e => e.die()
+			)
+		delete this.scores[slotId];
+		if (Object.keys(this.scores) == 0) {
+			console.log("No players left, stopping game.");
+			// all players left, we go back to lobby
+			this.stopGame();
+		}
+	}
+
+	/** @param {ClientModel} client */
+	handleLateClientJoin(client) {
+		console.log(`New player "${client.nickname}" joined during game.`)
+		// send start_round and then start_game
+		this.socketService.sendStartRound(client.socket, world.getMap());
+		this.socketService.sendStartGame(client.socket);
+		this.sendLiveEntities(client.socket);
 	}
 }

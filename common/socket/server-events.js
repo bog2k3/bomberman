@@ -7,9 +7,11 @@ export const ServerEvents = {
 	PLAYER_READY : "player_ready",
 	START_ROUND: "start_round",
 	START_GAME: "start_game",
+	STOP_GAME: "stop_game",
 	PLAYER_SPAWNED: "player_spawned",
 	STATE_UPDATE: "state_update",
 	ENTITY_CREATED: "entity_created",
 	ENTITY_REMOVED: "entity_removed",
 	BRICK_DESTROYED: "brick_destroyed",
+	LIVE_ENTITIES: "live_entities"
 };

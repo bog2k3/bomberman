@@ -3,7 +3,9 @@ import { UserStatus as UserStatus } from "./lobby-user.status.js";
 import { Socket } from "socket.io";
 import { Event } from "../../common/event.js";
 import { ClientModel } from "./client-model.js";
+import { serverState } from "./server-state.js";
 import * as constants from "../../common/constants.js";
+
 export class UserService {
 
 	/** @type {ClientModel[]} */
@@ -14,6 +16,7 @@ export class UserService {
 
 	onAllUsersReady = new Event();
 	onAllUsersInGame = new Event();
+	onLateClientJoin = new Event();
 
 	constructor() { }
 
@@ -69,10 +72,15 @@ export class UserService {
 		const client = this.getClientBySocket(socket);
 		if (client) {
 			client.status = status;
-			if (status === UserStatus.READY && this.areAllUsersReady()) {
-				this.onAllUsersReady.trigger();
+			if (status === UserStatus.READY) {
+				if (serverState.inLobby() && this.areAllUsersReady()) {
+					this.onAllUsersReady.trigger();
+				} else if (serverState.inGame()) {
+					// directly join player into game
+					this.onLateClientJoin.trigger(client);
+				}
 			}
-			if (status === UserStatus.INGAME && this.areAllUsersInGame()) {
+			if (status === UserStatus.INGAME && this.areAllUsersInGame() && serverState.inLobby()) {
 				this.onAllUsersInGame.trigger();
 			}
 		}

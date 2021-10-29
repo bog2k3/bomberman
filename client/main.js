@@ -141,6 +141,7 @@ function subscribeToSocketEvents() {
 
 	socket.onStartRound(/** @param {number[][]} map */(map) => {
 		gameScreenDOMElement.remove();
+		gameScreenDOMElement = null;
 		initGame();
 		startRound(map);
 	});
@@ -149,7 +150,7 @@ function subscribeToSocketEvents() {
 }
 
 function addUsersToLobby(users, userIdentityId) {
-	if (!userIdentityId) {
+	if (!userIdentityId || !gameScreenDOMElement) {
 		return;
 	}
 	for (const user of users) {

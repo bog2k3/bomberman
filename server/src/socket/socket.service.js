@@ -6,6 +6,7 @@ import { UserService } from "../user.service.js";
 import { SocketRoom } from "./socket-room.js";
 import { UserStatus } from "../lobby-user.status.js";
 import { EntityState } from "../../../common/entity-state.js";
+import { Event } from "../../../common/event.js";
 
 const WEBSOCKET_CONSTANTS = {
 	PORT : 7042,
@@ -21,10 +22,12 @@ export class SocketService {
 	/** @type {UserService} */
 	userService = null;
 
-	/** @type {(slotId: number, uuid: string, nickname: string) => void} */
-	onPlayerSpawned = null;
-	/** @type {({event: "key-pressed" | "key-released", key: string, playerSlot: number}) => void} */
-	onPlayerInput = null;
+	/** @param {(slotId: number, uuid: string, nickname: string) => void} */
+	onPlayerSpawned = new Event();
+	/** @param {({event: "key-pressed" | "key-released", key: string, playerSlot: number}) => void} */
+	onPlayerInput = new Event();
+	/** @param {(slotId: number) => void} */
+	onPlayerDisconnected = new Event();
 
 	/**
 	 * @param {http.Server} httpServer
@@ -70,7 +73,7 @@ export class SocketService {
 		socket.on(ClientEvents.PLAYER_INPUT,
 			/** @param {{event: "key-pressed" | "key-released", key: string}} event */
 			(event) => {
-				this.onPlayerInput(event.event, event.key, this.userService.getClientBySocket(socket).spawnSlotId);
+				this.onPlayerInput.trigger(event.event, event.key, this.userService.getClientBySocket(socket).spawnSlotId);
 				this.broadcastPlayerInput(event, socket);
 			}
 		);
@@ -92,6 +95,7 @@ export class SocketService {
 			this.userService.setClientNickname(socket, userNickname);
 			this.broadcastUserJoinedLobby(this.userService.getClientBySocket(socket));
 			ackFn(this.userService.getClientBySocket(socket).spawnSlotId);
+			console.log(`"${userNickname}" joined the lobby.`)
 		});
 	}
 
@@ -122,6 +126,8 @@ export class SocketService {
 	handleSocketDisconnect(socket) {
 		socket.on("disconnect", () => {
 			const userIdentityId = this.userService.getClientBySocket(socket).userIdentityId;
+			const quitterSlot = this.userService.getClientBySocket(socket).spawnSlotId;
+			this.onPlayerDisconnected.trigger(quitterSlot);
 			this.userService.deleteUser(socket);
 			this.sendUserDisconnected(socket, userIdentityId);
 			socket.leave(SocketRoom.LOBBY_ROOM);
@@ -145,7 +151,7 @@ export class SocketService {
 		socket.on(ClientEvents.PLAYER_SPAWNED, ({slot, uuid}, ackFn) => {
 			const client = this.userService.getClientBySocket(socket);
 			if (client.spawnSlotId == slot) {
-				this.onPlayerSpawned(slot, uuid, client.nickname);
+				this.onPlayerSpawned.trigger(slot, uuid, client.nickname);
 				socket.broadcast.to(SocketRoom.GAME_ROOM).emit(ServerEvents.PLAYER_SPAWNED, {
 					slot,
 					uuid,
@@ -160,12 +166,26 @@ export class SocketService {
 		socket.broadcast.to(SocketRoom.LOBBY_ROOM).emit(ServerEvents.PLAYER_READY, this.userService.getClientBySocket(socket).userIdentityId);
 	}
 
+	/** @param {Socket} socket */
+	sendStartRound(socket, map) {
+		socket.emit(ServerEvents.START_ROUND, map);
+	}
+
 	broadcastStartRound(map) {
 		this.server.emit(ServerEvents.START_ROUND, map);
 	}
 
+	/** @param {Socket} socket */
+	sendStartGame(socket) {
+		socket.emit(ServerEvents.START_GAME);
+	}
+
 	broadcastStartGame() {
 		this.server.emit(ServerEvents.START_GAME);
+	}
+
+	broadcastStopGame() {
+		this.server.emit(ServerEvents.STOP_GAME);
 	}
 
 	/** @param {{[entityId: string]: EntityState}} stateData */
@@ -184,5 +204,13 @@ export class SocketService {
 
 	broadcastBrickDestroyed(data) {
 		this.server.emit(ServerEvents.BRICK_DESTROYED, data);
+	}
+
+	/**
+	 * @param {Socket} socket
+	 * @param {any} data an array of serialized entity data
+	 **/
+	sendLiveEntities(socket, data) {
+		socket.emit(ServerEvents.LIVE_ENTITIES, data);
 	}
 }

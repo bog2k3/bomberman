@@ -118,7 +118,9 @@ function spawnEntities(playerSpawnSlot) {
 						break;
 					}
 			}
-			map[i][j] = 0; // leave an empty space below entity
+			if (!headlessMode) {
+				map[i][j] = 0; // leave an empty space below entity
+			}
 		}
 	}
 	if (!headlessMode && !playerSpawnSlot > crtPlayerSlot) {

@@ -32,6 +32,7 @@ export function init() {
 	socket.onEntityCreated(handleEntityCreated);
 	socket.onEntityRemoved(handleEntityRemoved);
 	socket.onBrickDestroyed(handleBrickDestroyed);
+	socket.onLiveEntityData(handleLiveEntityData);
 }
 
 export function reset() {
@@ -147,7 +148,7 @@ function handleStateUpdate(stateData) {
 	clientState.scores = stateData["scores"];
 }
 
-function handleEntityCreated(data) {
+function handleEntityCreated(data, allowPlayers) {
 	switch (data._entityType) {
 		case Bomb.ENTITY_TYPE:
 			return (new Bomb(0, 0, 0)).deserialize(data);
@@ -161,8 +162,16 @@ function handleEntityCreated(data) {
 			return (new PowerupSpeed(0, 0)).deserialize(data);
 		default:
 			if (data._entityType.startsWith(Player.ENTITY_TYPE)) {
-				// this shouldn't happen since players are handled by a different mechanism
-				console.error(`received PLAYER from server on ENTITY_ADDED`);
+				if (allowPlayers) {
+					handleNetworkPlayerSpawned({
+						nickname: data.name,
+						slot: data.skinNumber,
+						uuid: data.uuid
+					});
+				} else {
+					// this shouldn't happen since players are handled by a different mechanism
+					console.error(`received PLAYER from server on ENTITY_ADDED`);
+				}
 			} else if (data._entityType.startsWith(Enemy.ENTITY_TYPE)) {
 				const enemy = new Enemy({});
 				enemy.deserialize(data);
@@ -183,4 +192,11 @@ function handleEntityRemoved(uuid) {
 
 function handleBrickDestroyed({row, column}) {
 	world.destroyBrick(row, column);
+}
+
+/** @param {any[]} data */
+function handleLiveEntityData(data) {
+	for (let element of data) {
+		handleEntityCreated(element, true);
+	}
 }
