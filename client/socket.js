@@ -1,7 +1,8 @@
 import { ClientEvents } from "../common/socket/client-events.js";
 import { ServerEvents } from "../common/socket/server-events.js";
 
-const socket = new io("http://localhost:7042", {
+// const socket = new io("http://localhost:7042", {
+const socket = new io("http://10.154.10.88:7042", {
 	path: "/bomberman.io"
 });
 
