@@ -12,9 +12,10 @@ export class Bomb extends GridEntity {
 
 	fuseTime = constants.BOMB_FUSE_TIME;
 	power = 1;
+	playerSlot = -1;
 
 	/** @param {number} power the number of tiles the flames will span in each direction */
-	constructor(power, row, column) {
+	constructor(power, row, column, playerSlot) {
 		super(row, column);
 		this.power = power;
 		world.getEntitiesInArea(this.getBoundingBox()).forEach(
@@ -25,6 +26,7 @@ export class Bomb extends GridEntity {
 			}
 		);
 		this.startAnimation("idle");
+		this.playerSlot = playerSlot;
 	}
 
 	/** @returns {string} the type of entity */
@@ -68,7 +70,8 @@ export class Bomb extends GridEntity {
 	}
 
 	/** @override we've been fried by another explosion, so chain-reaction! */
-	fry() {
+	fry(killerSlotId) {
+		this.playerSlot = killerSlotId; // if this bomb was triggered by someone else, the frag should count toward him
 		this.explode();
 	}
 }

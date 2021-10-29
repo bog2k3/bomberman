@@ -183,7 +183,7 @@ function handleBrickDestroyed(row, col) {
 /** @param {Bomb} bomb */
 function handleBombExplosion(bomb) {
 	// create central fire
-	new Fire("center", bomb.row, bomb.column)
+	new Fire("center", bomb.row, bomb.column, bomb.playerSlot)
 	// go out from the center and create the flames
 	let directions = {
 		Up: { blocked: false, dx: 0, dy: -1 },
@@ -215,7 +215,7 @@ function handleBombExplosion(bomb) {
 				const fireType = isCap ? `cap${dirKey}` : (
 					["Up", "Down"].includes(dirKey) ? "middleV" : "middleH"
 				);
-				new Fire(fireType, fRow, fColumn);
+				new Fire(fireType, fRow, fColumn, bomb.playerSlot);
 			}
 		}
 	}

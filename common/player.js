@@ -6,6 +6,7 @@ import { Entity } from "./entity.js";
 import { PowerupSpeed } from "./powerup-speed.js";
 import { PowerupRadius } from "./powerup-radius.js";
 import { PowerupBomb } from "./powerup-bomb.js";
+import { Event } from "./event.js";
 
 export class Player extends Character {
 
@@ -18,6 +19,9 @@ export class Player extends Character {
 	name = "";
 
 	inputController = null;
+
+	/** @param {(victimSlot: number, killerSlot: number) => void} */
+	onFragRegistered = new Event();
 
 	/** @param {Character & {skinNumber: number, name: string}} data */
 	constructor(data) {
@@ -163,6 +167,12 @@ export class Player extends Character {
 		} else {
 			return this.reactToCollisionWithBrick(collision, dt);
 		}
+	}
+
+	/** @override we've been fried by an explosion */
+	fry(killerSlotId) {
+		super.fry(killerSlotId);
+		this.onFragRegistered.trigger(this.skinNumber, killerSlotId);
 	}
 }
 

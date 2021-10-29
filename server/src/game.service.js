@@ -80,6 +80,7 @@ export class GameService {
 			uuid,
 			name: nickname
 		});
+		networkPlayer.onFragRegistered.subscribe(this.handleFragRegistered.bind(this));
 		networkPlayer.setInputController(this.createInputController(slotId));
 		if (!this.scores[slotId]) {
 			this.scores[slotId] = {
@@ -108,7 +109,7 @@ export class GameService {
 
 	handleBombSpawnRequest(row, col, player) {
 		player.bombCount++;
-		(new Bomb(player.bombPower, row, col))
+		(new Bomb(player.bombPower, row, col, player.skinNumber))
 			.onDestroy.subscribe(() => player.bombCount--);
 	}
 
@@ -158,5 +159,14 @@ export class GameService {
 			});
 		}
 		return scores;
+	}
+
+	handleFragRegistered(victimSlot, killerSlot) {
+		if (victimSlot == killerSlot) {
+			// poor bastard killed himself
+			this.scores[killerSlot].score--;
+		} else {
+			this.scores[killerSlot].score++;
+		}
 	}
 }

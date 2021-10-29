@@ -15,7 +15,7 @@ export class PowerupRadius extends GridEntity {
 	getType() { return PowerupRadius.ENTITY_TYPE; }
 
 	/** @override */
-	fry() {
+	fry(killerSlotId) {
 		this.destroy();
 	}
 }

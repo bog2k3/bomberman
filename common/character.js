@@ -165,7 +165,7 @@ export class Character extends Entity {
 	}
 
 	/** @override we've been fried by an explosion */
-	fry() {
+	fry(killerSlotId) {
 		this.die();
 	}
 

@@ -8,13 +8,15 @@ export class Fire extends GridEntity {
 	static ENTITY_TYPE = "fire";
 
 	type = "";
+	playerSlot = -1;
 
 	/** @param {"center"|"middleV"|"middleH"|"capRight"|"capLeft"|"capUp"|"capDown"} type */
-	constructor(type, row, column) {
+	constructor(type, row, column, playerSlot) {
 		super(row, column);
 		this.type = type;
 		this.isSolid = false; // don't prevent other entities from going over fire
 		this.setLayer(layers.Fire); // appear behind bricks
+		this.playerSlot = playerSlot;
 	}
 
 	/** @returns {string} the type of entity */
@@ -52,7 +54,7 @@ export class Fire extends GridEntity {
 		const collisionResult = checkCollision(this.getBoundingBox(), this);
 		if (collisionResult && collisionResult.entity && !collisionResult.entity.isDestroyed) {
 			// we hit an entity
-			collisionResult.entity.fry();
+			collisionResult.entity.fry(this.playerSlot);
 		}
 	}
 }

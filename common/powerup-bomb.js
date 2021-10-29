@@ -15,7 +15,7 @@ export class PowerupBomb extends GridEntity {
 	getType() { return PowerupBomb.ENTITY_TYPE; }
 
 	/** @override */
-	fry() {
+	fry(killerSlotId) {
 		this.destroy();
 	}
 }

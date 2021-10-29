@@ -88,8 +88,11 @@ export class Entity {
 		this.layer = layerNumber;
 	}
 
-	/** @virtual Override this to react to being fried by an explosion */
-	fry() {}
+	/**
+	 * @virtual Override this to react to being fried by an explosion
+	 * @param {number} killerSlotId the slot id of the player who fried this entity
+	 **/
+	fry(killerSlotId) {}
 
 	/**
 	 * @param {string} name the name of the animation to start

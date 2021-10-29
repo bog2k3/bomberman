@@ -12,7 +12,7 @@ export const ENEMY_SPEED = [ // pixels per second for each enemy type
 	TILE_SIZE * 2
 ];
 export const BOMB_FUSE_TIME = 4; // seconds
-export const FIRE_DURATION = 1.1; // seconds
+export const FIRE_DURATION = 1; // seconds
 
 export const RANDOM_MAP_FILL_FACTOR_MIN = 0.4;
 export const RANDOM_MAP_FILL_FACTOR_MAX = 0.9;
