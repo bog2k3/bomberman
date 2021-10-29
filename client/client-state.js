@@ -14,5 +14,8 @@ export const clientState = {
 	scrollY: 0,
 
 	/** @type {{[slotId: number]: InputController}} */
-	networkInputControllers: {}
+	networkInputControllers: {},
+
+	/** @type {{name: string, score: number, slot: number}[]} */
+	scores: []
 }

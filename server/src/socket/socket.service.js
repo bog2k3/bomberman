@@ -21,7 +21,7 @@ export class SocketService {
 	/** @type {UserService} */
 	userService = null;
 
-	/** @type {(slotId: number, uuid: string) => void} */
+	/** @type {(slotId: number, uuid: string, nickname: string) => void} */
 	onPlayerSpawned = null;
 	/** @type {({event: "key-pressed" | "key-released", key: string, playerSlot: number}) => void} */
 	onPlayerInput = null;
@@ -145,7 +145,7 @@ export class SocketService {
 		socket.on(ClientEvents.PLAYER_SPAWNED, ({slot, uuid}, ackFn) => {
 			const client = this.userService.getClientBySocket(socket);
 			if (client.spawnSlotId == slot) {
-				this.onPlayerSpawned(slot, uuid);
+				this.onPlayerSpawned(slot, uuid, client.nickname);
 				socket.broadcast.to(SocketRoom.GAME_ROOM).emit(ServerEvents.PLAYER_SPAWNED, {
 					slot,
 					uuid,

@@ -144,6 +144,7 @@ function handleStateUpdate(stateData) {
 			e.updateFromStateData(stateData[e.uuid]);
 		}
 	}
+	clientState.scores = stateData["scores"];
 }
 
 function handleEntityCreated(data) {

@@ -74,18 +74,23 @@ export function draw() {
 
 function draw2D() {
 	const map = world.getMap();
+	const viewportX = clientState.scrollX;
+	const viewportY = clientState.scrollY;
+	const viewportOffsY = constants.HUD_HEIGHT;
 	// on which tile we start drawing:
-	const tileOffsX = clamp(Math.floor(clientState.scrollX / constants.TILE_SIZE), 0, map[0].length - 1);
-	const tileOffsY = clamp(Math.floor(clientState.scrollY / constants.TILE_SIZE), 0, map.length - 1);
+	const tileOffsX = clamp(Math.floor(viewportX / constants.TILE_SIZE), 0, map[0].length - 1);
+	const tileOffsY = clamp(Math.floor(viewportY / constants.TILE_SIZE), 0, map.length - 1);
+	const viewportW = constants.SCREEN_WIDTH;
+	const viewportH = constants.SCREEN_HEIGHT - viewportOffsY;
 	// how many tiles to draw:
-	const nTilesX = Math.min(Math.ceil(constants.SCREEN_WIDTH / constants.TILE_SIZE) + 1, map[0].length - tileOffsX);
-	const nTilesY = Math.min(Math.ceil(constants.SCREEN_HEIGHT / constants.TILE_SIZE) + 1, map.length - tileOffsY);
+	const nTilesX = Math.min(Math.ceil(viewportW / constants.TILE_SIZE) + 1, map[0].length - tileOffsX);
+	const nTilesY = Math.min(Math.ceil(viewportH / constants.TILE_SIZE) + 1, map.length - tileOffsY);
 
 	// draw field (background):
 	for (let i = tileOffsY; i < map.length && i < tileOffsY + nTilesY; i++) {
 		for (let j = tileOffsX; j < map[0].length && j < tileOffsX + nTilesX; j++) {
 			if (map[i][j] === 0) {
-				drawTile(map, i, j, -clientState.scrollX, -clientState.scrollY);
+				drawTile(map, i, j, -viewportX, -viewportY + viewportOffsY);
 			}
 		}
 	}
@@ -95,7 +100,7 @@ function draw2D() {
 	// draw entities below layer 0:
 	let iEntity = 0;
 	while (iEntity < entities.length && entities[iEntity].layer < 0) {
-		drawEntity(entities[iEntity], -clientState.scrollX, -clientState.scrollY);
+		drawEntity(entities[iEntity], -viewportX, -viewportY + viewportOffsY);
 		iEntity++;
 	}
 
@@ -103,16 +108,18 @@ function draw2D() {
 	for (let i = tileOffsY; i < map.length && i < tileOffsY + nTilesY; i++) {
 		for (let j = tileOffsX; j < map[0].length && j < tileOffsX + nTilesX; j++) {
 			if (map[i][j] !== 0) {
-				drawTile(map, i, j, -clientState.scrollX, -clientState.scrollY);
+				drawTile(map, i, j, -viewportX, -viewportY + viewportOffsY);
 			}
 		}
 	}
 
 	// draw entities above layer 0:
 	while (iEntity < entities.length) {
-		drawEntity(entities[iEntity], -clientState.scrollX, -clientState.scrollY);
+		drawEntity(entities[iEntity], -viewportX, -viewportY + viewportOffsY);
 		iEntity++;
 	}
+
+	drawHUD();
 }
 
 /**
@@ -122,6 +129,41 @@ function draw2D() {
 function drawShadowedText(x, y, text, color, shadowColor, alignment) {
 	dosemu.drawText(x + 1, y + 1, text, shadowColor, alignment);
 	dosemu.drawText(x, y, text, color, alignment);
+}
+
+function drawHUD() {
+	const height = constants.HUD_HEIGHT;
+	dosemu.drawBar(0, 0, 319, height-1, 239);
+	dosemu.drawRectangle(0, 0, 319, height-1, 7);
+	dosemu.drawRectangle(1, 1, 318, height-2, 8);
+	const padding = 5;
+	const xSpacing = 10;
+	const nrows = 3;
+	const ncols = 3;
+	const colW = (318 - (2*padding) - (ncols-1)*xSpacing) / ncols;
+	const maxTextChars = Math.floor((colW - xSpacing) / 8);
+	const rowH = 15;
+	let row = 0, col = 0;
+	for (let i=0; i<clientState.scores.length; i++) {
+		/** @type {string} */
+		let name = clientState.scores[i].name;
+		const scoreLength = clientState.scores[i].score >= 10 ? 2 : 1;
+		if (name.length + scoreLength + 2 > maxTextChars) {
+			name = name.substring(0, maxTextChars - scoreLength - 2);
+		}
+		drawShadowedText(
+			padding + col * colW, padding + row * rowH,
+			`${name}: ${clientState.scores[i].score}`,
+			playerNameColors[clientState.scores[i].slot],
+			0, "left"
+		);
+		if (col < ncols - 1) {
+			col++;
+		} else {
+			col = 0;
+			row++;
+		}
+	}
 }
 
 function drawLoserBox() {
@@ -185,15 +227,18 @@ function getScrollOffsets() {
 	// start from the last scroll position
 	let viewportX = clientState.scrollX;
 	let viewportY = clientState.scrollY;
+	const viewportW = constants.SCREEN_WIDTH;
+	const viewportOffsY = constants.HUD_HEIGHT;
+	const viewportH = constants.SCREEN_HEIGHT - viewportOffsY;
 	// only adjust if the player moves outside a central region
-	const playerScreenX = clientState.player.x - clientState.scrollX;
-	const playerScreenY = clientState.player.y - clientState.scrollY;
-	const toleranceX = constants.SCREEN_WIDTH / 8;
-	const toleranceY = constants.SCREEN_HEIGHT / 8;
-	const centerX = constants.SCREEN_WIDTH / 2;
-	const centerY = constants.SCREEN_HEIGHT / 2;
-	const differenceX = playerScreenX - centerX;
-	const differenceY = playerScreenY - centerY;
+	const playerViewportX = clientState.player.x - viewportX;
+	const playerViewportY = clientState.player.y - viewportY;
+	const toleranceX = viewportW / 8;
+	const toleranceY = viewportH / 8;
+	const centerX = viewportW / 2;
+	const centerY = viewportH / 2;
+	const differenceX = playerViewportX - centerX;
+	const differenceY = playerViewportY - centerY;
 	if (Math.abs(differenceX) > toleranceX) {
 		viewportX += differenceX - toleranceX * Math.sign(differenceX);
 	}
@@ -204,8 +249,8 @@ function getScrollOffsets() {
 	const maxMapX = map[0].length * constants.TILE_SIZE;
 	const maxMapY = map.length * constants.TILE_SIZE;
 	// only scroll as much as the map limits
-	viewportX = clamp(viewportX, 0, maxMapX - constants.SCREEN_WIDTH);
-	viewportY = clamp(viewportY, 0, maxMapY - constants.SCREEN_HEIGHT);
+	viewportX = clamp(viewportX, 0, maxMapX - viewportW);
+	viewportY = clamp(viewportY, 0, maxMapY - viewportH);
 
 	return [viewportX, viewportY];
 }

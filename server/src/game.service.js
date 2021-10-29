@@ -20,6 +20,8 @@ export class GameService {
 	/** @type {{[slotId: number]: InputController}} */
 	inputControllers = {};
 	updateInterval = null;
+	/** @type {{[slotId: number]: {score: number, name: string}}} */
+	scores = {};
 
 	/** @param {SocketService} socketService */
 	constructor(socketService) {
@@ -68,15 +70,23 @@ export class GameService {
 	/**
 	 * @param {number} slotId
 	 * @param {string} uuid remote player's entity uuid
+	 * @param {string} nickname
 	 **/
-	handlePlayerSpawned(slotId, uuid) {
+	handlePlayerSpawned(slotId, uuid, nickname) {
 		const [x, y] = bomberman.getPlayerSpawnPosition(slotId);
 		const networkPlayer = new Player({
 			x, y,
 			skinNumber: slotId,
-			uuid
+			uuid,
+			name: nickname
 		});
 		networkPlayer.setInputController(this.createInputController(slotId));
+		if (!this.scores[slotId]) {
+			this.scores[slotId] = {
+				name: nickname,
+				score: 0
+			};
+		}
 	}
 
 	createInputController(slotId) {
@@ -116,6 +126,7 @@ export class GameService {
 		for (let entity of world.getEntities()) {
 			payload[entity.uuid] = entity.buildStateData();
 		}
+		payload["scores"] = this.buildScores();
 		return payload;
 	}
 
@@ -133,5 +144,19 @@ export class GameService {
 
 	broadcastBrickDestroyed(row, column) {
 		this.socketService.broadcastBrickDestroyed({row, column});
+	}
+
+	/** @returns {{name: string, score: number, slot: number}[]} */
+	buildScores() {
+		/** @type {{name: string, score: number, slot: number}[]} */
+		const scores = [];
+		for (let slotId in this.scores) {
+			scores.push({
+				name: this.scores[slotId].name,
+				score: this.scores[slotId].score,
+				slot: slotId
+			});
+		}
+		return scores;
 	}
 }
