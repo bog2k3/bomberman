@@ -157,7 +157,7 @@ export class Player extends Character {
 				}
 				break;
 		}
-		if (world.getMapCell(collision.brick.row + drow, collision.brick.column + dcol) == 0) {
+		if (![1,2].includes(world.getMapCell(collision.brick.row + drow, collision.brick.column + dcol))) {
 			this.x += dcol * adjustFactor;
 			this.y += drow * adjustFactor;
 		}

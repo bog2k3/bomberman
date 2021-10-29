@@ -64,22 +64,22 @@ export class Enemy extends Character {
 		const [myRow, myCol] = [this.getRow(), this.getColumn()];
 		// determine what are the possible collision-free directions from our current location
 		const directions = [];
-		if (this.orientation !== "up" && world.getMapCell(myRow - 1, myCol) === 0) {
+		if (this.orientation !== "up" && ![1,2].includes(world.getMapCell(myRow - 1, myCol))) {
 			if (this.thereAreNoBombsAt(myRow - 1, myCol)) {
 				directions.push("up");
 			}
 		}
-		if (this.orientation !== "down" && world.getMapCell(myRow + 1, myCol) === 0) {
+		if (this.orientation !== "down" && ![1,2].includes(world.getMapCell(myRow + 1, myCol))) {
 			if (this.thereAreNoBombsAt(myRow + 1, myCol)) {
 				directions.push("down");
 			}
 		}
-		if (this.orientation !== "left" && world.getMapCell(myRow, myCol - 1) === 0) {
+		if (this.orientation !== "left" && ![1,2].includes(world.getMapCell(myRow, myCol - 1))) {
 			if (this.thereAreNoBombsAt(myRow, myCol - 1)) {
 				directions.push("left");
 			}
 		}
-		if (this.orientation !== "right" && world.getMapCell(myRow, myCol + 1) === 0) {
+		if (this.orientation !== "right" && ![1,2].includes(world.getMapCell(myRow, myCol + 1))) {
 			if (this.thereAreNoBombsAt(myRow, myCol + 1)) {
 				directions.push("right");
 			}
