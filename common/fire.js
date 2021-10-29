@@ -15,9 +15,6 @@ export class Fire extends GridEntity {
 		this.type = type;
 		this.isSolid = false; // don't prevent other entities from going over fire
 		this.setLayer(layers.Fire); // appear behind bricks
-		// this.animationController.animationDuration = constants.FIRE_DURATION / 2;
-		// this.animationController.enableLoop = false;
-		// this.animationController.onAnimationFinished = () => this.handleAnimationFinished();
 	}
 
 	/** @returns {string} the type of entity */
@@ -35,10 +32,6 @@ export class Fire extends GridEntity {
 	deserialize(data) {
 		super.deserialize(data);
 		this.type = data.type;
-		// setTimeout(() => {
-		// 	this.animationController.reset();
-		// 	this.startAnimation(this.type);
-		// }, 0);
 	}
 
 	update(dt) {
@@ -54,14 +47,6 @@ export class Fire extends GridEntity {
 		}
 		this.checkCollision();
 	}
-
-	// handleAnimationFinished() {
-	// 	if (this.animationController.animationDirection === -1) {
-	// 		this.destroy();
-	// 	} else {
-	// 		this.startAnimation(this.type, -1);
-	// 	}
-	// }
 
 	checkCollision() {
 		const collisionResult = checkCollision(this.getBoundingBox(), this);

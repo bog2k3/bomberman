@@ -108,7 +108,7 @@ function spawnEntities(playerSpawnSlot) {
 						const enemyY = i * constants.TILE_SIZE + constants.ENEMY_INITIAL_Y_OFFS;
 						let enemyType = map[i][j] - 3;
 						enemyType = 0; // TODO remove hardcoding after adding all the sprites
-						world.handleEnemySpawned(
+						world.handleCharacterSpawned(
 							new Enemy({
 								x: enemyX,
 								y: enemyY,

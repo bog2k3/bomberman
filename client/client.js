@@ -17,6 +17,7 @@ import { Fire } from "../common/fire.js";
 import { PowerupBomb } from "../common/powerup-bomb.js";
 import { PowerupRadius } from "../common/powerup-radius.js";
 import { PowerupSpeed } from "../common/powerup-speed.js";
+import { Character } from "../common/character.js";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -57,19 +58,17 @@ export function update(dt) {
 /** @param {Player} player */
 export async function handlePlayerSpawned(player) {
 	clientState.player = player;
-	player.onDestroy.subscribe(
-		() => createCharacterExplodeAnimation(player.getType(), player.x, player.y)
-	);
+	handleCharacterSpawned(player);
 	socket.sendPlayerSpanwed(player.skinNumber, player.uuid) // because skin number is equivalent with spawn slot or player id
 		.then(() => {
 			player.setInputController(clientState.playerInputController);
 		});
 }
 
-/** @param {Enemy} enemy */
-export function handleEnemySpawned(enemy) {
-	enemy.onDestroy.subscribe(
-		() => createCharacterExplodeAnimation(enemy.getType(), enemy.x, enemy.y)
+/** @param {Character} character */
+export function handleCharacterSpawned(character) {
+	character.onDestroy.subscribe(
+		() => createCharacterExplodeAnimation(character.getType(), character.x, character.y)
 	);
 }
 
@@ -104,6 +103,7 @@ function spawnNetworkPlayer(slot, uuid, nickname) {
 		uuid
 	});
 	networkPlayer.setInputController(createNetworkInputController(slot));
+	handleCharacterSpawned(networkPlayer);
 }
 
 function createNetworkInputController(slotId) {
@@ -163,7 +163,9 @@ function handleEntityCreated(data) {
 				// this shouldn't happen since players are handled by a different mechanism
 				console.error(`received PLAYER from server on ENTITY_ADDED`);
 			} else if (data._entityType.startsWith(Enemy.ENTITY_TYPE)) {
-				return (new Enemy({}).deserialize(data));
+				const enemy = new Enemy({});
+				enemy.deserialize(data);
+				return handleCharacterSpawned(enemy);
 			} else {
 				console.error(`received unknown entity type from server on ENTITY_ADDED: "${data._entityType}".`);
 			}

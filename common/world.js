@@ -143,8 +143,8 @@ export function handlePlayerSpawned(player) {
 }
 
 /** @param {Entity} enemy */
-export function handleEnemySpawned(enemy) {
+export function handleCharacterSpawned(enemy) {
 	if (data.client) {
-		data.client.handleEnemySpawned(enemy);
+		data.client.handleCharacterSpawned(enemy);
 	}
 }

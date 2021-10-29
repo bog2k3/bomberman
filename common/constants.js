@@ -15,8 +15,7 @@ export const BOMB_FUSE_TIME = 4; // seconds
 export const FIRE_DURATION = 1.1; // seconds
 
 export const RANDOM_MAP_FILL_FACTOR_MIN = 0.4;
-// export const RANDOM_MAP_FILL_FACTOR_MAX = 0.9;
-export const RANDOM_MAP_FILL_FACTOR_MAX = 0.4;
+export const RANDOM_MAP_FILL_FACTOR_MAX = 0.9;
 
 export const RANDOM_MAP_ENEMY_DENSITY = 0.05; // enemies per tile for random map
 
